@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="cs" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvoiceAI Flow - Skenování faktur a správa účetnictví</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* CSS Animations and custom touch styles */
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, rgba(59,130,246,0) 0%, rgba(59,130,246,1) 50%, rgba(59,130,246,0) 100%);
+            box-shadow: 0 0 15px #3b82f6;
+            animation: scan 2.2s infinite ease-in-out;
+        }
+        @keyframes scan {
+            0% { top: 0%; opacity: 0.2; }
+            50% { top: 95%; opacity: 1; }
+            100% { top: 0%; opacity: 0.2; }
+        }
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 1rem);
+        }
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 antialiased flex flex-col font-sans select-none">
+
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
+
+    <div id="app" class="flex-1 flex flex-col min-h-screen bg-slate-50">
+        <!-- Top Navigation Bar -->
+        <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <!-- Brand Logo -->
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                            <i data-lucide="scan-line" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">InvoiceAI</span>
+                            <span class="text-xs text-blue-400 block -mt-1 font-medium">Flow & Skenování</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Header Actions (Role Switcher & PWA Guide) -->
+                    <div class="flex items-center space-x-3">
+                        <!-- PWA Info Button -->
+                        <button onclick="openModal('pwa-modal')" class="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 text-xs font-medium border border-slate-700">
+                            <i data-lucide="smartphone" class="w-4 h-4 text-blue-400"></i>
+                            <span class="hidden sm:inline">PWA / Mobilní appka</span>
+                        </button>
+
+                        <!-- Role Switcher Control -->
+                        <div class="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center">
+                            <button id="role-btn-client" onclick="switchRole('client')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-blue-600 text-white shadow-sm">
+                                <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                                Klient / OSVČ
+                            </button>
+                            <button id="role-btn-accountant" onclick="switchRole('accountant')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200">
+                                <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+                                Účetní
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-8">
+
+            <!-- ================= ROLE 1: KLIENT / FIRMA VIEW ================= -->
+            <div id="client-view" class="space-y-6">
+                <!-- Welcome & Status Banner -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-xl font-bold text-slate-900">Přehled dokladů</h1>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                Firma: TechVision s.r.o.
+                            </span>
+                        </div>
+                        <p class="text-sm text-slate-500 mt-1">Skenujte faktury a účtenky přímo z mobilu. Účetní má k datům okamžitý přístup.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="triggerScan()" class="w-full md:w-auto px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition active:scale-95">
+                            <i data-lucide="camera" class="w-4 h-4"></i>
+                            Naskenovat doklad
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Client Dashboard Summary Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Tento měsíc</div>
+                        <div class="text-xl font-bold text-slate-900 mt-1" id="stat-client-total">148 290 Kč</div>
+                        <div class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                            <span class="text-emerald-600 font-semibold">12</span> dokladů celkem
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">K vyřešení / Nové</div>
+                        <div class="text-xl font-bold text-amber-600 mt-1" id="stat-client-pending">3</div>
+                        <div class="text-xs text-slate-500 mt-1">Čeká na kontrolu účetní</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Schváleno</div>
+                        <div class="text-xl font-bold text-emerald-600 mt-1" id="stat-client-approved">8</div>
+                        <div class="text-xs text-slate-500 mt-1">Zaúčtováno v systému</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Vraceno k doplnění</div>
+                        <div class="text-xl font-bold text-rose-600 mt-1" id="stat-client-rejected">1</div>
+                        <div class="text-xs text-rose-500 mt-1 font-medium">Vyžaduje vaši reakci</div>
+                    </div>
+                </div>
+
+                <!-- Filters & Invoice List -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+                            <button onclick="filterClientInvoices('all')" class="client-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap">
+                                Všechny (12)
+                            </button>
+                            <button onclick="filterClientInvoices('pending')" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
+                                Čekající (3)
+                            </button>
+                            <button onclick="filterClientInvoices('approved')" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
+                                Schválené (8)
+                            </button>
+                            <button onclick="filterClientInvoices('action_needed')" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
+                                K dořešení (1)
+                            </button>
+                        </div>
+                        <div class="relative min-w-[200px]">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                            <input type="text" id="client-search" onkeyup="renderClientInvoices()" placeholder="Hledat dodavatele, částku..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Table / List -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                                    <th class="p-3 pl-4">Doklad / Dodavatel</th>
+                                    <th class="p-3">Datum / Splatnost</th>
+                                    <th class="p-3">Typ</th>
+                                    <th class="p-3">Částka s DPH</th>
+                                    <th class="p-3">Stav</th>
+                                    <th class="p-3 text-right pr-4">Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody id="client-invoice-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Dynamic rendering -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= ROLE 2: ÚČETNÍ VIEW ================= -->
+            <div id="accountant-view" class="space-y-6 hidden">
+                <!-- Accountant Dashboard Header -->
+                <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                Účetní kancelář ProFit s.r.o.
+                            </span>
+                        </div>
+                        <h1 class="text-2xl font-bold mt-2">Klientský inbox dokladů</h1>
+                        <p class="text-slate-400 text-sm mt-1">Kontrola, schvalování AI vyťažených faktur a export do účetních systémů (Pohoda, Money S3).</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="exportInvoices('pohoda')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            Export XML (Pohoda)
+                        </button>
+                        <button onclick="exportInvoices('csv')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">K zpracování (Nové)</div>
+                        <div class="text-2xl font-bold text-amber-600 mt-1" id="acc-stat-pending">3</div>
+                        <p class="text-xs text-slate-500 mt-1">Vyžaduje kontrolu</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Zaúčtováno tento měsíc</div>
+                        <div class="text-2xl font-bold text-emerald-600 mt-1" id="acc-stat-approved">18</div>
+                        <p class="text-xs text-slate-500 mt-1">Připraveno pro účetní uzávěrku</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Objem v CZK</div>
+                        <div class="text-2xl font-bold text-slate-900 mt-1">312 450 Kč</div>
+                        <p class="text-xs text-slate-500 mt-1">Celkem 21 dokladů</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Průměrná přesnost AI</div>
+                        <div class="text-2xl font-bold text-indigo-600 mt-1">98.4%</div>
+                        <p class="text-xs text-emerald-600 mt-1 font-medium">↑ Bezchybná extrakce</p>
+                    </div>
+                </div>
+
+                <!-- Client Filter Bar -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/60">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter klienta:</span>
+                            <select id="acc-client-select" onchange="renderAccountantInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                                <option value="all">Všichni klienti (3)</option>
+                                <option value="TechVision s.r.o.">TechVision s.r.o.</option>
+                                <option value="Kavárna Liberec s.r.o.">Kavárna Liberec s.r.o.</option>
+                                <option value="Jan Novák - Design">Jan Novák - Design (OSVČ)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <select id="acc-status-select" onchange="renderAccountantInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                                <option value="all">Všechny stavy</option>
+                                <option value="pending">Nové k vyřízení</option>
+                                <option value="approved">Zaúčtované</option>
+                                <option value="action_needed">Vrácené k doplnění</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Accountant Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                                    <th class="p-3 pl-4">Klient</th>
+                                    <th class="p-3">Dodavatel / Popis</th>
+                                    <th class="p-3">Splatnost / VS</th>
+                                    <th class="p-3">Částka & DPH</th>
+                                    <th class="p-3">Stav AI Vyťaženia</th>
+                                    <th class="p-3 text-right pr-4">Kontrola & Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountant-invoice-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Dynamic rendering -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 md:hidden pb-safe shadow-lg">
+            <div class="flex items-center justify-around h-16 px-2">
+                <button onclick="switchRole('client')" id="mob-nav-client" class="flex flex-col items-center justify-center text-blue-600 font-medium text-[11px]">
+                    <i data-lucide="user" class="w-5 h-5 mb-0.5"></i>
+                    <span>Klient</span>
+                </button>
+
+                <!-- Floating Camera Scan Button -->
+                <button onclick="triggerScan()" class="-mt-6 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/40 border-4 border-slate-50 active:scale-95 transition">
+                    <i data-lucide="camera" class="w-6 h-6"></i>
+                </button>
+
+                <button onclick="switchRole('accountant')" id="mob-nav-accountant" class="flex flex-col items-center justify-center text-slate-400 font-medium text-[11px]">
+                    <i data-lucide="calculator" class="w-5 h-5 mb-0.5"></i>
+                    <span>Účetní</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 1: AI Camera Scanner & Data Verification Modal -->
+    <div id="scan-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">AI Skenování & Vyťaženie faktúry</h3>
+                        <p class="text-xs text-slate-500">Automatická detekce poli a kontrola údajů</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('scan-modal')" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 space-y-6">
+                <!-- Scanning animation viewport / Image Preview -->
+                <div class="relative bg-slate-900 rounded-2xl overflow-hidden min-h-[220px] flex items-center justify-center border border-slate-800">
+                    <!-- Scan line animation overlay -->
+                    <div id="scan-line-anim" class="scan-line hidden"></div>
+
+                    <!-- Simulated Image preview -->
+                    <img id="scan-preview-img" src="" alt="Skenovaný doklad" class="max-h-64 object-contain hidden transition opacity-90">
+
+                    <!-- Default Dropzone state -->
+                    <div id="scan-dropzone" class="text-center p-8">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-slate-800 text-blue-400 flex items-center justify-center border border-slate-700">
+                            <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                        </div>
+                        <p class="text-white text-sm font-semibold">Nahrajte nebo vyfoťte fakturu</p>
+                        <p class="text-xs text-slate-400 mt-1">Podporované formáty: JPG, PNG, PDF (do 15 MB)</p>
+                        <label class="mt-4 inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl cursor-pointer transition">
+                            Vybrat soubor / Foto
+                            <input type="file" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                        </label>
+                    </div>
+
+                    <!-- Live AI Processing Indicator -->
+                    <div id="scan-loading" class="hidden absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center text-white p-4">
+                        <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                        <p class="font-bold text-sm">AI Gemini analyzuje strukturu dokladu...</p>
+                        <p class="text-xs text-slate-400 mt-1">Vyťažování IČO, DPH, částek a platebních údajů</p>
+                    </div>
+                </div>
+
+                <!-- Extracted Data Editable Form -->
+                <form id="extracted-form" onsubmit="saveExtractedInvoice(event)" class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Vyťažené údaje z dokladu</h4>
+                        <span class="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                            Spolehlivost 99%
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Dodavatel</label>
+                            <input type="text" id="field-vendor" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">IČO Dodavatele</label>
+                            <input type="text" id="field-ico" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Typ dokladu</label>
+                            <select id="field-type" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="Přijatá faktura">Přijatá faktura</option>
+                                <option value="Vydaná faktura">Vydaná faktura</option>
+                                <option value="Účtenka">Zjednodušený doklad / Účtenka</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Variabilní Symbol (VS)</label>
+                            <input type="text" id="field-vs" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Datum vystavení</label>
+                            <input type="date" id="field-date-issue" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Datum splatnosti</label>
+                            <input type="date" id="field-date-due" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Celková částka s DPH (Kč)</label>
+                            <input type="number" step="0.01" id="field-amount" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm font-bold text-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Sazba DPH (%)</label>
+                            <select id="field-vat-rate" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="21">21 % (základní)</option>
+                                <option value="12">12 % (snížená)</option>
+                                <option value="0">0 % (osvobozeno)</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Číslo účtu pro úhradu</label>
+                            <input type="text" id="field-account" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                        <button type="button" onclick="closeModal('scan-modal')" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
+                            Zrušit
+                        </button>
+                        <button type="submit" class="px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 flex items-center gap-1.5">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            Uložit & Odeslat účetní
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Detailed Invoice Review Modal (For Accountant) -->
+    <div id="detail-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                    <h3 class="font-bold text-slate-900 text-base" id="detail-modal-title">Detail dokladu</h3>
+                </div>
+                <button onclick="closeModal('detail-modal')" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Preview Document Image -->
+                <div class="bg-slate-100 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[300px] border border-slate-200 relative">
+                    <img id="detail-img-preview" src="" alt="Náhled" class="max-h-80 object-contain rounded-lg shadow-sm">
+                    <p class="text-xs text-slate-400 mt-2">Původní skenovaný originál dokladu</p>
+                </div>
+
+                <!-- Details & Actions -->
+                <div class="space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-blue-600">Odesílatel / Klient</span>
+                                <div class="font-bold text-slate-900 text-sm" id="detail-client-name">-</div>
+                            </div>
+                            <span id="detail-status-badge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                Čeká na zpracování
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="p-2.5 bg-slate-50 rounded-lg">
+                                <span class="text-slate-400 block font-medium">Dodavatel</span>
+                                <strong class="text-slate-800" id="detail-vendor">-</strong>
+                            </div>
+                            <div class="p-2.5 bg-slate-50 rounded-lg">
+                                <span class="text-slate-400 block font-medium">IČO</span>
+                                <strong class="text-slate-800" id="detail-ico">-</strong>
+                            </div>
+                            <div class="p-2.5 bg-slate-50 rounded-lg">
+                                <span class="text-slate-400 block font-medium">Variabilní symbol</span>
+                                <strong class="text-slate-800" id="detail-vs">-</strong>
+                            </div>
+                            <div class="p-2.5 bg-slate-50 rounded-lg">
+                                <span class="text-slate-400 block font-medium">Splatnost</span>
+                                <strong class="text-slate-800" id="detail-due">-</strong>
+                            </div>
+                            <div class="p-2.5 bg-slate-50 rounded-lg">
+                                <span class="text-slate-400 block font-medium">Částka celkem</span>
+                                <strong class="text-blue-600 text-sm font-bold" id="detail-amount">-</strong>
+                            </div>
+                            <div class="p-2.5 bg-slate-50 rounded-lg">
+                                <span class="text-slate-400 block font-medium">DPH</span>
+                                <strong class="text-slate-800" id="detail-vat">-</strong>
+                            </div>
+                        </div>
+
+                        <!-- Reject / Return Note Input -->
+                        <div class="pt-2">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Poznámka pro klienta (v případě vrácení k doplnění)</label>
+                            <textarea id="detail-comment-note" rows="2" placeholder="Napište důvod vrácení (např. Chybí specifikace položky)..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Accountant Action Buttons -->
+                    <div id="acc-action-buttons" class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-slate-100">
+                        <button onclick="updateInvoiceStatus('rejected')" class="flex-1 py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                            Vrátit k doplnění
+                        </button>
+                        <button onclick="updateInvoiceStatus('approved')" class="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            Schválit & Zaúčtovat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: GitHub Pages & Mobile PWA Installation Guide -->
+    <div id="pwa-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 p-6 space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center">
+                        <i data-lucide="github" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">GitHub Pages & Instalační Návod PWA</h3>
+                        <p class="text-xs text-slate-500">Spusťte si tuto aplikaci zdarma jako aplikaci na mobilu</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('pwa-modal')" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+                <!-- Step 1 -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="font-bold text-slate-900 text-sm mb-1 flex items-center gap-1.5">
+                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px]">1</span>
+                        Jak nahrát kód na GitHub Pages (Zdarma hosting)
+                    </div>
+                    <ol class="list-decimal pl-6 space-y-1 mt-2 text-slate-600">
+                        <li>Vytvořte nové repozitář na GitHubu (např. <code class="bg-slate-200 px-1 rounded">invoice-ai-app</code>).</li>
+                        <li>Uložte tento soubor jako <code class="bg-slate-200 px-1 rounded">index.html</code> do vaší hlavní větve (main/master).</li>
+                        <li>V nastavení repozitáře (<strong>Settings → Pages</strong>) zvolte Build and deployment z větvě <strong>Main / root</strong>.</li>
+                        <li>Vaše webová adresa bude připravena během minuty na adrese <code class="text-blue-600 font-mono">https://uzivatel.github.io/invoice-ai-app/</code>.</li>
+                    </ol>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="font-bold text-slate-900 text-sm mb-1 flex items-center gap-1.5">
+                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px]">2</span>
+                        Pridání aplikace na plochu mobilního telefonu (iOS & Android)
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                        <div class="p-3 bg-white rounded-lg border border-slate-200">
+                            <strong class="text-slate-900 block mb-1">📱 iPhone / iOS (Safari)</strong>
+                            1. Otevřete web v Safari.<br>
+                            2. Klepněte na tlačítko <strong>Sdílet (ikona se šipkou)</strong>.<br>
+                            3. Zvolte <strong>Přidat na plochu</strong> (Add to Home Screen).
+                        </div>
+                        <div class="p-3 bg-white rounded-lg border border-slate-200">
+                            <strong class="text-slate-900 block mb-1">🤖 Android (Chrome)</strong>
+                            1. Otevřete web v Chrome.<br>
+                            2. Klepněte na <strong>3 tečky</strong> vpravo nahoře.<br>
+                            3. Zvolte <strong>Instalovat aplikaci</strong> nebo <strong>Přidat na plochu</strong>.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 flex items-center gap-2">
+                    <i data-lucide="info" class="w-5 h-5 shrink-0 text-blue-600"></i>
+                    <span>Aplikace funguje jako plnohodnotná webová PWA aplikace, nevyžaduje stahování z App Store ani Google Play.</span>
+                </div>
+            </div>
+
+            <div class="pt-2 text-right">
+                <button onclick="closeModal('pwa-modal')" class="px-5 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl hover:bg-slate-800">
+                    Rozumím
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentRole = 'client'; // 'client' or 'accountant'
+        let selectedInvoiceId = null;
+
+        // Mock Invoice Database (Realistic Czech invoices)
+        let invoices = [
+            {
+                id: 'INV-2026-001',
+                clientName: 'TechVision s.r.o.',
+                vendor: 'Alza.cz a.s.',
+                ico: '27082440',
+                type: 'Přijatá faktura',
+                vs: '820260192',
+                dateIssue: '2026-09-28',
+                dateDue: '2026-10-12',
+                amount: 34890.00,
+                vatRate: '21',
+                accountNumber: '123456789/0800',
+                status: 'pending', // 'pending', 'approved', 'rejected' (action_needed)
+                note: '',
+                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=Alza.cz+Faktura+No.+820260192'
+            },
+            {
+                id: 'INV-2026-002',
+                clientName: 'TechVision s.r.o.',
+                vendor: 'Rohlík.cz Finance s.r.o.',
+                ico: '03748291',
+                type: 'Účtenka',
+                vs: '10293847',
+                dateIssue: '2026-09-29',
+                dateDue: '2026-09-29',
+                amount: 2450.00,
+                vatRate: '12',
+                accountNumber: '-',
+                status: 'approved',
+                note: 'Zaúčtováno do občerstvení',
+                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=Uctenka+Rohlik.cz'
+            },
+            {
+                id: 'INV-2026-003',
+                clientName: 'TechVision s.r.o.',
+                vendor: 'ČEZ Prodej a.s.',
+                ico: '27232480',
+                type: 'Přijatá faktura',
+                vs: '3901928301',
+                dateIssue: '2026-09-15',
+                dateDue: '2026-10-01',
+                amount: 18900.00,
+                vatRate: '21',
+                accountNumber: '987654321/0100',
+                status: 'action_needed',
+                note: 'Prosím o doplňění stěrky zálohového kalendáře.',
+                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=CEZ+Zalohova+Faktura'
+            },
+            {
+                id: 'INV-2026-004',
+                clientName: 'Kavárna Liberec s.r.o.',
+                vendor: 'Vodafone Czech Republic a.s.',
+                ico: '25788001',
+                type: 'Přijatá faktura',
+                vs: '61928374',
+                dateIssue: '2026-10-01',
+                dateDue: '2026-10-15',
+                amount: 1490.00,
+                vatRate: '21',
+                accountNumber: '222333444/0300',
+                status: 'pending',
+                note: '',
+                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=Vodafone+Vyuctovani'
+            },
+            {
+                id: 'INV-2026-005',
+                clientName: 'Jan Novák - Design',
+                vendor: 'Adobe Systems Software',
+                ico: '50293810',
+                type: 'Přijatá faktura',
+                vs: '9920192',
+                dateIssue: '2026-09-20',
+                dateDue: '2026-09-20',
+                amount: 1620.00,
+                vatRate: '21',
+                accountNumber: '-',
+                status: 'approved',
+                note: '',
+                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=Adobe+Creative+Cloud'
+            }
+        ];
+
+        function switchRole(role) {
+            currentRole = role;
+            const clientView = document.getElementById('client-view');
+            const accountantView = document.getElementById('accountant-view');
+            
+            const btnClient = document.getElementById('role-btn-client');
+            const btnAcc = document.getElementById('role-btn-accountant');
+            
+            const mobClient = document.getElementById('mob-nav-client');
+            const mobAcc = document.getElementById('mob-nav-accountant');
+
+            if (role === 'client') {
+                clientView.classList.remove('hidden');
+                accountantView.classList.add('hidden');
+
+                btnClient.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-blue-600 text-white shadow-sm";
+                btnAcc.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200";
+
+                mobClient.className = "flex flex-col items-center justify-center text-blue-600 font-medium text-[11px]";
+                mobAcc.className = "flex flex-col items-center justify-center text-slate-400 font-medium text-[11px]";
+
+                renderClientInvoices();
+                showToast("Přepnuto do prostředí: Klient (OSVČ/Firma)", "info");
+            } else {
+                clientView.classList.add('hidden');
+                accountantView.classList.remove('hidden');
+
+                btnAcc.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-blue-600 text-white shadow-sm";
+                btnClient.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200";
+
+                mobAcc.className = "flex flex-col items-center justify-center text-blue-600 font-medium text-[11px]";
+                mobClient.className = "flex flex-col items-center justify-center text-slate-400 font-medium text-[11px]";
+
+                renderAccountantInvoices();
+                showToast("Přepnuto do prostředí: Účetní kancelář", "info");
+            }
+        }
+
+        function renderClientInvoices(filterStatus = 'all') {
+            const tbody = document.getElementById('client-invoice-table-body');
+            const searchQuery = document.getElementById('client-search').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            // Filter invoices for TechVision s.r.o. (current client mock)
+            let filtered = invoices.filter(inv => inv.clientName === 'TechVision s.r.o.');
+
+            if (filterStatus === 'pending') filtered = filtered.filter(inv => inv.status === 'pending');
+            if (filterStatus === 'approved') filtered = filtered.filter(inv => inv.status === 'approved');
+            if (filterStatus === 'action_needed') filtered = filtered.filter(inv => inv.status === 'action_needed');
+
+            if (searchQuery) {
+                filtered = filtered.filter(inv => 
+                    inv.vendor.toLowerCase().includes(searchQuery) ||
+                    inv.amount.toString().includes(searchQuery) ||
+                    inv.vs.includes(searchQuery)
+                );
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
+                            Žádné doklady nenalezeny. Nahrajte nový doklad pomocí tlačítka skenovat.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtered.forEach(inv => {
+                let statusBadge = '';
+                if (inv.status === 'pending') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Čeká na schválení</span>`;
+                } else if (inv.status === 'approved') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Zaúčtováno</span>`;
+                } else {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">K doplnění</span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition";
+                tr.innerHTML = `
+                    <td class="p-3 pl-4">
+                        <div class="font-bold text-slate-900">${inv.vendor}</div>
+                        <div class="text-xs text-slate-400 font-mono">VS: ${inv.vs}</div>
+                    </td>
+                    <td class="p-3 text-xs text-slate-600">
+                        <div>Vystaveno: ${inv.dateIssue}</div>
+                        <div class="text-slate-400">Splatnost: ${inv.dateDue}</div>
+                    </td>
+                    <td class="p-3 text-xs font-medium text-slate-600">${inv.type}</td>
+                    <td class="p-3 font-bold text-slate-900">${inv.amount.toLocaleString('cs-CZ')} Kč</td>
+                    <td class="p-3">${statusBadge}</td>
+                    <td class="p-3 text-right pr-4">
+                        <button onclick="openDetailModal('${inv.id}')" class="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            lucide.createIcons();
+            updateClientStats();
+        }
+
+        function filterClientInvoices(status) {
+            document.querySelectorAll('.client-filter-btn').forEach(btn => {
+                btn.className = "client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap";
+            });
+            event.target.className = "client-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap";
+            renderClientInvoices(status);
+        }
+
+        function updateClientStats() {
+            const clientInvoices = invoices.filter(inv => inv.clientName === 'TechVision s.r.o.');
+            const pending = clientInvoices.filter(i => i.status === 'pending').length;
+            const approved = clientInvoices.filter(i => i.status === 'approved').length;
+            const rejected = clientInvoices.filter(i => i.status === 'action_needed').length;
+
+            document.getElementById('stat-client-pending').textContent = pending;
+            document.getElementById('stat-client-approved').textContent = approved;
+            document.getElementById('stat-client-rejected').textContent = rejected;
+        }
+
+        function renderAccountantInvoices() {
+            const tbody = document.getElementById('accountant-invoice-table-body');
+            const clientFilter = document.getElementById('acc-client-select').value;
+            const statusFilter = document.getElementById('acc-status-select').value;
+
+            tbody.innerHTML = '';
+
+            let filtered = [...invoices];
+            if (clientFilter !== 'all') {
+                filtered = filtered.filter(i => i.clientName === clientFilter);
+            }
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(i => i.status === statusFilter);
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
+                            Žádné doklady neodpovídají vybraným filtrům.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtered.forEach(inv => {
+                let statusBadge = '';
+                if (inv.status === 'pending') {
+                    statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Nová k vyřízení</span>`;
+                } else if (inv.status === 'approved') {
+                    statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Zaúčtováno</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Vraceno k doplnění</span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition";
+                tr.innerHTML = `
+                    <td class="p-3 pl-4">
+                        <div class="font-bold text-slate-900 text-xs">${inv.clientName}</div>
+                        <span class="text-[10px] text-slate-400">ID: ${inv.id}</span>
+                    </td>
+                    <td class="p-3">
+                        <div class="font-semibold text-slate-800 text-xs">${inv.vendor}</div>
+                        <div class="text-[11px] text-slate-400">IČO: ${inv.ico}</div>
+                    </td>
+                    <td class="p-3 text-xs">
+                        <div class="text-slate-700 font-medium">Splatnost: ${inv.dateDue}</div>
+                        <div class="text-slate-400 font-mono text-[11px]">VS: ${inv.vs}</div>
+                    </td>
+                    <td class="p-3">
+                        <div class="font-bold text-slate-900 text-xs">${inv.amount.toLocaleString('cs-CZ')} Kč</div>
+                        <div class="text-[10px] text-slate-400">DPH ${inv.vatRate}%</div>
+                    </td>
+                    <td class="p-3">${statusBadge}</td>
+                    <td class="p-3 text-right pr-4">
+                        <button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold rounded-lg text-xs transition flex items-center gap-1 ml-auto">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            Detail & Kontrola
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            lucide.createIcons();
+            updateAccountantStats();
+        }
+
+        function updateAccountantStats() {
+            const pending = invoices.filter(i => i.status === 'pending').length;
+            const approved = invoices.filter(i => i.status === 'approved').length;
+            document.getElementById('acc-stat-pending').textContent = pending;
+            document.getElementById('acc-stat-approved').textContent = approved;
+        }
+
+        function triggerScan() {
+            openModal('scan-modal');
+            // Reset scan form state
+            document.getElementById('scan-dropzone').classList.remove('hidden');
+            document.getElementById('scan-preview-img').classList.add('hidden');
+            document.getElementById('scan-loading').classList.add('hidden');
+            document.getElementById('scan-line-anim').classList.add('hidden');
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Show scan animation
+            document.getElementById('scan-dropzone').classList.add('hidden');
+            document.getElementById('scan-preview-img').classList.remove('hidden');
+            document.getElementById('scan-preview-img').src = URL.createObjectURL(file);
+            document.getElementById('scan-loading').classList.remove('hidden');
+            document.getElementById('scan-line-anim').classList.remove('hidden');
+
+            // Simulate Gemini AI extraction processing delay
+            setTimeout(() => {
+                document.getElementById('scan-loading').classList.add('hidden');
+                document.getElementById('scan-line-anim').classList.add('hidden');
+
+                // Auto fill extracted mockup data
+                document.getElementById('field-vendor').value = "DATART s.r.o.";
+                document.getElementById('field-ico').value = "16196238";
+                document.getElementById('field-type').value = "Přijatá faktura";
+                document.getElementById('field-vs').value = "202610" + Math.floor(1000 + Math.random() * 9000);
+                document.getElementById('field-date-issue').value = new Date().toISOString().split('T')[0];
+                
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + 14);
+                document.getElementById('field-date-due').value = dueDate.toISOString().split('T')[0];
+                
+                document.getElementById('field-amount').value = (Math.floor(Math.random() * 8000) + 1200).toFixed(2);
+                document.getElementById('field-vat-rate').value = "21";
+                document.getElementById('field-account').value = "270081029/0300";
+
+                showToast("Faktura byla úspěšně vyťažena AI s přesností 99.2%", "success");
+            }, 2000);
+        }
+
+        function saveExtractedInvoice(e) {
+            e.preventDefault();
+
+            const newInvoice = {
+                id: 'INV-2026-00' + (invoices.length + 1),
+                clientName: 'TechVision s.r.o.',
+                vendor: document.getElementById('field-vendor').value,
+                ico: document.getElementById('field-ico').value,
+                type: document.getElementById('field-type').value,
+                vs: document.getElementById('field-vs').value,
+                dateIssue: document.getElementById('field-date-issue').value,
+                dateDue: document.getElementById('field-date-due').value,
+                amount: parseFloat(document.getElementById('field-amount').value),
+                vatRate: document.getElementById('field-vat-rate').value,
+                accountNumber: document.getElementById('field-account').value,
+                status: 'pending',
+                note: '',
+                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=Naskenovana+Faktura+' + encodeURIComponent(document.getElementById('field-vendor').value)
+            };
+
+            invoices.unshift(newInvoice);
+            closeModal('scan-modal');
+            renderClientInvoices();
+            renderAccountantInvoices();
+
+            showToast("Doklad byl uložen a odeslán vaší účetní!", "success");
+        }
+
+        function openDetailModal(id) {
+            selectedInvoiceId = id;
+            const inv = invoices.find(i => i.id === id);
+            if (!inv) return;
+
+            document.getElementById('detail-modal-title').textContent = `Detail dokladu ${inv.id}`;
+            document.getElementById('detail-client-name').textContent = inv.clientName;
+            document.getElementById('detail-vendor').textContent = inv.vendor;
+            document.getElementById('detail-ico').textContent = inv.ico;
+            document.getElementById('detail-vs').textContent = inv.vs;
+            document.getElementById('detail-due').textContent = inv.dateDue;
+            document.getElementById('detail-amount').textContent = `${inv.amount.toLocaleString('cs-CZ')} Kč`;
+            document.getElementById('detail-vat').textContent = `${inv.vatRate} %`;
+            document.getElementById('detail-img-preview').src = inv.imgUrl;
+            document.getElementById('detail-comment-note').value = inv.note || '';
+
+            const badge = document.getElementById('detail-status-badge');
+            if (inv.status === 'pending') {
+                badge.className = "px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800";
+                badge.textContent = "Čeká na zpracování";
+            } else if (inv.status === 'approved') {
+                badge.className = "px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800";
+                badge.textContent = "Zaúčtováno";
+            } else {
+                badge.className = "px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800";
+                badge.textContent = "K doplnění";
+            }
+
+            openModal('detail-modal');
+        }
+
+        function updateInvoiceStatus(newStatus) {
+            if (!selectedInvoiceId) return;
+            const inv = invoices.find(i => i.id === selectedInvoiceId);
+            if (inv) {
+                inv.status = newStatus;
+                inv.note = document.getElementById('detail-comment-note').value;
+                closeModal('detail-modal');
+                renderClientInvoices();
+                renderAccountantInvoices();
+
+                if (newStatus === 'approved') {
+                    showToast(`Doklad ${inv.id} byl schválen a zaúčtován!`, "success");
+                } else {
+                    showToast(`Doklad ${inv.id} byl vrácen klientovi k doplnění.`, "warning");
+                }
+            }
+        }
+
+        function exportInvoices(format) {
+            const approved = invoices.filter(i => i.status === 'approved');
+            if (approved.length === 0) {
+                showToast("Žádné zaúčtované faktury k exportu.", "warning");
+                return;
+            }
+
+            if (format === 'pohoda') {
+                showToast(`Generuji POHODA XML export pro ${approved.length} dokladů...`, "success");
+            } else {
+                showToast(`Generuji CSV soubor pro účetní systém...`, "success");
+            }
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgBg = 'bg-slate-900 border-slate-700 text-white';
+            let icon = 'info';
+
+            if (type === 'success') {
+                bgBg = 'bg-emerald-600 border-emerald-500 text-white';
+                icon = 'check-circle';
+            } else if (type === 'warning') {
+                bgBg = 'bg-amber-600 border-amber-500 text-white';
+                icon = 'alert-triangle';
+            }
+
+            toast.className = `p-3.5 rounded-xl border shadow-xl flex items-center gap-2.5 text-xs font-medium transform transition duration-300 translate-y-2 opacity-0 ${bgBg} pointer-events-auto`;
+            toast.innerHTML = `
+                <i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Initialize application on window load
+        window.onload = function() {
+            lucide.createIcons();
+            renderClientInvoices();
+            renderAccountantInvoices();
+        };
+    </script>
+</body>
+</html>
