@@ -895,39 +895,111 @@
         }
 
         function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+  const file = event.target.files[0];
+  if (!file) return;
 
-            // Show scan animation
-            document.getElementById('scan-dropzone').classList.add('hidden');
-            document.getElementById('scan-preview-img').classList.remove('hidden');
-            document.getElementById('scan-preview-img').src = URL.createObjectURL(file);
-            document.getElementById('scan-loading').classList.remove('hidden');
-            document.getElementById('scan-line-anim').classList.remove('hidden');
+  // Skryje tlačítko nahrání a ukáže animaci
+  document.getElementById('scan-dropzone').classList.add('hidden');
+  document.getElementById('scan-preview-img').classList.remove('hidden');
+  document.getElementById('scan-loading').classList.remove('hidden');
+  document.getElementById('scan-line-anim').classList.remove('hidden');
 
-            // Simulate Gemini AI extraction processing delay
-            setTimeout(() => {
-                document.getElementById('scan-loading').classList.add('hidden');
-                document.getElementById('scan-line-anim').classList.add('hidden');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = async function() {
+      // Zmenší fotku pro rychlé odeslání do AI (max 1000px)
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 1000;
+      let width = img.width;
+      let height = img.height;
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width);
+        width = MAX_WIDTH;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
 
-                // Auto fill extracted mockup data
-                document.getElementById('field-vendor').value = "DATART s.r.o.";
-                document.getElementById('field-ico').value = "16196238";
-                document.getElementById('field-type').value = "Přijatá faktura";
-                document.getElementById('field-vs').value = "202610" + Math.floor(1000 + Math.random() * 9000);
-                document.getElementById('field-date-issue').value = new Date().toISOString().split('T')[0];
-                
-                const dueDate = new Date();
-                dueDate.setDate(dueDate.getDate() + 14);
-                document.getElementById('field-date-due').value = dueDate.toISOString().split('T')[0];
-                
-                document.getElementById('field-amount').value = (Math.floor(Math.random() * 8000) + 1200).toFixed(2);
-                document.getElementById('field-vat-rate').value = "21";
-                document.getElementById('field-account').value = "270081029/0300";
+      // Získá obrázek v datech
+      const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+      document.getElementById('scan-preview-img').src = base64Image;
 
-                showToast("Faktura byla úspěšně vyťažena AI s přesností 99.2%", "success");
-            }, 2000);
-        }
+      // Spustí opravdovou AI
+      await processWithOpenAI(base64Image);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function processWithOpenAI(base64Image) {
+  // Ověří nebo vyžádá API klíč od uživatele
+  let apiKey = localStorage.getItem('openai_key');
+  if (!apiKey) {
+    apiKey = prompt("Pro reálné skenování vložte váš OpenAI API klíč (začíná na sk-...):");
+    if (!apiKey) {
+      alert("Skenování zrušeno. Bez klíče nelze data z faktury přečíst.");
+      closeModal('scan-modal');
+      return;
+    }
+    localStorage.setItem('openai_key', apiKey);
+  }
+
+  try {
+    // Volání na OpenAI server
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Vytáhni data z této faktury do JSON s klíči: 'vendor' (Dodavatel), 'ico' (IČO), 'vs' (Variabilní symbol), 'dateIssue' (YYYY-MM-DD), 'dateDue' (YYYY-MM-DD), 'amount' (pouze číslo s tečkou bez textu Kč), 'vatRate' (číslo 21, 12, 0), 'account' (číslo účtu nebo IBAN)."
+              },
+              { type: "image_url", image_url: { url: base64Image } }
+            ]
+          }
+        ]
+      })
+    });
+
+    const data = await response.json();
+    if (data.choices && data.choices[0]) {
+      const parsed = JSON.parse(data.choices[0].message.content);
+      
+      // Předvyplní pole ve vašem existujícím HTML formuláři
+      document.getElementById('field-vendor').value = parsed.vendor || "";
+      document.getElementById('field-ico').value = parsed.ico || "";
+      document.getElementById('field-vs').value = parsed.vs || "";
+      document.getElementById('field-date-issue').value = parsed.dateIssue || "";
+      document.getElementById('field-date-due').value = parsed.dateDue || "";
+      document.getElementById('field-amount').value = parsed.amount || "";
+      document.getElementById('field-vat-rate').value = parsed.vatRate || "21";
+      document.getElementById('field-account').value = parsed.account || "";
+      
+      showToast("Faktura úspěšně přečtena přes umělou inteligenci!", "success");
+    } else {
+      alert("AI nemohla fakturu přečíst. Zkuste to znovu.");
+    }
+  } catch (err) {
+    alert("Chyba při komunikaci s AI. Pokud chyba přetrvává, zkontrolujte svůj API klíč.");
+    localStorage.removeItem('openai_key');
+  } finally {
+    // Vypne načítací animace
+    document.getElementById('scan-loading').classList.add('hidden');
+    document.getElementById('scan-line-anim').classList.add('hidden');
+  }
+}
 
         function saveExtractedInvoice(e) {
             e.preventDefault();
