@@ -134,27 +134,27 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Tento měsíc</div>
-                        <div class="text-xl font-bold text-slate-900 mt-1" id="stat-client-total">148 290 Kč</div>
+                        <div class="text-xl font-bold text-slate-900 mt-1" id="stat-client-total">0 Kč</div>
                         <div class="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                            <span class="text-emerald-600 font-semibold">12</span> dokladů celkem
+                            <span class="text-emerald-600 font-semibold" id="stat-client-count">0</span> dokladů celkem
                         </div>
                     </div>
 
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">K vyřešení / Nové</div>
-                        <div class="text-xl font-bold text-amber-600 mt-1" id="stat-client-pending">3</div>
+                        <div class="text-xl font-bold text-amber-600 mt-1" id="stat-client-pending">0</div>
                         <div class="text-xs text-slate-500 mt-1">Čeká na kontrolu účetní</div>
                     </div>
 
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Schváleno</div>
-                        <div class="text-xl font-bold text-emerald-600 mt-1" id="stat-client-approved">8</div>
+                        <div class="text-xl font-bold text-emerald-600 mt-1" id="stat-client-approved">0</div>
                         <div class="text-xs text-slate-500 mt-1">Zaúčtováno v systému</div>
                     </div>
 
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Vraceno k doplnění</div>
-                        <div class="text-xl font-bold text-rose-600 mt-1" id="stat-client-rejected">1</div>
+                        <div class="text-xl font-bold text-rose-600 mt-1" id="stat-client-rejected">0</div>
                         <div class="text-xs text-rose-500 mt-1 font-medium">Vyžaduje vaši reakci</div>
                     </div>
                 </div>
@@ -163,17 +163,17 @@
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
                         <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-                            <button onclick="filterClientInvoices('all')" class="client-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap">
-                                Všechny (12)
+                            <button onclick="filterClientInvoices('all')" id="filter-btn-all" class="client-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap">
+                                Všechny
                             </button>
-                            <button onclick="filterClientInvoices('pending')" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
-                                Čekající (3)
+                            <button onclick="filterClientInvoices('pending')" id="filter-btn-pending" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
+                                Čekající
                             </button>
-                            <button onclick="filterClientInvoices('approved')" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
-                                Schválené (8)
+                            <button onclick="filterClientInvoices('approved')" id="filter-btn-approved" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
+                                Schválené
                             </button>
-                            <button onclick="filterClientInvoices('action_needed')" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
-                                K dořešení (1)
+                            <button onclick="filterClientInvoices('action_needed')" id="filter-btn-action_needed" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
+                                K dořešení
                             </button>
                         </div>
                         <div class="relative min-w-[200px]">
@@ -232,20 +232,20 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">K zpracování (Nové)</div>
-                        <div class="text-2xl font-bold text-amber-600 mt-1" id="acc-stat-pending">3</div>
+                        <div class="text-2xl font-bold text-amber-600 mt-1" id="acc-stat-pending">0</div>
                         <p class="text-xs text-slate-500 mt-1">Vyžaduje kontrolu</p>
                     </div>
 
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Zaúčtováno tento měsíc</div>
-                        <div class="text-2xl font-bold text-emerald-600 mt-1" id="acc-stat-approved">18</div>
+                        <div class="text-2xl font-bold text-emerald-600 mt-1" id="acc-stat-approved">0</div>
                         <p class="text-xs text-slate-500 mt-1">Připraveno pro účetní uzávěrku</p>
                     </div>
 
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Objem v CZK</div>
-                        <div class="text-2xl font-bold text-slate-900 mt-1">312 450 Kč</div>
-                        <p class="text-xs text-slate-500 mt-1">Celkem 21 dokladů</p>
+                        <div class="text-2xl font-bold text-slate-900 mt-1" id="acc-stat-volume">0 Kč</div>
+                        <p class="text-xs text-slate-500 mt-1" id="acc-stat-total-count">Celkem 0 dokladů</p>
                     </div>
 
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
@@ -261,7 +261,7 @@
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter klienta:</span>
                             <select id="acc-client-select" onchange="renderAccountantInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
-                                <option value="all">Všichni klienti (3)</option>
+                                <option value="all">Všichni klienti</option>
                                 <option value="TechVision s.r.o.">TechVision s.r.o.</option>
                                 <option value="Kavárna Liberec s.r.o.">Kavárna Liberec s.r.o.</option>
                                 <option value="Jan Novák - Design">Jan Novák - Design (OSVČ)</option>
@@ -567,15 +567,15 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                         <div class="p-3 bg-white rounded-lg border border-slate-200">
                             <strong class="text-slate-900 block mb-1">📱 iPhone / iOS (Safari)</strong>
-                            1. Otevřete web v Safari.<br>
-                            2. Klepněte na tlačítko <strong>Sdílet (ikona se šipkou)</strong>.<br>
-                            3. Zvolte <strong>Přidat na plochu</strong> (Add to Home Screen).
+1. Otevřete web v Safari.<br>
+2. Klepněte na tlačítko <strong>Sdílet (ikona se šipkou)</strong>.<br>
+3. Zvolte <strong>Přidat na plochu</strong> (Add to Home Screen).
                         </div>
                         <div class="p-3 bg-white rounded-lg border border-slate-200">
                             <strong class="text-slate-900 block mb-1">🤖 Android (Chrome)</strong>
-                            1. Otevřete web v Chrome.<br>
-                            2. Klepněte na <strong>3 tečky</strong> vpravo nahoře.<br>
-                            3. Zvolte <strong>Instalovat aplikaci</strong> nebo <strong>Přidat na plochu</strong>.
+1. Otevřete web v Chrome.<br>
+2. Klepněte na <strong>3 tečky</strong> vpravo nahoře.<br>
+3. Zvolte <strong>Instalovat aplikaci</strong> nebo <strong>Přidat na plochu</strong>.
                         </div>
                     </div>
                 </div>
@@ -594,94 +594,43 @@
         </div>
     </div>
 
-    <script>
+    <!-- Firebase SDK a aplikační logika -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAx_UsY1kCL01fobO6fWkXpbLC93XF1Vo",
+            authDomain: "invoiceai-flow.firebaseapp.com",
+            projectId: "invoiceai-flow",
+            storageBucket: "invoiceai-flow.firebasestorage.app",
+            messagingSenderId: "242344344796",
+            appId: "1:242344344796:web:7c2d5f10a5ca4b40d04819",
+            measurementId: "G-ZESE0H37N4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         // State management
         let currentRole = 'client'; // 'client' or 'accountant'
         let selectedInvoiceId = null;
+        let invoices = [];
+        let currentClientFilter = 'all';
 
-        // Mock Invoice Database (Realistic Czech invoices)
-        let invoices = [
-            {
-                id: 'INV-2026-001',
-                clientName: 'TechVision s.r.o.',
-                vendor: 'Alza.cz a.s.',
-                ico: '27082440',
-                type: 'Přijatá faktura',
-                vs: '820260192',
-                dateIssue: '2026-09-28',
-                dateDue: '2026-10-12',
-                amount: 34890.00,
-                vatRate: '21',
-                accountNumber: '123456789/0800',
-                status: 'pending', // 'pending', 'approved', 'rejected' (action_needed)
-                note: '',
-                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=Alza.cz+Faktura+No.+820260192'
-            },
-            {
-                id: 'INV-2026-002',
-                clientName: 'TechVision s.r.o.',
-                vendor: 'Rohlík.cz Finance s.r.o.',
-                ico: '03748291',
-                type: 'Účtenka',
-                vs: '10293847',
-                dateIssue: '2026-09-29',
-                dateDue: '2026-09-29',
-                amount: 2450.00,
-                vatRate: '12',
-                accountNumber: '-',
-                status: 'approved',
-                note: 'Zaúčtováno do občerstvení',
-                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=Uctenka+Rohlik.cz'
-            },
-            {
-                id: 'INV-2026-003',
-                clientName: 'TechVision s.r.o.',
-                vendor: 'ČEZ Prodej a.s.',
-                ico: '27232480',
-                type: 'Přijatá faktura',
-                vs: '3901928301',
-                dateIssue: '2026-09-15',
-                dateDue: '2026-10-01',
-                amount: 18900.00,
-                vatRate: '21',
-                accountNumber: '987654321/0100',
-                status: 'action_needed',
-                note: 'Prosím o doplňění stěrky zálohového kalendáře.',
-                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=CEZ+Zalohova+Faktura'
-            },
-            {
-                id: 'INV-2026-004',
-                clientName: 'Kavárna Liberec s.r.o.',
-                vendor: 'Vodafone Czech Republic a.s.',
-                ico: '25788001',
-                type: 'Přijatá faktura',
-                vs: '61928374',
-                dateIssue: '2026-10-01',
-                dateDue: '2026-10-15',
-                amount: 1490.00,
-                vatRate: '21',
-                accountNumber: '222333444/0300',
-                status: 'pending',
-                note: '',
-                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=Vodafone+Vyuctovani'
-            },
-            {
-                id: 'INV-2026-005',
-                clientName: 'Jan Novák - Design',
-                vendor: 'Adobe Systems Software',
-                ico: '50293810',
-                type: 'Přijatá faktura',
-                vs: '9920192',
-                dateIssue: '2026-09-20',
-                dateDue: '2026-09-20',
-                amount: 1620.00,
-                vatRate: '21',
-                accountNumber: '-',
-                status: 'approved',
-                note: '',
-                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=Adobe+Creative+Cloud'
-            }
-        ];
+        // Realtime poslech změn z Firebase Firestore
+        const invoicesQuery = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
+        onSnapshot(invoicesQuery, (snapshot) => {
+            invoices = [];
+            snapshot.forEach((docSnap) => {
+                invoices.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            renderClientInvoices();
+            renderAccountantInvoices();
+        }, (error) => {
+            console.error("Chyba při čtení z Firestore:", error);
+            showToast("Chyba synchronizace databáze: " + error.message, "warning");
+        });
 
         function switchRole(role) {
             currentRole = role;
@@ -721,23 +670,25 @@
             }
         }
 
-        function renderClientInvoices(filterStatus = 'all') {
+        function renderClientInvoices(filterStatus = null) {
+            if (filterStatus !== null) {
+                currentClientFilter = filterStatus;
+            }
             const tbody = document.getElementById('client-invoice-table-body');
             const searchQuery = document.getElementById('client-search').value.toLowerCase();
             tbody.innerHTML = '';
 
-            // Filter invoices for TechVision s.r.o. (current client mock)
-            let filtered = invoices.filter(inv => inv.clientName === 'TechVision s.r.o.');
+            let filtered = invoices.filter(inv => (inv.clientName || 'TechVision s.r.o.') === 'TechVision s.r.o.');
 
-            if (filterStatus === 'pending') filtered = filtered.filter(inv => inv.status === 'pending');
-            if (filterStatus === 'approved') filtered = filtered.filter(inv => inv.status === 'approved');
-            if (filterStatus === 'action_needed') filtered = filtered.filter(inv => inv.status === 'action_needed');
+            if (currentClientFilter === 'pending') filtered = filtered.filter(inv => inv.status === 'pending');
+            if (currentClientFilter === 'approved') filtered = filtered.filter(inv => inv.status === 'approved');
+            if (currentClientFilter === 'action_needed') filtered = filtered.filter(inv => inv.status === 'action_needed');
 
             if (searchQuery) {
                 filtered = filtered.filter(inv => 
-                    inv.vendor.toLowerCase().includes(searchQuery) ||
-                    inv.amount.toString().includes(searchQuery) ||
-                    inv.vs.includes(searchQuery)
+                    (inv.vendor && inv.vendor.toLowerCase().includes(searchQuery)) ||
+                    (inv.amount && inv.amount.toString().includes(searchQuery)) ||
+                    (inv.vs && inv.vs.includes(searchQuery))
                 );
             }
 
@@ -749,41 +700,40 @@
                         </td>
                     </tr>
                 `;
-                return;
+            } else {
+                filtered.forEach(inv => {
+                    let statusBadge = '';
+                    if (inv.status === 'pending') {
+                        statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Čeká na schválení</span>`;
+                    } else if (inv.status === 'approved') {
+                        statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Zaúčtováno</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">K doplnění</span>`;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50/80 transition";
+                    tr.innerHTML = `
+                        <td class="p-3 pl-4">
+                            <div class="font-bold text-slate-900">${inv.vendor || '-'}</div>
+                            <div class="text-xs text-slate-400 font-mono">VS: ${inv.vs || '-'}</div>
+                        </td>
+                        <td class="p-3 text-xs text-slate-600">
+                            <div>Vystaveno: ${inv.dateIssue || '-'}</div>
+                            <div class="text-slate-400">Splatnost: ${inv.dateDue || '-'}</div>
+                        </td>
+                        <td class="p-3 text-xs font-medium text-slate-600">${inv.type || 'Přijatá faktura'}</td>
+                        <td class="p-3 font-bold text-slate-900">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</td>
+                        <td class="p-3">${statusBadge}</td>
+                        <td class="p-3 text-right pr-4">
+                            <button onclick="openDetailModal('${inv.id}')" class="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             }
-
-            filtered.forEach(inv => {
-                let statusBadge = '';
-                if (inv.status === 'pending') {
-                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Čeká na schválení</span>`;
-                } else if (inv.status === 'approved') {
-                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Zaúčtováno</span>`;
-                } else {
-                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">K doplnění</span>`;
-                }
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition";
-                tr.innerHTML = `
-                    <td class="p-3 pl-4">
-                        <div class="font-bold text-slate-900">${inv.vendor}</div>
-                        <div class="text-xs text-slate-400 font-mono">VS: ${inv.vs}</div>
-                    </td>
-                    <td class="p-3 text-xs text-slate-600">
-                        <div>Vystaveno: ${inv.dateIssue}</div>
-                        <div class="text-slate-400">Splatnost: ${inv.dateDue}</div>
-                    </td>
-                    <td class="p-3 text-xs font-medium text-slate-600">${inv.type}</td>
-                    <td class="p-3 font-bold text-slate-900">${inv.amount.toLocaleString('cs-CZ')} Kč</td>
-                    <td class="p-3">${statusBadge}</td>
-                    <td class="p-3 text-right pr-4">
-                        <button onclick="openDetailModal('${inv.id}')" class="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition">
-                            <i data-lucide="eye" class="w-4 h-4"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
 
             lucide.createIcons();
             updateClientStats();
@@ -793,16 +743,22 @@
             document.querySelectorAll('.client-filter-btn').forEach(btn => {
                 btn.className = "client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap";
             });
-            event.target.className = "client-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap";
+            const activeBtn = document.getElementById(`filter-btn-${status}`);
+            if (activeBtn) {
+                activeBtn.className = "client-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap";
+            }
             renderClientInvoices(status);
         }
 
         function updateClientStats() {
-            const clientInvoices = invoices.filter(inv => inv.clientName === 'TechVision s.r.o.');
+            const clientInvoices = invoices.filter(inv => (inv.clientName || 'TechVision s.r.o.') === 'TechVision s.r.o.');
             const pending = clientInvoices.filter(i => i.status === 'pending').length;
             const approved = clientInvoices.filter(i => i.status === 'approved').length;
             const rejected = clientInvoices.filter(i => i.status === 'action_needed').length;
+            const totalSum = clientInvoices.reduce((sum, i) => sum + Number(i.amount || 0), 0);
 
+            document.getElementById('stat-client-total').textContent = `${totalSum.toLocaleString('cs-CZ')} Kč`;
+            document.getElementById('stat-client-count').textContent = clientInvoices.length;
             document.getElementById('stat-client-pending').textContent = pending;
             document.getElementById('stat-client-approved').textContent = approved;
             document.getElementById('stat-client-rejected').textContent = rejected;
@@ -817,7 +773,7 @@
 
             let filtered = [...invoices];
             if (clientFilter !== 'all') {
-                filtered = filtered.filter(i => i.clientName === clientFilter);
+                filtered = filtered.filter(i => (i.clientName || 'TechVision s.r.o.') === clientFilter);
             }
             if (statusFilter !== 'all') {
                 filtered = filtered.filter(i => i.status === statusFilter);
@@ -831,48 +787,47 @@
                         </td>
                     </tr>
                 `;
-                return;
+            } else {
+                filtered.forEach(inv => {
+                    let statusBadge = '';
+                    if (inv.status === 'pending') {
+                        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Nová k vyřízení</span>`;
+                    } else if (inv.status === 'approved') {
+                        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Zaúčtováno</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Vraceno k doplnění</span>`;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50/80 transition";
+                    tr.innerHTML = `
+                        <td class="p-3 pl-4">
+                            <div class="font-bold text-slate-900 text-xs">${inv.clientName || 'TechVision s.r.o.'}</div>
+                            <span class="text-[10px] text-slate-400">ID: ${inv.id}</span>
+                        </td>
+                        <td class="p-3">
+                            <div class="font-semibold text-slate-800 text-xs">${inv.vendor || '-'}</div>
+                            <div class="text-[11px] text-slate-400">IČO: ${inv.ico || '-'}</div>
+                        </td>
+                        <td class="p-3 text-xs">
+                            <div class="text-slate-700 font-medium">Splatnost: ${inv.dateDue || '-'}</div>
+                            <div class="text-slate-400 font-mono text-[11px]">VS: ${inv.vs || '-'}</div>
+                        </td>
+                        <td class="p-3">
+                            <div class="font-bold text-slate-900 text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div>
+                            <div class="text-[10px] text-slate-400">DPH ${inv.vatRate || 21}%</div>
+                        </td>
+                        <td class="p-3">${statusBadge}</td>
+                        <td class="p-3 text-right pr-4">
+                            <button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold rounded-lg text-xs transition flex items-center gap-1 ml-auto">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                Detail & Kontrola
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             }
-
-            filtered.forEach(inv => {
-                let statusBadge = '';
-                if (inv.status === 'pending') {
-                    statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Nová k vyřízení</span>`;
-                } else if (inv.status === 'approved') {
-                    statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Zaúčtováno</span>`;
-                } else {
-                    statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Vraceno k doplnění</span>`;
-                }
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition";
-                tr.innerHTML = `
-                    <td class="p-3 pl-4">
-                        <div class="font-bold text-slate-900 text-xs">${inv.clientName}</div>
-                        <span class="text-[10px] text-slate-400">ID: ${inv.id}</span>
-                    </td>
-                    <td class="p-3">
-                        <div class="font-semibold text-slate-800 text-xs">${inv.vendor}</div>
-                        <div class="text-[11px] text-slate-400">IČO: ${inv.ico}</div>
-                    </td>
-                    <td class="p-3 text-xs">
-                        <div class="text-slate-700 font-medium">Splatnost: ${inv.dateDue}</div>
-                        <div class="text-slate-400 font-mono text-[11px]">VS: ${inv.vs}</div>
-                    </td>
-                    <td class="p-3">
-                        <div class="font-bold text-slate-900 text-xs">${inv.amount.toLocaleString('cs-CZ')} Kč</div>
-                        <div class="text-[10px] text-slate-400">DPH ${inv.vatRate}%</div>
-                    </td>
-                    <td class="p-3">${statusBadge}</td>
-                    <td class="p-3 text-right pr-4">
-                        <button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold rounded-lg text-xs transition flex items-center gap-1 ml-auto">
-                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                            Detail & Kontrola
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
 
             lucide.createIcons();
             updateAccountantStats();
@@ -881,13 +836,16 @@
         function updateAccountantStats() {
             const pending = invoices.filter(i => i.status === 'pending').length;
             const approved = invoices.filter(i => i.status === 'approved').length;
+            const totalVolume = invoices.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+
             document.getElementById('acc-stat-pending').textContent = pending;
             document.getElementById('acc-stat-approved').textContent = approved;
+            document.getElementById('acc-stat-volume').textContent = `${totalVolume.toLocaleString('cs-CZ')} Kč`;
+            document.getElementById('acc-stat-total-count').textContent = `Celkem ${invoices.length} dokladů`;
         }
 
         function triggerScan() {
             openModal('scan-modal');
-            // Reset scan form state
             document.getElementById('scan-dropzone').classList.remove('hidden');
             document.getElementById('scan-preview-img').classList.add('hidden');
             document.getElementById('scan-loading').classList.add('hidden');
@@ -898,7 +856,6 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // Skryje tlačítko nahrání a ukáže animaci
             document.getElementById('scan-dropzone').classList.add('hidden');
             document.getElementById('scan-preview-img').classList.remove('hidden');
             document.getElementById('scan-loading').classList.remove('hidden');
@@ -908,7 +865,6 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = async function() {
-                    // Zmenší fotku pro rychlé odeslání do AI (max 1000px)
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 1000;
                     let width = img.width;
@@ -922,11 +878,9 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Získá obrázek v datech
                     const base64Image = canvas.toDataURL('image/jpeg', 0.8);
                     document.getElementById('scan-preview-img').src = base64Image;
 
-                    // Spustí opravdovou AI
                     await processWithOpenAI(base64Image);
                 };
                 img.src = e.target.result;
@@ -935,7 +889,6 @@
         }
 
         async function processWithOpenAI(base64Image) {
-            // Ověří nebo vyžádá API klíč od uživatele
             let apiKey = localStorage.getItem('openai_key');
             if (!apiKey) {
                 apiKey = prompt("Pro reálné skenování vložte váš OpenAI API klíč (začíná na sk-...):");
@@ -948,7 +901,6 @@
             }
 
             try {
-                // Volání na OpenAI server
                 const response = await fetch("https://api.openai.com/v1/chat/completions", {
                     method: "POST",
                     headers: {
@@ -976,8 +928,6 @@
                 const data = await response.json();
                 if (data.choices && data.choices[0]) {
                     const parsed = JSON.parse(data.choices[0].message.content);
-                    
-                    // Předvyplní pole ve vašem existujícím HTML formuláři
                     document.getElementById('field-vendor').value = parsed.vendor || "";
                     document.getElementById('field-ico').value = parsed.ico || "";
                     document.getElementById('field-vs').value = parsed.vs || "";
@@ -986,7 +936,6 @@
                     document.getElementById('field-amount').value = parsed.amount || "";
                     document.getElementById('field-vat-rate').value = parsed.vatRate || "21";
                     document.getElementById('field-account').value = parsed.account || "";
-                    
                     showToast("Faktura úspěšně přečtena přes umělou inteligenci!", "success");
                 } else {
                     alert("AI nemohla fakturu přečíst. Zkuste to znovu.");
@@ -995,17 +944,15 @@
                 alert("Chyba při komunikaci s AI. Pokud chyba přetrvává, zkontrolujte svůj API klíč.");
                 localStorage.removeItem('openai_key');
             } finally {
-                // Vypne načítací animace
                 document.getElementById('scan-loading').classList.add('hidden');
                 document.getElementById('scan-line-anim').classList.add('hidden');
             }
         }
 
-        function saveExtractedInvoice(e) {
+        async function saveExtractedInvoice(e) {
             e.preventDefault();
 
             const newInvoice = {
-                id: 'INV-2026-00' + (invoices.length + 1),
                 clientName: 'TechVision s.r.o.',
                 vendor: document.getElementById('field-vendor').value,
                 ico: document.getElementById('field-ico').value,
@@ -1013,20 +960,23 @@
                 vs: document.getElementById('field-vs').value,
                 dateIssue: document.getElementById('field-date-issue').value,
                 dateDue: document.getElementById('field-date-due').value,
-                amount: parseFloat(document.getElementById('field-amount').value),
+                amount: parseFloat(document.getElementById('field-amount').value) || 0,
                 vatRate: document.getElementById('field-vat-rate').value,
                 accountNumber: document.getElementById('field-account').value,
                 status: 'pending',
                 note: '',
-                imgUrl: 'https://placehold.co/600x800/f1f5f9/334155?text=Naskenovana+Faktura+' + encodeURIComponent(document.getElementById('field-vendor').value)
+                imgUrl: document.getElementById('scan-preview-img').src || '',
+                createdAt: new Date().toISOString()
             };
 
-            invoices.unshift(newInvoice);
-            closeModal('scan-modal');
-            renderClientInvoices();
-            renderAccountantInvoices();
-
-            showToast("Doklad byl uložen a odeslán vaší účetní!", "success");
+            try {
+                await addDoc(collection(db, "invoices"), newInvoice);
+                closeModal('scan-modal');
+                showToast("Doklad byl úspěšně uložen do Firebase databáze!", "success");
+            } catch (err) {
+                console.error("Chyba při zápisu do Firestore:", err);
+                showToast("Chyba při ukládání: " + err.message, "warning");
+            }
         }
 
         function openDetailModal(id) {
@@ -1035,14 +985,14 @@
             if (!inv) return;
 
             document.getElementById('detail-modal-title').textContent = `Detail dokladu ${inv.id}`;
-            document.getElementById('detail-client-name').textContent = inv.clientName;
-            document.getElementById('detail-vendor').textContent = inv.vendor;
-            document.getElementById('detail-ico').textContent = inv.ico;
-            document.getElementById('detail-vs').textContent = inv.vs;
-            document.getElementById('detail-due').textContent = inv.dateDue;
-            document.getElementById('detail-amount').textContent = `${inv.amount.toLocaleString('cs-CZ')} Kč`;
-            document.getElementById('detail-vat').textContent = `${inv.vatRate} %`;
-            document.getElementById('detail-img-preview').src = inv.imgUrl;
+            document.getElementById('detail-client-name').textContent = inv.clientName || 'TechVision s.r.o.';
+            document.getElementById('detail-vendor').textContent = inv.vendor || '-';
+            document.getElementById('detail-ico').textContent = inv.ico || '-';
+            document.getElementById('detail-vs').textContent = inv.vs || '-';
+            document.getElementById('detail-due').textContent = inv.dateDue || '-';
+            document.getElementById('detail-amount').textContent = `${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč`;
+            document.getElementById('detail-vat').textContent = `${inv.vatRate || 21} %`;
+            document.getElementById('detail-img-preview').src = inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu';
             document.getElementById('detail-comment-note').value = inv.note || '';
 
             const badge = document.getElementById('detail-status-badge');
@@ -1060,21 +1010,25 @@
             openModal('detail-modal');
         }
 
-        function updateInvoiceStatus(newStatus) {
+        async function updateInvoiceStatus(newStatus) {
             if (!selectedInvoiceId) return;
-            const inv = invoices.find(i => i.id === selectedInvoiceId);
-            if (inv) {
-                inv.status = newStatus;
-                inv.note = document.getElementById('detail-comment-note').value;
-                closeModal('detail-modal');
-                renderClientInvoices();
-                renderAccountantInvoices();
+            const noteText = document.getElementById('detail-comment-note').value;
 
+            try {
+                const docRef = doc(db, "invoices", selectedInvoiceId);
+                await updateDoc(docRef, {
+                    status: newStatus,
+                    note: noteText
+                });
+                closeModal('detail-modal');
                 if (newStatus === 'approved') {
-                    showToast(`Doklad ${inv.id} byl schválen a zaúčtován!`, "success");
+                    showToast(`Doklad byl schválen a zaúčtován!`, "success");
                 } else {
-                    showToast(`Doklad ${inv.id} byl vrácen klientovi k doplnění.`, "warning");
+                    showToast(`Doklad byl vrácen klientovi k doplnění.`, "warning");
                 }
+            } catch (err) {
+                console.error("Chyba při aktualizaci stavu:", err);
+                showToast("Chyba při ukládání stavu: " + err.message, "warning");
             }
         }
 
@@ -1124,24 +1078,36 @@
             container.appendChild(toast);
             lucide.createIcons();
 
-            // Animate in
             setTimeout(() => {
                 toast.classList.remove('translate-y-2', 'opacity-0');
             }, 10);
 
-            // Remove after 3s
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
         }
 
-        // Initialize application on window load
-        window.onload = function() {
+        // Zpřístupnění funkcí pro HTML kliknutí (onclick)
+        window.switchRole = switchRole;
+        window.triggerScan = triggerScan;
+        window.handleFileSelect = handleFileSelect;
+        window.saveExtractedInvoice = saveExtractedInvoice;
+        window.openDetailModal = openDetailModal;
+        window.updateInvoiceStatus = updateInvoiceStatus;
+        window.filterClientInvoices = filterClientInvoices;
+        window.renderClientInvoices = renderClientInvoices;
+        window.renderAccountantInvoices = renderAccountantInvoices;
+        window.exportInvoices = exportInvoices;
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+        window.showToast = showToast;
+
+        window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             renderClientInvoices();
             renderAccountantInvoices();
-        };
+        });
     </script>
 </body>
 </html>
