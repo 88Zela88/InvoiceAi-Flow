@@ -536,14 +536,15 @@
 
                         <!-- Reject / Return Note Input -->
                         <div class="pt-2">
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Poznámka pro klienta (v případě vrácení k doplnění)</label>
+                            <label id="detail-note-label" class="block text-xs font-semibold text-slate-700 mb-1">Poznámka pro klienta / účetní</label>
                             <textarea id="detail-comment-note" rows="2" placeholder="Napište důvod vrácení (např. Chybí specifikace položky)..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
                     <div class="space-y-2 pt-4 border-t border-slate-100">
-                        <div id="acc-action-buttons" class="flex flex-col sm:flex-row gap-2">
+                        <!-- Účetní akce -->
+                        <div id="detail-acc-buttons" class="flex flex-col sm:flex-row gap-2">
                             <button onclick="updateInvoiceStatus('rejected')" class="flex-1 py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
                                 <i data-lucide="x-circle" class="w-4 h-4"></i>
                                 Vrátit k doplnění
@@ -553,7 +554,15 @@
                                 Schválit & Zaúčtovat
                             </button>
                         </div>
-                        <button onclick="deleteInvoice(selectedInvoiceId)" class="w-full py-2 px-3 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                        <!-- Klientské akce -->
+                        <div id="detail-client-buttons" class="hidden">
+                            <button onclick="clientSubmitInvoice()" class="w-full py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 transition">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Odeslat účetní ke kontrole
+                            </button>
+                        </div>
+                        <!-- Smazat doklad -->
+                        <button onclick="deleteCurrentInvoice()" class="w-full py-2 px-3 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                             Smazat tento doklad z databáze
                         </button>
@@ -1325,7 +1334,47 @@
                 badge.textContent = "K doplnění";
             }
 
+            // Přizpůsobení tlačítek podle role (Klient vs Účetní)
+            const accButtons = document.getElementById('detail-acc-buttons');
+            const clientButtons = document.getElementById('detail-client-buttons');
+            const noteLabel = document.getElementById('detail-note-label');
+            
+            if (currentRole === 'client') {
+                if (accButtons) accButtons.classList.add('hidden');
+                if (clientButtons) clientButtons.classList.remove('hidden');
+                if (noteLabel) noteLabel.textContent = 'Poznámka / doplňující zpráva pro účetní';
+            } else {
+                if (accButtons) accButtons.classList.remove('hidden');
+                if (clientButtons) clientButtons.classList.add('hidden');
+                if (noteLabel) noteLabel.textContent = 'Poznámka pro klienta (v případě vrácení k doplnění)';
+            }
+
             openModal('detail-modal');
+        }
+
+        // Klientské odeslání účetní z detailu dokladu
+        async function clientSubmitInvoice() {
+            if (!selectedInvoiceId) return;
+            const noteText = document.getElementById('detail-comment-note').value;
+            try {
+                const docRef = doc(db, "invoices", selectedInvoiceId);
+                await updateDoc(docRef, {
+                    status: 'pending',
+                    note: noteText
+                });
+                closeModal('detail-modal');
+                showToast("Doklad byl odeslán účetní ke kontrole!", "success");
+            } catch (err) {
+                console.error("Chyba při odesílání účetní:", err);
+                showToast("Chyba při odesílání: " + err.message, "warning");
+            }
+        }
+
+        // Bezpečné smazání aktuálně otevřené faktury v modálu
+        function deleteCurrentInvoice() {
+            if (selectedInvoiceId) {
+                deleteInvoice(selectedInvoiceId);
+            }
         }
 
         async function updateInvoiceStatus(newStatus) {
@@ -1414,6 +1463,8 @@
         window.openDetailModal = openDetailModal;
         window.updateInvoiceStatus = updateInvoiceStatus;
         window.deleteInvoice = deleteInvoice;
+        window.deleteCurrentInvoice = deleteCurrentInvoice;
+        window.clientSubmitInvoice = clientSubmitInvoice;
         window.renameClient = renameClient;
         window.deleteClient = deleteClient;
         window.addNewClientFromInput = addNewClientFromInput;
