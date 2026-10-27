@@ -657,7 +657,7 @@
 
                         <!-- Save changes button -->
                         <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <button type="button" onclick="downloadSingleISDOC(selectedInvoiceId)" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                            <button type="button" onclick="downloadSingleISDOC()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
                                 <i data-lucide="file-code" class="w-3.5 h-3.5"></i>
                                 Stáhnout ISDOC pro Money S3
                             </button>
@@ -1577,6 +1577,7 @@
 
         function openDetailModal(id) {
             selectedInvoiceId = id;
+            window.selectedInvoiceId = id;
             const inv = invoices.find(i => i.id === id);
             if (!inv) return;
 
@@ -1901,13 +1902,38 @@
 
         // Stažení ISDOC pro jednu konkrétní fakturu z detailu
         window.downloadSingleISDOC = function(id) {
-            const inv = invoices.find(i => i.id === id);
+            const targetId = id || selectedInvoiceId;
+            let inv = invoices.find(i => i.id === targetId);
             if (!inv) {
-                showToast("Faktura nenalezena.", "warning");
+                showToast("Faktura nenalezena nebo není vybrána.", "warning");
                 return;
             }
+
+            // Pokud je otevřen detail tohoto dokladu, vezmeme aktuální hodnoty z formuláře
+            if (selectedInvoiceId === targetId) {
+                inv = {
+                    ...inv,
+                    clientName: document.getElementById('detail-client-select')?.value || inv.clientName,
+                    vendor: document.getElementById('detail-vendor')?.value?.trim() || inv.vendor,
+                    ico: document.getElementById('detail-ico')?.value?.trim() || inv.ico,
+                    invoiceNumber: document.getElementById('detail-invoice-num')?.value?.trim() || inv.invoiceNumber,
+                    vs: document.getElementById('detail-vs')?.value?.trim() || inv.vs,
+                    type: document.getElementById('detail-type')?.value || inv.type,
+                    paymentMethod: document.getElementById('detail-payment-method')?.value || inv.paymentMethod,
+                    dateIssue: document.getElementById('detail-due-issue')?.value || inv.dateIssue,
+                    dateTax: document.getElementById('detail-date-tax')?.value || inv.dateTax,
+                    dateDue: document.getElementById('detail-due')?.value || inv.dateDue,
+                    baseAmount: parseFloat(document.getElementById('detail-base-amount')?.value) || inv.baseAmount,
+                    vatRate: document.getElementById('detail-vat')?.value || inv.vatRate,
+                    vatAmount: parseFloat(document.getElementById('detail-vat-amount')?.value) || inv.vatAmount,
+                    amount: parseFloat(document.getElementById('detail-amount')?.value) || inv.amount,
+                    accountNumber: document.getElementById('detail-account')?.value?.trim() || inv.accountNumber,
+                    note: document.getElementById('detail-comment-note')?.value?.trim() || inv.note
+                };
+            }
+
             const xml = generateISDOCXml(inv);
-            const filename = `faktura_${inv.invoiceNumber || inv.vs || inv.id}.isdoc`;
+            const filename = `ISDOC_${inv.clientName ? inv.clientName.replace(/[^a-zA-Z0-9]/g, '_') : 'firma'}_${inv.invoiceNumber || inv.vs || inv.id}.isdoc`;
             triggerDownload(xml, filename, 'application/xml;charset=utf-8');
             showToast(`ISDOC soubor "${filename}" byl úspěšně stažen!`, "success");
         };
