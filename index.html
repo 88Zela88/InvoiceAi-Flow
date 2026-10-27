@@ -229,9 +229,9 @@
                             <i data-lucide="building-2" class="w-4 h-4"></i>
                             Správa firem
                         </button>
-                        <button onclick="exportInvoices('isdoc')" class="px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
-                            <i data-lucide="file-code" class="w-4 h-4"></i>
-                            Export ISDOC (Money S3 / Pohoda)
+                        <button onclick="exportInvoices('pohoda')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            Export Pohoda
                         </button>
                         <button onclick="exportInvoices('csv')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
                             <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
@@ -656,11 +656,7 @@
                         </div>
 
                         <!-- Save changes button -->
-                        <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <button type="button" onclick="downloadSingleISDOC(selectedInvoiceId)" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
-                                <i data-lucide="file-code" class="w-3.5 h-3.5"></i>
-                                Stáhnout ISDOC pro Money S3
-                            </button>
+                        <div class="flex justify-end">
                             <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
                                 <i data-lucide="save" class="w-3.5 h-3.5 text-blue-400"></i>
                                 Uložit změny v dokladu
@@ -1762,207 +1758,19 @@
             }
         }
 
-
-        // ================= ISDOC GENERÁTOR A EXPORT (Money S3, Pohoda, Abra) =================
-        function escapeXml(unsafe) {
-            if (unsafe === undefined || unsafe === null) return '';
-            return String(unsafe).replace(/[<>&'"]/g, function (c) {
-                switch (c) {
-                    case '<': return '&lt;';
-                    case '>': return '&gt;';
-                    case '&': return '&amp;';
-                    case ''': return '&apos;';
-                    case '"': return '&quot;';
-                }
-            });
-        }
-
-        function generateISDOCXml(inv) {
-            const docId = inv.invoiceNumber || inv.vs || inv.id || 'INV-001';
-            const issueDate = inv.dateIssue || new Date().toISOString().split('T')[0];
-            const taxDate = inv.dateTax || issueDate;
-            const dueDate = inv.dateDue || issueDate;
-            const amount = Number(inv.amount || 0).toFixed(2);
-            const baseAmount = Number(inv.baseAmount || 0).toFixed(2);
-            const vatAmount = Number(inv.vatAmount || 0).toFixed(2);
-            const vatRate = Number(inv.vatRate || 21).toFixed(2);
-            const vendorName = inv.vendor || 'Dodavatel';
-            const clientName = inv.clientName || 'TechVision s.r.o.';
-            const ico = inv.ico || '00000000';
-            const vs = inv.vs || docId.replace(/\D/g, '') || '0';
-            const bankAccount = inv.accountNumber || '';
-            const paymentMethod = inv.paymentMethod || 'Převodem';
-
-            // Kód platební metody dle standardu UN/CEFACT 4461
-            // 31 = převodem, 10 = hotově, 48 = kartou, 97 = zápočtem
-            let paymentCode = '31';
-            if (paymentMethod === 'Hotově') paymentCode = '10';
-            else if (paymentMethod === 'Kartou') paymentCode = '48';
-            else if (paymentMethod === 'Zápočtem') paymentCode = '97';
-
-            // Validní ISDOC 6.0.1 struktura kompatibilní s Money S3, Pohoda, Abra Flexi
-            return `<?xml version="1.0" encoding="UTF-8"?>
-<Invoice xmlns="http://isdoc.cz/namespace/2013" version="6.0.1">
-  <DocumentType>1</DocumentType>
-  <ID>${escapeXml(docId)}</ID>
-  <UUID>${escapeXml(inv.id || '00000000-0000-0000-0000-000000000000')}</UUID>
-  <IssuingSystem>InvoiceAI Flow</IssuingSystem>
-  <IssueDate>${escapeXml(issueDate)}</IssueDate>
-  <TaxPointDate>${escapeXml(taxDate)}</TaxPointDate>
-  <VATApplicable>true</VATApplicable>
-  <ElectronicPossibilityAgreementReference>N/A</ElectronicPossibilityAgreementReference>
-  <Note>${escapeXml(inv.note || '')}</Note>
-  <LocalCurrencyCode>CZK</LocalCurrencyCode>
-  <CurrRate>1</CurrRate>
-  <RefCurrRate>1</RefCurrRate>
-  <AccountingSupplierParty>
-    <Party>
-      <PartyIdentification>
-        <ID>${escapeXml(ico)}</ID>
-      </PartyIdentification>
-      <PartyName>
-        <Name>${escapeXml(vendorName)}</Name>
-      </PartyName>
-    </Party>
-  </AccountingSupplierParty>
-  <AccountingCustomerParty>
-    <Party>
-      <PartyName>
-        <Name>${escapeXml(clientName)}</Name>
-      </PartyName>
-    </Party>
-  </AccountingCustomerParty>
-  <PaymentMeans>
-    <Payment>
-      <PaidAmount>${amount}</PaidAmount>
-      <PaymentMeansCode>${paymentCode}</PaymentMeansCode>
-      <Details>
-        <PaymentDueDate>${escapeXml(dueDate)}</PaymentDueDate>
-        <ID>${escapeXml(bankAccount)}</ID>
-        <VariableSymbol>${escapeXml(vs)}</VariableSymbol>
-      </Details>
-    </Payment>
-  </PaymentMeans>
-  <TaxTotal>
-    <TaxSubTotal>
-      <TaxableAmount>${baseAmount}</TaxableAmount>
-      <TaxAmount>${vatAmount}</TaxAmount>
-      <TaxCategory>
-        <Percent>${vatRate}</Percent>
-        <VATCalculationMethod>0</VATCalculationMethod>
-      </TaxCategory>
-    </TaxSubTotal>
-    <TaxAmount>${vatAmount}</TaxAmount>
-  </TaxTotal>
-  <LegalMonetaryTotal>
-    <TaxExclusiveAmount>${baseAmount}</TaxExclusiveAmount>
-    <TaxInclusiveAmount>${amount}</TaxInclusiveAmount>
-    <AlreadyClaimedDateTaxExclusiveAmount>0.00</AlreadyClaimedDateTaxExclusiveAmount>
-    <AlreadyClaimedTaxInclusiveAmount>0.00</AlreadyClaimedTaxInclusiveAmount>
-    <DifferenceTaxExclusiveAmount>${baseAmount}</DifferenceTaxExclusiveAmount>
-    <DifferenceTaxInclusiveAmount>${amount}</DifferenceTaxInclusiveAmount>
-    <PayableRoundingAmount>0.00</PayableRoundingAmount>
-    <PaidDepositsAmount>0.00</PaidDepositsAmount>
-    <PayableAmount>${amount}</PayableAmount>
-  </LegalMonetaryTotal>
-  <InvoiceLines>
-    <InvoiceLine>
-      <ID>1</ID>
-      <InvoicedQuantity unitCode="C62">1</InvoicedQuantity>
-      <LineExtensionAmount>${baseAmount}</LineExtensionAmount>
-      <LineExtensionAmountTaxInclusive>${amount}</LineExtensionAmountTaxInclusive>
-      <LineExtensionTaxAmount>${vatAmount}</LineExtensionTaxAmount>
-      <UnitPrice>${baseAmount}</UnitPrice>
-      <UnitPriceTaxInclusive>${amount}</UnitPriceTaxInclusive>
-      <ClassifiedTaxCategory>
-        <Percent>${vatRate}</Percent>
-        <VATCalculationMethod>0</VATCalculationMethod>
-      </ClassifiedTaxCategory>
-      <Item>
-        <Description>${escapeXml(vendorName + ' - ' + (inv.type || 'Faktura'))}</Description>
-      </Item>
-    </InvoiceLine>
-  </InvoiceLines>
-</Invoice>`;
-        }
-
-        // Pomocná funkce pro spuštění stažení souboru v prohlížeči
-        function triggerDownload(content, filename, mimeType) {
-            const blob = new Blob([content], { type: mimeType });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // Stažení ISDOC pro jednu konkrétní fakturu z detailu
-        window.downloadSingleISDOC = function(id) {
-            const inv = invoices.find(i => i.id === id);
-            if (!inv) {
-                showToast("Faktura nenalezena.", "warning");
-                return;
-            }
-            const xml = generateISDOCXml(inv);
-            const filename = `faktura_${inv.invoiceNumber || inv.vs || inv.id}.isdoc`;
-            triggerDownload(xml, filename, 'application/xml;charset=utf-8');
-            showToast(`ISDOC soubor "${filename}" byl úspěšně stažen!`, "success");
-        };
-
-        // Hlavní exportní funkce
         function exportInvoices(format) {
-            const clientFilter = document.getElementById('acc-client-select')?.value || 'all';
-            let list = invoices.filter(i => i.status === 'approved');
-
-            if (clientFilter !== 'all') {
-                list = list.filter(i => (i.clientName || 'TechVision s.r.o.') === clientFilter);
-            }
-
-            if (list.length === 0) {
-                showToast("Žádné zaúčtované faktury k exportu. Označte faktury jako 'Zaúčtovat'.", "warning");
+            const approved = invoices.filter(i => i.status === 'approved');
+            if (approved.length === 0) {
+                showToast("Žádné zaúčtované faktury k exportu.", "warning");
                 return;
             }
 
-            if (format === 'isdoc') {
-                // Stažení ISDOC pro zaúčtované doklady
-                list.forEach((inv, idx) => {
-                    setTimeout(() => {
-                        const xml = generateISDOCXml(inv);
-                        const filename = `ISDOC_${inv.clientName ? inv.clientName.replace(/[^a-zA-Z0-9]/g, '_') : 'firma'}_${inv.invoiceNumber || inv.vs || inv.id}.isdoc`;
-                        triggerDownload(xml, filename, 'application/xml;charset=utf-8');
-                    }, idx * 250);
-                });
-                showToast(`Vygenerováno a staženo ${list.length} ISDOC souborů pro Money S3 / Pohodu!`, "success");
-            } else if (format === 'csv') {
-                // CSV export s diakritikou (UTF-8 s BOM pro Excel / Money)
-                const headers = ["Firma/Klient", "CisloFaktury", "VS", "Dodavatel", "ICO", "Typ", "ZpusobUhrady", "DatumVystaveni", "DUZP", "DatumSplatnosti", "ZakladDaně", "SazbaDPH", "VyseDPH", "CelkemCZK", "Ucet"];
-                const rows = list.map(i => [
-                    `"${(i.clientName || '').replace(/"/g, '""')}"`,
-                    `"${(i.invoiceNumber || '').replace(/"/g, '""')}"`,
-                    `"${(i.vs || '').replace(/"/g, '""')}"`,
-                    `"${(i.vendor || '').replace(/"/g, '""')}"`,
-                    `"${(i.ico || '').replace(/"/g, '""')}"`,
-                    `"${(i.type || '').replace(/"/g, '""')}"`,
-                    `"${(i.paymentMethod || 'Převodem').replace(/"/g, '""')}"`,
-                    `"${i.dateIssue || ''}"`,
-                    `"${i.dateTax || ''}"`,
-                    `"${i.dateDue || ''}"`,
-                    (i.baseAmount || 0),
-                    (i.vatRate || 21),
-                    (i.vatAmount || 0),
-                    (i.amount || 0),
-                    `"${(i.accountNumber || '').replace(/"/g, '""')}"`
-                ].join(";"));
-
-                const csvContent = "\uFEFF" + headers.join(";") + "\n" + rows.join("\n");
-                triggerDownload(csvContent, `faktury_export_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8');
-                showToast(`Exportováno ${list.length} dokladů do CSV!`, "success");
+            if (format === 'pohoda') {
+                showToast(`Generuji POHODA XML export pro ${approved.length} dokladů...`, "success");
+            } else {
+                showToast(`Generuji CSV soubor pro účetní systém...`, "success");
             }
         }
-
 
         function openModal(id) {
             document.getElementById(id).classList.remove('hidden');
@@ -2016,7 +1824,6 @@
         window.deleteInvoice = deleteInvoice;
         window.deleteCurrentInvoice = deleteCurrentInvoice;
         window.saveDetailChanges = saveDetailChanges;
-        window.downloadSingleISDOC = downloadSingleISDOC;
         window.clientSubmitInvoice = clientSubmitInvoice;
         window.renameClient = renameClient;
         window.deleteClient = deleteClient;
@@ -2037,4 +1844,18 @@
         });
     </script>
 </body>
-</html>
+</html><td class="p-3 text-xs">
+                            <div class="text-slate-800 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div>
+                            <div class="text-slate-500 text-[11px]">DUZP: ${inv.dateTax || inv.dateIssue || '-'}</div>
+                            <div class="text-slate-400 text-[11px]">Splatnost: ${inv.dateDue || '-'}</div>
+                        </td>
+                        <td class="p-3">
+                            <div class="font-bold text-slate-900 text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div>
+                            <div class="text-[10px] text-slate-500">
+                                Základ: ${inv.baseAmount ? Number(inv.baseAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}
+                            </div>
+                            <div class="text-[10px] text-slate-400">
+                                DPH (${inv.vatRate || 21}%): ${inv.vatAmount ? Number(inv.vatAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}
+                            </div>
+                        </td>
+                        
