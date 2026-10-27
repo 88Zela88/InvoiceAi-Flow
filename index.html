@@ -116,7 +116,7 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-xl font-bold text-slate-900">Přehled dokladů</h1>
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <span id="current-client-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
                                 Firma: TechVision s.r.o.
                             </span>
                         </div>
@@ -216,12 +216,20 @@
                         <h1 class="text-2xl font-bold mt-2">Klientský inbox dokladů</h1>
                         <p class="text-slate-400 text-sm mt-1">Kontrola, schvalování AI vyťažených faktur a export do účetních systémů (Pohoda, Money S3).</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <button onclick="exportInvoices('pohoda')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            Export XML (Pohoda)
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="triggerScan()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                            <i data-lucide="camera" class="w-4 h-4"></i>
+                            Naskenovat doklad
                         </button>
-                        <button onclick="exportInvoices('csv')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
+                        <button onclick="addNewClientPrompt()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                            + Nová firma
+                        </button>
+                        <button onclick="exportInvoices('pohoda')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            Export Pohoda
+                        </button>
+                        <button onclick="exportInvoices('csv')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
                             <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                             Export CSV
                         </button>
@@ -382,6 +390,21 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Výběr / Přiřazení firmy -->
+                        <div class="sm:col-span-2 bg-blue-50/60 p-3.5 rounded-2xl border border-blue-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Přiřadit ke klientovi / firmě:</label>
+                                <select id="field-client-name" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <option value="TechVision s.r.o.">TechVision s.r.o.</option>
+                                    <option value="Kavárna Liberec s.r.o.">Kavárna Liberec s.r.o.</option>
+                                    <option value="Jan Novák - Design">Jan Novák - Design (OSVČ)</option>
+                                </select>
+                            </div>
+                            <button type="button" onclick="addNewClientPrompt()" class="sm:mt-5 px-3 py-2 bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 text-xs font-semibold rounded-xl flex items-center justify-center gap-1 transition shadow-sm">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> + Nová firma
+                            </button>
+                        </div>
+
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Dodavatel</label>
                             <input type="text" id="field-vendor" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -567,15 +590,15 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                         <div class="p-3 bg-white rounded-lg border border-slate-200">
                             <strong class="text-slate-900 block mb-1">📱 iPhone / iOS (Safari)</strong>
-1. Otevřete web v Safari.<br>
-2. Klepněte na tlačítko <strong>Sdílet (ikona se šipkou)</strong>.<br>
-3. Zvolte <strong>Přidat na plochu</strong> (Add to Home Screen).
+                            1. Otevřete web v Safari.<br>
+                            2. Klepněte na tlačítko <strong>Sdílet (ikona se šipkou)</strong>.<br>
+                            3. Zvolte <strong>Přidat na plochu</strong> (Add to Home Screen).
                         </div>
                         <div class="p-3 bg-white rounded-lg border border-slate-200">
                             <strong class="text-slate-900 block mb-1">🤖 Android (Chrome)</strong>
-1. Otevřete web v Chrome.<br>
-2. Klepněte na <strong>3 tečky</strong> vpravo nahoře.<br>
-3. Zvolte <strong>Instalovat aplikaci</strong> nebo <strong>Přidat na plochu</strong>.
+                            1. Otevřete web v Chrome.<br>
+                            2. Klepněte na <strong>3 tečky</strong> vpravo nahoře.<br>
+                            3. Zvolte <strong>Instalovat aplikaci</strong> nebo <strong>Přidat na plochu</strong>.
                         </div>
                     </div>
                 </div>
@@ -625,12 +648,71 @@
             snapshot.forEach((docSnap) => {
                 invoices.push({ id: docSnap.id, ...docSnap.data() });
             });
+            updateDynamicClients();
             renderClientInvoices();
             renderAccountantInvoices();
         }, (error) => {
             console.error("Chyba při čtení z Firestore:", error);
             showToast("Chyba synchronizace databáze: " + error.message, "warning");
         });
+
+        // Automatické načtení a aktualizace seznamu firem z databáze
+        function updateDynamicClients() {
+            const clientSelect = document.getElementById('field-client-name');
+            const accSelect = document.getElementById('acc-client-select');
+            if (!clientSelect || !accSelect) return;
+
+            const existingClients = new Set(['TechVision s.r.o.', 'Kavárna Liberec s.r.o.', 'Jan Novák - Design']);
+            invoices.forEach(inv => {
+                if (inv.clientName && inv.clientName.trim()) {
+                    existingClients.add(inv.clientName.trim());
+                }
+            });
+
+            // Zachovat aktuálně vybrané hodnoty
+            const currentSelected = clientSelect.value;
+            const currentAccSelected = accSelect.value;
+
+            clientSelect.innerHTML = '';
+            existingClients.forEach(name => {
+                const opt = new Option(name, name);
+                clientSelect.add(opt);
+            });
+            if (currentSelected && existingClients.has(currentSelected)) {
+                clientSelect.value = currentSelected;
+            }
+
+            accSelect.innerHTML = '<option value="all">Všichni klienti</option>';
+            existingClients.forEach(name => {
+                const opt = new Option(name, name);
+                accSelect.add(opt);
+            });
+            if (currentAccSelected && (currentAccSelected === 'all' || existingClients.has(currentAccSelected))) {
+                accSelect.value = currentAccSelected;
+            }
+        }
+
+        // Tlačítko pro přidání nového klienta
+        window.addNewClientPrompt = function() {
+            const newName = prompt("Zadejte název nové firmy nebo jméno klienta:");
+            if (!newName || !newName.trim()) return;
+            const cleanName = newName.trim();
+
+            const scanSelect = document.getElementById('field-client-name');
+            if (scanSelect && ![...scanSelect.options].some(o => o.value === cleanName)) {
+                scanSelect.add(new Option(cleanName, cleanName));
+                scanSelect.value = cleanName;
+            }
+
+            const accSelect = document.getElementById('acc-client-select');
+            if (accSelect && ![...accSelect.options].some(o => o.value === cleanName)) {
+                accSelect.add(new Option(cleanName, cleanName));
+                accSelect.value = cleanName;
+                renderAccountantInvoices();
+            }
+
+            showToast(`Firma "${cleanName}" byla přidána do seznamu!`, "success");
+        };
 
         function switchRole(role) {
             currentRole = role;
@@ -952,30 +1034,44 @@
         async function saveExtractedInvoice(e) {
             e.preventDefault();
 
+            // Bezpečná optimalizace náhledu fotky pod 1 MB pro Firestore
+            let safeImgUrl = '';
+            const previewEl = document.getElementById('scan-preview-img');
+            if (previewEl && previewEl.src && previewEl.src.startsWith('data:image')) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 300;
+                canvas.height = 400;
+                ctx.drawImage(previewEl, 0, 0, 300, 400);
+                safeImgUrl = canvas.toDataURL('image/jpeg', 0.5);
+            }
+
+            const chosenClient = document.getElementById('field-client-name')?.value || 'TechVision s.r.o.';
+
             const newInvoice = {
-                clientName: 'TechVision s.r.o.',
-                vendor: document.getElementById('field-vendor').value,
-                ico: document.getElementById('field-ico').value,
-                type: document.getElementById('field-type').value,
-                vs: document.getElementById('field-vs').value,
-                dateIssue: document.getElementById('field-date-issue').value,
-                dateDue: document.getElementById('field-date-due').value,
+                clientName: chosenClient,
+                vendor: document.getElementById('field-vendor').value || 'Neznámý dodavatel',
+                ico: document.getElementById('field-ico').value || '',
+                type: document.getElementById('field-type').value || 'Přijatá faktura',
+                vs: document.getElementById('field-vs').value || '',
+                dateIssue: document.getElementById('field-date-issue').value || '',
+                dateDue: document.getElementById('field-date-due').value || '',
                 amount: parseFloat(document.getElementById('field-amount').value) || 0,
-                vatRate: document.getElementById('field-vat-rate').value,
-                accountNumber: document.getElementById('field-account').value,
+                vatRate: document.getElementById('field-vat-rate').value || '21',
+                accountNumber: document.getElementById('field-account').value || '',
                 status: 'pending',
                 note: '',
-                imgUrl: document.getElementById('scan-preview-img').src || '',
+                imgUrl: safeImgUrl,
                 createdAt: new Date().toISOString()
             };
 
             try {
                 await addDoc(collection(db, "invoices"), newInvoice);
                 closeModal('scan-modal');
-                showToast("Doklad byl úspěšně uložen do Firebase databáze!", "success");
+                showToast(`Doklad byl uložen pod firmu "${chosenClient}"!`, "success");
             } catch (err) {
                 console.error("Chyba při zápisu do Firestore:", err);
-                showToast("Chyba při ukládání: " + err.message, "warning");
+                alert("CHYBA UKLÁDÁNÍ DO FIREBASE:\n" + err.message);
             }
         }
 
