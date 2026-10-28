@@ -32,6 +32,7 @@
         }
     </script>
     <style>
+        /* CSS Animations and custom touch styles */
         .scan-line {
             position: absolute;
             width: 100%;
@@ -48,6 +49,7 @@
         .pb-safe {
             padding-bottom: env(safe-area-inset-bottom, 1rem);
         }
+        /* Custom Scrollbars */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -65,7 +67,8 @@
 
     <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
 
-    <!-- ================= LANDING PAGE ================= -->
+    
+    <!-- ================= LANDING PAGE (ÚVODNÍ STRÁNKA S PŘIHLÁŠENÍM) ================= -->
     <div id="landing-page" class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white flex flex-col">
         <!-- Landing Navbar -->
         <header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-30">
@@ -80,16 +83,19 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button type="button" onclick="continueAsDemo()" class="text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition flex items-center gap-1.5">
-                        <i data-lucide="play" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <button type="button" onclick="continueAsDemo()" class="text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition">
                         Zkušební demo režim
+                    </button>
+                    <button type="button" onclick="focusAuthCard()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/20 transition">
+                        Přihlásit se
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- Hero Section with Login/Register Card -->
+        <!-- Hero Section with Integrated Login/Register Card -->
         <section class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 flex flex-col lg:flex-row items-center justify-between gap-12">
+            <!-- Left: Hero Text & Value Proposition -->
             <div class="flex-1 space-y-6 text-center lg:text-left">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
                     <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
@@ -102,6 +108,7 @@
                     Propojte své klienty s účetní kanceláří v reálném čase. Klient doklad jednoduše vyfotí mobilem, AI vyčte všechny položky a účetní ho jedním klikem importuje do <strong class="text-slate-200 font-semibold">Money S3</strong> nebo <strong class="text-slate-200 font-semibold">Pohody</strong>.
                 </p>
 
+                <!-- Value Highlights -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-left max-w-xl mx-auto lg:mx-0">
                     <div class="p-3 bg-slate-900/80 rounded-2xl border border-slate-800">
                         <i data-lucide="camera" class="w-5 h-5 text-blue-400 mb-1.5"></i>
@@ -120,6 +127,7 @@
                     </div>
                 </div>
 
+                <!-- Demo button CTA -->
                 <div class="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
                     <button type="button" onclick="continueAsDemo()" class="w-full sm:w-auto px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition shadow-sm">
                         <i data-lucide="play" class="w-4 h-4 text-emerald-400"></i>
@@ -128,19 +136,20 @@
                 </div>
             </div>
 
-            <!-- Login / Registration Card -->
+            <!-- Right: Prominent Login / Registration Card -->
             <div class="w-full max-w-md" id="landing-auth-card-wrapper">
                 <div class="bg-white text-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 relative">
                     <div class="flex items-center justify-between mb-5">
                         <div>
-                            <h2 class="text-xl font-bold text-slate-900" id="landing-auth-title">Přihlášení do systému</h2>
-                            <p class="text-xs text-slate-500 mt-0.5">Zadejte své přihlašovací údaje</p>
+                            <h2 class="text-xl font-bold text-slate-900" id="landing-auth-title">Vstup do systému</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Přihlaste se nebo si vytvořte nový účet</p>
                         </div>
                         <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                             <i data-lucide="lock" class="w-5 h-5"></i>
                         </div>
                     </div>
 
+                    <!-- Auth Switcher Tabs -->
                     <div class="flex p-1 bg-slate-100 rounded-xl border border-slate-200 mb-5">
                         <button type="button" onclick="setAuthMode('signin')" id="landing-tab-signin" class="flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm">
                             Přihlásit se
@@ -150,6 +159,7 @@
                         </button>
                     </div>
 
+                    <!-- Form -->
                     <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">E-mailová adresa</label>
@@ -172,38 +182,26 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">Zvolte typ účtu:</label>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 border-blue-500 bg-blue-50/40" id="label-role-accountant">
-                                        <input type="radio" name="auth-role" value="accountant" checked onchange="updateRoleTypeUI('accountant')" class="text-blue-600 focus:ring-blue-500">
+                                    <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 border-slate-200" id="label-role-accountant">
+                                        <input type="radio" name="auth-role" value="accountant" checked onchange="toggleCompanyInput(false)" class="text-blue-600 focus:ring-blue-500">
                                         <div class="text-xs">
                                             <strong class="block text-slate-800">Účetní kancelář</strong>
-                                            <span class="text-[10px] text-slate-500">Správa klientů & ISDOC</span>
+                                            <span class="text-[10px] text-slate-400">Správa klientů & ISDOC</span>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 border-slate-200" id="label-role-client">
-                                        <input type="radio" name="auth-role" value="client" onchange="updateRoleTypeUI('client')" class="text-blue-600 focus:ring-blue-500">
+                                        <input type="radio" name="auth-role" value="client" onchange="toggleCompanyInput(true)" class="text-blue-600 focus:ring-blue-500">
                                         <div class="text-xs">
                                             <strong class="block text-slate-800">Klient / Firma</strong>
-                                            <span class="text-[10px] text-slate-500">Skenování dokladů</span>
+                                            <span class="text-[10px] text-slate-400">Pouze skenování dokladů</span>
                                         </div>
                                     </label>
                                 </div>
                             </div>
 
-                            <div id="accountant-company-box">
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Název účetní kanceláře / firmy</label>
-                                <input type="text" id="auth-accountant-company" placeholder="např. ProFit účetnictví s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            </div>
-
-                            <div id="client-pairing-box" class="hidden space-y-2">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Párovací kód od vaší účetní (PIN)</label>
-                                    <input type="text" id="auth-pairing-code" placeholder="např. PEK-742" class="w-full px-3 py-2 border border-blue-300 rounded-xl text-sm font-mono font-bold uppercase tracking-wider text-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-blue-50/30">
-                                    <p class="text-[11px] text-slate-500 mt-1">Zadejte 6místný kód od účetní. Účet se automaticky spáruje s vaší firmou.</p>
-                                </div>
-                                <div class="pt-1">
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nebo název firmy (pokud kód nemáte)</label>
-                                    <input type="text" id="auth-client-company" placeholder="např. Moje Firma s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                </div>
+                            <div id="company-name-container" class="hidden">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Název vaší firmy / IČO</label>
+                                <input type="text" id="auth-company" placeholder="např. TechVision s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             </div>
                         </div>
 
@@ -215,9 +213,54 @@
 
                     <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-center text-xs text-slate-500">
                         <button type="button" onclick="continueAsDemo()" class="hover:text-blue-600 font-medium flex items-center gap-1">
-                            <span>Vstoupit do zkušebního demo režimu</span>
+                            <span>Nebo vstoupit bez účtu</span>
                             <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                         </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Showcase Grid -->
+        <section class="border-t border-slate-800/80 bg-slate-950/60 py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-8">
+                    <h2 class="text-xl sm:text-2xl font-bold">Vše, co potřebuje moderní účetnictví</h2>
+                    <p class="text-xs sm:text-sm text-slate-400 mt-1">Jednoduché pro zákazníka, výkonné a bezpečné pro účetní kancelář.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Feature 1 -->
+                    <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3">
+                        <div class="w-10 h-10 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
+                            <i data-lucide="smartphone" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Mobilní klientský skener</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Klient nemusí na konci měsíce nosit krabici od bot s účtenkami. Každou účtenku vyfotí ihned v kavárně nebo na benzínce a účetní ji má v reálném čase k dispozici.
+                        </p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3">
+                        <div class="w-10 h-10 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+                            <i data-lucide="eye" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Inspekční náhled & Lupa</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Účetní si doklad prohlédne s lupou (až 350 %), doklad může otočit a jakékoli pole (DUZP, částku, variabilní symbol) přímo upravit a uložit.
+                        </p>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3">
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center">
+                            <i data-lucide="database" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Přímý import do Money S3</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Export ve standardizovaném českém formátu ISDOC 6.0.1. V účetním programu Money S3 nebo Pohoda stačí zvolit Import dokladů a faktura je okamžitě v účetnictví.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -229,12 +272,12 @@
         </footer>
     </div>
 
-    <!-- ================= DASHBOARD APP ================= -->
     <div id="app" class="flex-1 flex flex-col min-h-screen bg-slate-50 hidden">
         <!-- Top Navigation Bar -->
         <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
+                    <!-- Brand Logo -->
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
                             <i data-lucide="scan-line" class="w-6 h-6 text-white"></i>
@@ -245,33 +288,43 @@
                         </div>
                     </div>
 
+                    <!-- Right Header Actions (User Auth Profile & Controls) -->
                     <div class="flex items-center space-x-2 sm:space-x-3">
+                        <!-- PWA Info Button -->
                         <button onclick="openModal('pwa-modal')" class="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 text-xs font-medium border border-slate-700">
                             <i data-lucide="smartphone" class="w-4 h-4 text-blue-400"></i>
-                            <span class="hidden md:inline">Mobilní appka</span>
+                            <span class="hidden md:inline">PWA</span>
                         </button>
 
-                        <!-- Demo Mode Switcher (viditelný VÝHRADNĚ v demo režimu) -->
-                        <div id="demo-switcher-container" class="hidden bg-slate-800 p-1 rounded-xl border border-amber-500/30 flex items-center">
-                            <span class="px-2 text-[10px] uppercase font-bold text-amber-400">Demo</span>
-                            <button id="role-btn-client" onclick="switchRole('client')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-blue-600 text-white">
-                                Klient
+                        <!-- Role Switcher Control (Visible for demo or accountant) -->
+                        <div id="role-switcher-container" class="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center">
+                            <button id="role-btn-client" onclick="switchRole('client')" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-blue-600 text-white shadow-sm">
+                                <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                                <span class="hidden sm:inline">Klient</span>
                             </button>
-                            <button id="role-btn-accountant" onclick="switchRole('accountant')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white">
-                                Účetní
+                            <button id="role-btn-accountant" onclick="switchRole('accountant')" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200">
+                                <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+                                <span class="hidden sm:inline">Účetní</span>
                             </button>
                         </div>
 
-                        <!-- User Profile Card -->
-                        <div id="auth-logged-in" class="flex items-center gap-2">
-                            <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center gap-2.5 shadow-sm">
-                                <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-sm" id="user-avatar">U</div>
-                                <div class="text-left hidden sm:block">
-                                    <div class="text-xs font-bold text-white leading-tight" id="user-display-email">user@email.cz</div>
-                                    <div class="text-[10px] text-blue-400 font-semibold" id="user-display-role">Účetní kancelář</div>
+                        <!-- User Authentication Status Bar -->
+                        <div id="auth-logged-out" class="flex items-center">
+                            <button onclick="openModal('auth-modal')" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                                <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+                                <span>Přihlásit se</span>
+                            </button>
+                        </div>
+
+                        <div id="auth-logged-in" class="hidden flex items-center gap-2">
+                            <div class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-xl flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-blue-600/30 text-blue-400 flex items-center justify-center text-xs font-bold" id="user-avatar">U</div>
+                                <div class="text-left hidden lg:block">
+                                    <div class="text-xs font-semibold text-white leading-tight" id="user-display-email">user@email.cz</div>
+                                    <span class="text-[10px] text-slate-400 font-medium" id="user-display-role">Účetní</span>
                                 </div>
                             </div>
-                            <button onclick="handleLogout()" title="Odhlásit se z účtu" class="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition border border-slate-700">
+                            <button onclick="handleLogout()" title="Odhlásit se" class="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition border border-slate-700">
                                 <i data-lucide="log-out" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -282,14 +335,15 @@
 
         <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-8">
 
-            <!-- ROLE 1: KLIENT VIEW -->
+            <!-- ================= ROLE 1: KLIENT / FIRMA VIEW ================= -->
             <div id="client-view" class="space-y-6">
+                <!-- Welcome & Status Banner -->
                 <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-xl font-bold text-slate-900">Přehled dokladů</h1>
                             <span id="current-client-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                Firma: Moje Firma
+                                Firma: TechVision s.r.o.
                             </span>
                         </div>
                         <p class="text-sm text-slate-500 mt-1">Skenujte faktury a účtenky přímo z mobilu. Účetní má k datům okamžitý přístup.</p>
@@ -302,6 +356,7 @@
                     </div>
                 </div>
 
+                <!-- Client Dashboard Summary Cards -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Tento měsíc</div>
@@ -310,16 +365,19 @@
                             <span class="text-emerald-600 font-semibold" id="stat-client-count">0</span> dokladů celkem
                         </div>
                     </div>
+
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">K vyřešení / Nové</div>
                         <div class="text-xl font-bold text-amber-600 mt-1" id="stat-client-pending">0</div>
                         <div class="text-xs text-slate-500 mt-1">Čeká na kontrolu účetní</div>
                     </div>
+
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Schváleno</div>
                         <div class="text-xl font-bold text-emerald-600 mt-1" id="stat-client-approved">0</div>
                         <div class="text-xs text-slate-500 mt-1">Zaúčtováno v systému</div>
                     </div>
+
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Vraceno k doplnění</div>
                         <div class="text-xl font-bold text-rose-600 mt-1" id="stat-client-rejected">0</div>
@@ -327,6 +385,7 @@
                     </div>
                 </div>
 
+                <!-- Filters & Invoice List -->
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
                         <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
@@ -349,6 +408,7 @@
                         </div>
                     </div>
 
+                    <!-- Table / List -->
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
@@ -361,19 +421,22 @@
                                     <th class="p-3 text-right pr-4">Akce</th>
                                 </tr>
                             </thead>
-                            <tbody id="client-invoice-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                            <tbody id="client-invoice-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Dynamic rendering -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- ROLE 2: ÚČETNÍ VIEW -->
+            <!-- ================= ROLE 2: ÚČETNÍ VIEW ================= -->
             <div id="accountant-view" class="space-y-6 hidden">
+                <!-- Accountant Dashboard Header -->
                 <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <div class="flex items-center gap-2">
-                            <span id="acc-agency-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                                Účetní kancelář
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                Účetní kancelář ProFit s.r.o.
                             </span>
                         </div>
                         <h1 class="text-2xl font-bold mt-2">Klientský inbox dokladů</h1>
@@ -384,10 +447,6 @@
                             <i data-lucide="camera" class="w-4 h-4"></i>
                             Naskenovat doklad
                         </button>
-                        <button onclick="addNewClientPrompt()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
-                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                            + Nová firma
-                        </button>
                         <button onclick="openModal('clients-modal')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
                             <i data-lucide="building-2" class="w-4 h-4"></i>
                             Správa firem & PINů
@@ -396,29 +455,29 @@
                             <i data-lucide="file-code" class="w-4 h-4"></i>
                             Export ISDOC (Money S3 / Pohoda)
                         </button>
-                        <button onclick="exportInvoices('csv')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
-                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-                            Export CSV
-                        </button>
-                    </div>
+                    </div></div>
                 </div>
 
+                <!-- Stats Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">K zpracování (Nové)</div>
                         <div class="text-2xl font-bold text-amber-600 mt-1" id="acc-stat-pending">0</div>
                         <p class="text-xs text-slate-500 mt-1">Vyžaduje kontrolu</p>
                     </div>
+
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Zaúčtováno tento měsíc</div>
                         <div class="text-2xl font-bold text-emerald-600 mt-1" id="acc-stat-approved">0</div>
                         <p class="text-xs text-slate-500 mt-1">Připraveno pro účetní uzávěrku</p>
                     </div>
+
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Objem v CZK</div>
                         <div class="text-2xl font-bold text-slate-900 mt-1" id="acc-stat-volume">0 Kč</div>
                         <p class="text-xs text-slate-500 mt-1" id="acc-stat-total-count">Celkem 0 dokladů</p>
                     </div>
+
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Průměrná přesnost AI</div>
                         <div class="text-2xl font-bold text-indigo-600 mt-1">98.4%</div>
@@ -426,14 +485,19 @@
                     </div>
                 </div>
 
+                <!-- Client Filter Bar -->
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/60">
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter klienta:</span>
                             <select id="acc-client-select" onchange="renderAccountantInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
                                 <option value="all">Všichni klienti</option>
+                                <option value="TechVision s.r.o.">TechVision s.r.o.</option>
+                                <option value="Kavárna Liberec s.r.o.">Kavárna Liberec s.r.o.</option>
+                                <option value="Jan Novák - Design">Jan Novák - Design (OSVČ)</option>
                             </select>
                         </div>
+
                         <div class="flex items-center gap-2">
                             <select id="acc-status-select" onchange="renderAccountantInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
                                 <option value="all">Všechny stavy</option>
@@ -444,19 +508,22 @@
                         </div>
                     </div>
 
+                    <!-- Accountant Table -->
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
                                     <th class="p-3 pl-4">Klient</th>
-                                    <th class="p-3">Dodavatel & IČO</th>
-                                    <th class="p-3">Číslo / DUZP / Splatnost</th>
-                                    <th class="p-3">Částka (Základ & DPH)</th>
-                                    <th class="p-3">Stav</th>
+                                    <th class="p-3">Dodavatel / Popis</th>
+                                    <th class="p-3">Splatnost / VS</th>
+                                    <th class="p-3">Částka & DPH</th>
+                                    <th class="p-3">Stav AI Vyťaženia</th>
                                     <th class="p-3 text-right pr-4">Kontrola & Akce</th>
                                 </tr>
                             </thead>
-                            <tbody id="accountant-invoice-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                            <tbody id="accountant-invoice-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Dynamic rendering -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -464,18 +531,113 @@
         </main>
 
         <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 md:hidden pb-safe shadow-lg">
-            <div class="flex items-center justify-around h-16 px-4">
-                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center justify-center text-slate-600 hover:text-blue-600 font-medium text-[11px]">
-                    <i data-lucide="file-text" class="w-5 h-5 mb-0.5"></i>
-                    <span>Přehled</span>
+            <div class="flex items-center justify-around h-16 px-2">
+                <button onclick="switchRole('client')" id="mob-nav-client" class="flex flex-col items-center justify-center text-blue-600 font-medium text-[11px]">
+                    <i data-lucide="user" class="w-5 h-5 mb-0.5"></i>
+                    <span>Klient</span>
                 </button>
+
+                <!-- Floating Camera Scan Button -->
                 <button onclick="triggerScan()" class="-mt-6 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/40 border-4 border-slate-50 active:scale-95 transition">
                     <i data-lucide="camera" class="w-6 h-6"></i>
                 </button>
-                <button onclick="openModal('pwa-modal')" class="flex flex-col items-center justify-center text-slate-600 hover:text-blue-600 font-medium text-[11px]">
-                    <i data-lucide="smartphone" class="w-5 h-5 mb-0.5"></i>
-                    <span>Nápověda</span>
+
+                <button onclick="switchRole('accountant')" id="mob-nav-accountant" class="flex flex-col items-center justify-center text-slate-400 font-medium text-[11px]">
+                    <i data-lucide="calculator" class="w-5 h-5 mb-0.5"></i>
+                    <span>Účetní</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 5: Firebase Authentication (Přihlášení / Registrace) -->
+    <div id="auth-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 flex flex-col">
+            <!-- Modal Header -->
+            <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                        <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-white" id="auth-modal-title">Přihlášení do InvoiceAI Flow</h3>
+                        <p class="text-xs text-slate-400">Přístup k fakturám a účetnictví</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('auth-modal')" class="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content & Form -->
+            <div class="p-6 space-y-4">
+                <!-- Auth Tabs: Sign in vs Register -->
+                <div class="flex p-1 bg-slate-100 rounded-xl border border-slate-200">
+                    <button type="button" onclick="setAuthMode('signin')" id="tab-auth-signin" class="flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm">
+                        Přihlásit se
+                    </button>
+                    <button type="button" onclick="setAuthMode('signup')" id="tab-auth-signup" class="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition">
+                        Nová registrace
+                    </button>
+                </div>
+
+                <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">E-mailová adresa</label>
+                        <div class="relative">
+                            <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                            <input type="email" id="auth-email" required placeholder="vas@email.cz" class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Heslo</label>
+                        <div class="relative">
+                            <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                            <input type="password" id="auth-password" required minlength="6" placeholder="Minimálně 6 znaků" class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Registration Fields (Visible only in signup mode) -->
+                    <div id="signup-extra-fields" class="space-y-3 hidden pt-2 border-t border-slate-100">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Zvolte typ účtu:</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 border-slate-200" id="label-role-accountant">
+                                    <input type="radio" name="auth-role" value="accountant" checked onchange="toggleCompanyInput(false)" class="text-blue-600 focus:ring-blue-500">
+                                    <div class="text-xs">
+                                        <strong class="block text-slate-800">Účetní kancelář</strong>
+                                        <span class="text-[10px] text-slate-400">Správa klientů & ISDOC</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 border-slate-200" id="label-role-client">
+                                    <input type="radio" name="auth-role" value="client" onchange="toggleCompanyInput(true)" class="text-blue-600 focus:ring-blue-500">
+                                    <div class="text-xs">
+                                        <strong class="block text-slate-800">Klient / Firma</strong>
+                                        <span class="text-[10px] text-slate-400">Pouze skenování dokladů</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="company-name-container" class="hidden">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Název vaší firmy / IČO</label>
+                            <input type="text" id="auth-company" placeholder="např. TechVision s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="auth-submit-btn" class="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition active:scale-95">
+                        <i data-lucide="log-in" class="w-4 h-4"></i>
+                        <span id="auth-submit-label">Přihlásit se do systému</span>
+                    </button>
+                </form>
+
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                    <button type="button" onclick="continueAsDemo()" class="hover:text-blue-600 font-medium">
+                        Pokračovat v demo režimu (bez přihlášení)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -483,6 +645,7 @@
     <!-- Modal 1: AI Camera Scanner & Data Verification Modal -->
     <div id="scan-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
+            <!-- Modal Header -->
             <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
@@ -498,28 +661,38 @@
                 </button>
             </div>
 
+            <!-- Modal Content -->
             <div class="p-6 space-y-6">
+                <!-- Scanning animation viewport / Image Preview -->
                 <div class="relative bg-slate-900 rounded-2xl overflow-hidden min-h-[220px] flex items-center justify-center border border-slate-800">
+                    <!-- Scan line animation overlay -->
                     <div id="scan-line-anim" class="scan-line hidden"></div>
+
+                    <!-- Simulated Image preview -->
                     <img id="scan-preview-img" src="" alt="Skenovaný doklad" class="max-h-64 object-contain hidden transition opacity-90">
+
+                    <!-- Default Dropzone state -->
                     <div id="scan-dropzone" class="text-center p-8">
                         <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-slate-800 text-blue-400 flex items-center justify-center border border-slate-700">
                             <i data-lucide="upload-cloud" class="w-8 h-8"></i>
                         </div>
                         <p class="text-white text-sm font-semibold">Nahrajte nebo vyfoťte fakturu</p>
-                        <p class="text-xs text-slate-400 mt-1">Podporované formáty: JPG, PNG, PDF</p>
+                        <p class="text-xs text-slate-400 mt-1">Podporované formáty: JPG, PNG, PDF (do 15 MB)</p>
                         <label class="mt-4 inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl cursor-pointer transition">
                             Vybrat soubor / Foto
                             <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)">
                         </label>
                     </div>
+
+                    <!-- Live AI Processing Indicator -->
                     <div id="scan-loading" class="hidden absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center text-white p-4">
                         <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                        <p class="font-bold text-sm">AI analyzuje strukturu dokladu...</p>
-                        <p class="text-xs text-slate-400 mt-1">Vytěžování IČO, DPH, DUZP a platebních údajů</p>
+                        <p class="font-bold text-sm">AI Gemini analyzuje strukturu dokladu...</p>
+                        <p class="text-xs text-slate-400 mt-1">Vyťažování IČO, DPH, částek a platebních údajů</p>
                     </div>
                 </div>
 
+                <!-- Extracted Data Editable Form -->
                 <form id="extracted-form" onsubmit="saveExtractedInvoice(event)" class="space-y-4">
                     <div class="flex items-center justify-between">
                         <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Vyťažené údaje z dokladu</h4>
@@ -530,10 +703,15 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Výběr / Přiřazení firmy -->
                         <div class="sm:col-span-2 bg-blue-50/60 p-3.5 rounded-2xl border border-blue-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                             <div class="flex-1">
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Přiřadit ke klientovi / firmě:</label>
-                                <select id="field-client-name" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+                                <select id="field-client-name" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <option value="TechVision s.r.o.">TechVision s.r.o.</option>
+                                    <option value="Kavárna Liberec s.r.o.">Kavárna Liberec s.r.o.</option>
+                                    <option value="Jan Novák - Design">Jan Novák - Design (OSVČ)</option>
+                                </select>
                             </div>
                             <div class="sm:mt-5 flex gap-2">
                                 <button type="button" onclick="addNewClientPrompt()" class="px-3 py-2 bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 text-xs font-semibold rounded-xl flex items-center justify-center gap-1 transition shadow-sm">
@@ -555,7 +733,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Číslo dokladu / faktury</label>
-                            <input type="text" id="field-invoice-num" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <input type="text" id="field-invoice-num" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="např. 20260012">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Variabilní Symbol (VS)</label>
@@ -600,7 +778,7 @@
                             </select>
                         </div>
 
-                        <!-- Finanční rozpad -->
+                        <!-- Finanční rozpad (Základ, DPH, Celkem) -->
                         <div class="sm:col-span-2 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-600 mb-1">Základ daně (Kč)</label>
@@ -636,9 +814,10 @@
         </div>
     </div>
 
-    <!-- Modal 2: Detailed Invoice Review & Edit Modal -->
+        <!-- Modal 2: Detailed Invoice Review & Edit Modal -->
     <div id="detail-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
+            <!-- Modal Header -->
             <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-20">
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-blue-600 animate-pulse"></span>
@@ -653,12 +832,13 @@
             </div>
 
             <div class="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Image Viewer -->
+                <!-- Left: Interactive Image Viewer (5 cols on lg) -->
                 <div class="lg:col-span-5 flex flex-col space-y-3">
                     <div class="flex items-center justify-between bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
                         <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1">
                             <i data-lucide="image" class="w-3.5 h-3.5"></i> Náhled originálu
                         </span>
+                        <!-- Viewer Controls -->
                         <div class="flex items-center gap-1">
                             <button type="button" onclick="zoomDetailImg(-0.2)" title="Oddálit" class="p-1 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition">
                                 <i data-lucide="zoom-out" class="w-4 h-4"></i>
@@ -678,24 +858,28 @@
                         </div>
                     </div>
 
+                    <!-- Scrollable Zoom Container -->
                     <div class="bg-slate-950 rounded-2xl p-2 min-h-[350px] sm:min-h-[440px] max-h-[500px] overflow-auto flex items-center justify-center border border-slate-800 relative select-none">
                         <img id="detail-img-preview" src="" alt="Originální doklad" class="max-w-full object-contain transition-transform duration-200 shadow-md">
                     </div>
                     <p class="text-[11px] text-slate-400 text-center">Tip: Můžete přibližovat lupou a otáčet pro lepší čitelnost položek.</p>
                 </div>
 
-                <!-- Form Fields -->
+                <!-- Right: Editable Extracted Fields & Workflow (7 cols on lg) -->
                 <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
                     <form id="detail-edit-form" onsubmit="saveDetailChanges(event)" class="space-y-4">
-                        <!-- Výběr firmy pro účetní (pro klienta se skryje) -->
-                        <div id="detail-client-assignment-box" class="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <!-- Client assignment & ID header -->
+                        <div class="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div class="flex-1">
                                 <label class="block text-[11px] uppercase font-bold text-blue-700 mb-1">Přiřazeno k firmě / klientovi:</label>
-                                <select id="detail-client-select" class="w-full px-2.5 py-1.5 bg-white border border-blue-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+                                <select id="detail-client-select" class="w-full px-2.5 py-1.5 bg-white border border-blue-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <!-- Dynamic clients -->
+                                </select>
                             </div>
                             <span class="text-xs text-slate-400 font-mono self-end sm:self-center" id="detail-doc-id">ID: -</span>
                         </div>
 
+                        <!-- Editable Fields Grid -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                             <div>
                                 <label class="block font-semibold text-slate-700 mb-1">Dodavatel</label>
@@ -752,7 +936,7 @@
                                 </select>
                             </div>
 
-                            <!-- Rozpad částek -->
+                            <!-- Finanční rozpad v detailu (Základ, DPH, Celkem) -->
                             <div class="sm:col-span-2 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-600 mb-1">Základ daně (Kč)</label>
@@ -774,25 +958,28 @@
                             </div>
                         </div>
 
+                        <!-- Notes Section -->
                         <div>
                             <label id="detail-note-label" class="block text-xs font-semibold text-slate-700 mb-1">Poznámka pro klienta / účetní</label>
                             <textarea id="detail-comment-note" rows="2" placeholder="Zadejte poznámku..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
                         </div>
 
+                        <!-- Save changes button -->
                         <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <button type="button" id="btn-download-single-isdoc" onclick="downloadSingleISDOC()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                            <button type="button" onclick="downloadSingleISDOC()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
                                 <i data-lucide="file-code" class="w-3.5 h-3.5"></i>
                                 Stáhnout ISDOC pro Money S3
                             </button>
-                            <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shadow-sm ml-auto">
+                            <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
                                 <i data-lucide="save" class="w-3.5 h-3.5 text-blue-400"></i>
                                 Uložit změny v dokladu
                             </button>
                         </div>
                     </form>
 
-                    <!-- Status Actions -->
+                    <!-- Workflow & Status Action Buttons -->
                     <div class="space-y-2 pt-4 border-t border-slate-100">
+                        <!-- Účetní akce (přepínání stavů) -->
                         <div id="detail-acc-buttons" class="space-y-2">
                             <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-600"></i>
@@ -814,6 +1001,7 @@
                             </div>
                         </div>
 
+                        <!-- Klientské akce -->
                         <div id="detail-client-buttons" class="hidden">
                             <button type="button" onclick="clientSubmitInvoice()" class="w-full py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 transition">
                                 <i data-lucide="send" class="w-4 h-4"></i>
@@ -821,6 +1009,7 @@
                             </button>
                         </div>
 
+                        <!-- Smazat doklad -->
                         <button type="button" onclick="deleteCurrentInvoice()" class="w-full py-2 px-3 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                             Smazat tento doklad z databáze
@@ -831,7 +1020,7 @@
         </div>
     </div>
 
-    <!-- Modal 3: GitHub Pages Guide -->
+    <!-- Modal 3: GitHub Pages & Mobile PWA Installation Guide -->
     <div id="pwa-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 p-6 space-y-6">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -848,6 +1037,50 @@
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
+
+            <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+                <!-- Step 1 -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="font-bold text-slate-900 text-sm mb-1 flex items-center gap-1.5">
+                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px]">1</span>
+                        Jak nahrát kód na GitHub Pages (Zdarma hosting)
+                    </div>
+                    <ol class="list-decimal pl-6 space-y-1 mt-2 text-slate-600">
+                        <li>Vytvořte nové repozitář na GitHubu (např. <code class="bg-slate-200 px-1 rounded">invoice-ai-app</code>).</li>
+                        <li>Uložte tento soubor jako <code class="bg-slate-200 px-1 rounded">index.html</code> do vaší hlavní větve (main/master).</li>
+                        <li>V nastavení repozitáře (<strong>Settings → Pages</strong>) zvolte Build and deployment z větvě <strong>Main / root</strong>.</li>
+                        <li>Vaše webová adresa bude připravena během minuty na adrese <code class="text-blue-600 font-mono">https://uzivatel.github.io/invoice-ai-app/</code>.</li>
+                    </ol>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="font-bold text-slate-900 text-sm mb-1 flex items-center gap-1.5">
+                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px]">2</span>
+                        Pridání aplikace na plochu mobilního telefonu (iOS & Android)
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                        <div class="p-3 bg-white rounded-lg border border-slate-200">
+                            <strong class="text-slate-900 block mb-1">📱 iPhone / iOS (Safari)</strong>
+                            1. Otevřete web v Safari.<br>
+                            2. Klepněte na tlačítko <strong>Sdílet (ikona se šipkou)</strong>.<br>
+                            3. Zvolte <strong>Přidat na plochu</strong> (Add to Home Screen).
+                        </div>
+                        <div class="p-3 bg-white rounded-lg border border-slate-200">
+                            <strong class="text-slate-900 block mb-1">🤖 Android (Chrome)</strong>
+                            1. Otevřete web v Chrome.<br>
+                            2. Klepněte na <strong>3 tečky</strong> vpravo nahoře.<br>
+                            3. Zvolte <strong>Instalovat aplikaci</strong> nebo <strong>Přidat na plochu</strong>.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 flex items-center gap-2">
+                    <i data-lucide="info" class="w-5 h-5 shrink-0 text-blue-600"></i>
+                    <span>Aplikace funguje jako plnohodnotná webová PWA aplikace, nevyžaduje stahování z App Store ani Google Play.</span>
+                </div>
+            </div>
+
             <div class="pt-2 text-right">
                 <button onclick="closeModal('pwa-modal')" class="px-5 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl hover:bg-slate-800">
                     Rozumím
@@ -856,17 +1089,18 @@
         </div>
     </div>
 
-    <!-- Modal 4: Správa klientů a firem (s párovacími PINy pro Model B) -->
+
+    <!-- Modal 4: Správa klientů a firem -->
     <div id="clients-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
             <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
                         <i data-lucide="building-2" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-900 text-base">Správa klientských firem & PINů</h3>
-                        <p class="text-xs text-slate-500">Předávejte klientům vygenerovaný PIN pro automatické spárování</p>
+                        <h3 class="font-bold text-slate-900 text-base">Správa firem a klientů</h3>
+                        <p class="text-xs text-slate-500">Přejmenování, smazání a přidávání klientských firem</p>
                     </div>
                 </div>
                 <button onclick="closeModal('clients-modal')" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
@@ -875,25 +1109,28 @@
             </div>
 
             <div class="p-6 space-y-6">
+                <!-- Add new client inline input -->
                 <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row gap-2">
                     <input type="text" id="new-client-input" placeholder="Zadejte název nové firmy..." class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     <button onclick="addNewClientFromInput()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm">
                         <i data-lucide="plus" class="w-4 h-4"></i>
-                        Založit firmu & vytvořit PIN
+                        Přidat firmu
                     </button>
                 </div>
 
+                <!-- Clients List Table -->
                 <div class="border border-slate-200 rounded-2xl overflow-hidden">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
                                 <th class="p-3 pl-4">Název firmy</th>
-                                <th class="p-3 text-center">Párovací PIN pro klienta</th>
-                                <th class="p-3 text-center">Doklady</th>
+                                <th class="p-3 text-center">Počet dokladů</th>
                                 <th class="p-3 text-right pr-4">Akce</th>
                             </tr>
                         </thead>
-                        <tbody id="clients-list-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                        <tbody id="clients-list-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Rendered dynamically -->
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -909,7 +1146,7 @@
     <!-- Firebase SDK a aplikační logika -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -926,17 +1163,17 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+        // State management
         let currentUser = null;
-        let currentUserData = null;
-        let currentRole = 'client';
-        let activeClientCompany = 'Moje Firma s.r.o.';
-        let activeAccountantCompany = 'Účetní kancelář';
+        let currentRole = 'client'; // 'client' or 'accountant'
+        let activeClientCompany = 'TechVision s.r.o.'; // Pro klienta svázaná firma
         let selectedInvoiceId = null;
         let invoices = [];
         let currentClientFilter = 'all';
-        let authMode = 'signin';
-        window.isDemoMode = false;
+        let authMode = 'signin'; // 'signin' or 'signup'
 
+
+        // Realtime poslech změn z Firebase Firestore
         const invoicesQuery = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
         onSnapshot(invoicesQuery, (snapshot) => {
             invoices = [];
@@ -951,80 +1188,100 @@
             showToast("Chyba synchronizace databáze: " + error.message, "warning");
         });
 
+
         // ================= FIREBASE AUTHENTICATION LOGIKA =================
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
             const landingPage = document.getElementById('landing-page');
             const appContainer = document.getElementById('app');
-            const demoSwitcher = document.getElementById('demo-switcher-container');
+            const loggedOutDiv = document.getElementById('auth-logged-out');
+            const loggedInDiv = document.getElementById('auth-logged-in');
+            const switcherContainer = document.getElementById('role-switcher-container');
+            const mobClientBtn = document.getElementById('mob-nav-client');
+            const mobAccBtn = document.getElementById('mob-nav-accountant');
 
             if (user) {
-                window.isDemoMode = false;
+                // Přepnutí ze vstupní stránky do aplikace
                 if (landingPage) landingPage.classList.add('hidden');
                 if (appContainer) appContainer.classList.remove('hidden');
-                if (demoSwitcher) demoSwitcher.classList.add('hidden');
+
+                if (loggedOutDiv) loggedOutDiv.classList.add('hidden');
+                if (loggedInDiv) loggedInDiv.classList.remove('hidden');
 
                 document.getElementById('user-display-email').textContent = user.email || 'Přihlášený uživatel';
                 document.getElementById('user-avatar').textContent = (user.email ? user.email[0].toUpperCase() : 'U');
 
+                // Načteme profil a roli z kolekce "users"
                 try {
                     const userDocRef = doc(db, "users", user.uid);
                     const userSnap = await getDoc(userDocRef);
                     if (userSnap.exists()) {
-                        currentUserData = userSnap.data();
-                        currentRole = currentUserData.role || 'client';
-                        if (currentUserData.company) {
-                            if (currentRole === 'client') {
-                                activeClientCompany = currentUserData.company;
-                                const badge = document.getElementById('current-client-badge');
-                                if (badge) badge.textContent = `Firma: ${activeClientCompany}`;
-                            } else {
-                                activeAccountantCompany = currentUserData.company;
-                                const accBadge = document.getElementById('acc-agency-badge');
-                                if (accBadge) accBadge.textContent = `Účetní kancelář: ${activeAccountantCompany}`;
-                            }
+                        const userData = userSnap.data();
+                        currentRole = userData.role || 'client';
+                        if (userData.company) {
+                            activeClientCompany = userData.company;
+                            const badge = document.getElementById('current-client-badge');
+                            if (badge) badge.textContent = `Firma: ${activeClientCompany}`;
                         }
                     }
                 } catch (e) {
-                    console.warn("Profil uživatele nebyl načten:", e);
+                    console.warn("Profil uživatele v users nebyl načten:", e);
                 }
 
-                document.getElementById('user-display-role').textContent = currentRole === 'accountant' ? (activeAccountantCompany || 'Účetní kancelář') : `Klient (${activeClientCompany})`;
+                document.getElementById('user-display-role').textContent = currentRole === 'accountant' ? 'Účetní kancelář' : `Klient (${activeClientCompany})`;
 
+                // Zabezpečení zobrazení podle role
                 if (currentRole === 'client') {
+                    // Klient vidí POUZE klientské prostředí! Přepínač rolí se skryje.
+                    if (switcherContainer) switcherContainer.classList.add('hidden');
+                    if (mobAccBtn) mobAccBtn.classList.add('hidden');
                     switchRole('client');
                 } else {
+                    // Účetní vidí účetní rozhraní i přepínač pro kontrolu
+                    if (switcherContainer) switcherContainer.classList.remove('hidden');
+                    if (mobAccBtn) mobAccBtn.classList.remove('hidden');
                     switchRole('accountant');
                 }
 
+                closeModal('auth-modal');
                 showToast(`Vítejte zpět, ${user.email}!`, "success");
             } else {
-                if (!window.isDemoMode) {
-                    if (landingPage) landingPage.classList.remove('hidden');
+                // Uživatel není přihlášen: zobrazíme úvodní stránku
+                if (landingPage && !window.isDemoMode) {
+                    landingPage.classList.remove('hidden');
                     if (appContainer) appContainer.classList.add('hidden');
                 }
+                if (loggedOutDiv) loggedOutDiv.classList.remove('hidden');
+                if (loggedInDiv) loggedInDiv.classList.add('hidden');
+                if (switcherContainer) switcherContainer.classList.remove('hidden');
+                if (mobAccBtn) mobAccBtn.classList.remove('hidden');
             }
-            updateDynamicClients();
-            renderClientsModalTable();
             renderClientInvoices();
             renderAccountantInvoices();
         });
 
         window.setAuthMode = function(mode) {
             authMode = mode;
-            const landIn = document.getElementById('landing-tab-signin');
-            const landUp = document.getElementById('landing-tab-signup');
-            const landTitle = document.getElementById('landing-auth-title');
+            const tabIn = document.getElementById('tab-auth-signin');
+            const tabUp = document.getElementById('tab-auth-signup');
             const extraFields = document.getElementById('signup-extra-fields');
             const submitLabel = document.getElementById('auth-submit-label');
 
+            const landIn = document.getElementById('landing-tab-signin');
+            const landUp = document.getElementById('landing-tab-signup');
+            const landTitle = document.getElementById('landing-auth-title');
+
             if (mode === 'signin') {
+                if (tabIn) tabIn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm";
+                if (tabUp) tabUp.className = "flex-1 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
                 if (landIn) landIn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm";
                 if (landUp) landUp.className = "flex-1 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
                 if (landTitle) landTitle.textContent = "Přihlášení do systému";
                 if (extraFields) extraFields.classList.add('hidden');
                 if (submitLabel) submitLabel.textContent = "Přihlásit se do systému";
             } else {
+                if (tabUp) tabUp.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm";
+                if (tabIn) tabIn.className = "flex-1 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
                 if (landUp) landUp.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm";
                 if (landIn) landIn.className = "flex-1 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
                 if (landTitle) landTitle.textContent = "Vytvoření nového účtu";
@@ -1033,51 +1290,33 @@
             }
         };
 
-        window.updateRoleTypeUI = function(role) {
-            const accBox = document.getElementById('accountant-company-box');
-            const cliBox = document.getElementById('client-pairing-box');
-            const labelAcc = document.getElementById('label-role-accountant');
-            const labelCli = document.getElementById('label-role-client');
-
-            if (role === 'accountant') {
-                if (accBox) accBox.classList.remove('hidden');
-                if (cliBox) cliBox.classList.add('hidden');
-                if (labelAcc) { labelAcc.classList.add('border-blue-500', 'bg-blue-50/40'); labelAcc.classList.remove('border-slate-200'); }
-                if (labelCli) { labelCli.classList.remove('border-blue-500', 'bg-blue-50/40'); labelCli.classList.add('border-slate-200'); }
-            } else {
-                if (accBox) accBox.classList.add('hidden');
-                if (cliBox) cliBox.classList.remove('hidden');
-                if (labelCli) { labelCli.classList.add('border-blue-500', 'bg-blue-50/40'); labelCli.classList.remove('border-slate-200'); }
-                if (labelAcc) { labelAcc.classList.remove('border-blue-500', 'bg-blue-50/40'); labelAcc.classList.add('border-slate-200'); }
+        window.toggleCompanyInput = function(show) {
+            const container = document.getElementById('company-name-container');
+            if (container) {
+                if (show) container.classList.remove('hidden');
+                else container.classList.add('hidden');
             }
         };
 
+        window.isDemoMode = false;
+
         window.continueAsDemo = function() {
             window.isDemoMode = true;
-            currentUser = null;
-            currentUserData = null;
-            currentRole = 'client';
-            activeClientCompany = 'TechVision s.r.o.';
-            activeAccountantCompany = 'Účetní kancelář ProFit s.r.o.';
-
             const landingPage = document.getElementById('landing-page');
             const appContainer = document.getElementById('app');
-            const demoSwitcher = document.getElementById('demo-switcher-container');
-
             if (landingPage) landingPage.classList.add('hidden');
             if (appContainer) appContainer.classList.remove('hidden');
-            if (demoSwitcher) demoSwitcher.classList.remove('hidden');
-
-            document.getElementById('current-client-badge').textContent = `Firma: TechVision s.r.o.`;
-            document.getElementById('user-display-email').textContent = 'Demo Návštěvník';
-            document.getElementById('user-display-role').textContent = 'Zkušební Demo';
-
-            showToast("Vstoupili jste do zkušebního demo režimu.", "info");
+            closeModal('auth-modal');
+            showToast("Vstoupili jste do zkušebního demo režimu bez přihlášení.", "info");
             lucide.createIcons();
-            updateDynamicClients();
-            renderClientsModalTable();
             renderClientInvoices();
             renderAccountantInvoices();
+        };
+
+        window.focusAuthCard = function() {
+            const el = document.getElementById('landing-auth-card-wrapper');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('auth-email')?.focus();
         };
 
         window.handleAuthSubmit = async function(e) {
@@ -1086,54 +1325,30 @@
             const password = document.getElementById('auth-password').value;
             const roleEl = document.querySelector('input[name="auth-role"]:checked');
             const role = roleEl ? roleEl.value : 'accountant';
+            const companyName = document.getElementById('auth-company')?.value?.trim() || 'TechVision s.r.o.';
 
             if (!email || !password) return;
 
             try {
                 if (authMode === 'signup') {
-                    let finalCompany = '';
-                    let linkedAccountantId = '';
-
-                    if (role === 'accountant') {
-                        finalCompany = document.getElementById('auth-accountant-company')?.value?.trim() || 'Moje Účetní Kancelář';
-                    } else {
-                        // Klient: Model B párovací PIN
-                        const pinInput = document.getElementById('auth-pairing-code')?.value?.trim().toUpperCase();
-                        const clientNameInput = document.getElementById('auth-client-company')?.value?.trim();
-
-                        if (pinInput) {
-                            const qPin = query(collection(db, "clients"), where("pairingCode", "==", pinInput));
-                            const pinSnap = await getDocs(qPin);
-
-                            if (!pinSnap.empty) {
-                                const foundClient = pinSnap.docs[0].data();
-                                finalCompany = foundClient.name;
-                                linkedAccountantId = foundClient.accountantId || '';
-                                showToast(`Účet byl úspěšně spárován s firmou ${finalCompany}!`, "success");
-                            } else {
-                                alert(`Zadaný párovací kód "${pinInput}" nebyl nalezen. Zkontrolujte prosím kód od vaší účetní kanceláře.`);
-                                return;
-                            }
-                        } else {
-                            finalCompany = clientNameInput || 'Moje Firma s.r.o.';
-                        }
-                    }
-
+                    // Registrace nového uživatele
                     const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    // Uložíme metadata profilu a role do Firestore
                     await setDoc(doc(db, "users", cred.user.uid), {
                         email: email,
                         role: role,
-                        company: finalCompany,
-                        accountantId: linkedAccountantId,
+                        company: role === 'client' ? companyName : '',
                         createdAt: new Date().toISOString()
                     });
 
-                    if (role === 'accountant') {
-                        await addNewClient(finalCompany);
+                    // Pokud klient zadal novou firmu, přidáme ji do seznamu
+                    if (role === 'client' && companyName) {
+                        await addNewClient(companyName);
                     }
 
-                    showToast("Registrace proběhla úspěšně!", "success");
+                    showToast("Registrace byla úspěšná!", "success");
                 } else {
+                    // Přihlášení stávajícího uživatele
                     await signInWithEmailAndPassword(auth, email, password);
                 }
             } catch (err) {
@@ -1145,6 +1360,8 @@
                     msg = "Tento e-mail je již v systému zaregistrován. Zvolte Přihlásit se.";
                 } else if (err.code === 'auth/weak-password') {
                     msg = "Heslo musí mít alespoň 6 znaků.";
+                } else if (err.code === 'auth/operation-not-allowed') {
+                    msg = "E-mail/heslo není povoleno v konzoli Firebase (Authentication -> Sign-in method -> Email/Password).";
                 }
                 alert("Chyba ověření: " + msg);
             }
@@ -1154,16 +1371,17 @@
             try {
                 await signOut(auth);
                 currentUser = null;
-                currentUserData = null;
                 window.isDemoMode = false;
                 currentRole = 'client';
                 activeClientCompany = 'TechVision s.r.o.';
                 
+                // Návrat na úvodní landing page
                 const landingPage = document.getElementById('landing-page');
                 const appContainer = document.getElementById('app');
                 if (landingPage) landingPage.classList.remove('hidden');
                 if (appContainer) appContainer.classList.add('hidden');
 
+                document.getElementById('current-client-badge').textContent = `Firma: TechVision s.r.o.`;
                 showToast("Byl jste úspěšně odhlášen.", "info");
                 lucide.createIcons();
             } catch (err) {
@@ -1173,6 +1391,7 @@
 
         let customClients = [];
 
+        // Realtime poslech firem z Firestore kolekce "clients"
         const clientsQuery = query(collection(db, "clients"), orderBy("name", "asc"));
         onSnapshot(clientsQuery, (snapshot) => {
             customClients = [];
@@ -1182,55 +1401,20 @@
             updateDynamicClients();
             renderClientsModalTable();
         }, (err) => {
-            console.warn("Kolekce clients nebyla načtena z databáze:", err);
+            console.warn("Kolekce clients nebyla načtena, použijeme výchozí firmy:", err);
             updateDynamicClients();
-            renderClientsModalTable();
         });
 
-        function generatePairingPin() {
-            const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-            const numbers = "23456789";
-            let pin = "";
-            for (let i = 0; i < 3; i++) pin += letters.charAt(Math.floor(Math.random() * letters.length));
-            pin += "-";
-            for (let i = 0; i < 3; i++) pin += numbers.charAt(Math.floor(Math.random() * numbers.length));
-            return pin;
-        }
-
+        // Automatické načtení a aktualizace seznamu firem
         function getAllClientNames() {
-            const clientSet = new Set();
-            const user = auth.currentUser || currentUser;
-
-            if (window.isDemoMode) {
-                clientSet.add('TechVision s.r.o.');
-                clientSet.add('Kavárna Liberec s.r.o.');
-                clientSet.add('Jan Novák - Design');
-                return Array.from(clientSet).sort();
-            }
-
-            if (user && currentRole === 'client') {
-                if (activeClientCompany) clientSet.add(activeClientCompany);
-                return Array.from(clientSet);
-            }
-
-            if (user && currentRole === 'accountant') {
-                customClients.forEach(c => {
-                    if (c.accountantId === user.uid || c.userId === user.uid || !c.accountantId) {
-                        if (c.name && c.name.trim()) clientSet.add(c.name.trim());
-                    }
-                });
-                invoices.forEach(inv => {
-                    if ((inv.accountantId === user.uid || inv.userId === user.uid) && inv.clientName) {
-                        clientSet.add(inv.clientName.trim());
-                    }
-                });
-                if (activeAccountantCompany && activeAccountantCompany !== 'Účetní kancelář') {
-                    clientSet.add(activeAccountantCompany);
-                }
-                return Array.from(clientSet).sort();
-            }
-
-            return ['Moje Firma'];
+            const clientSet = new Set(['TechVision s.r.o.', 'Kavárna Liberec s.r.o.', 'Jan Novák - Design']);
+            customClients.forEach(c => {
+                if (c.name && c.name.trim()) clientSet.add(c.name.trim());
+            });
+            invoices.forEach(inv => {
+                if (inv.clientName && inv.clientName.trim()) clientSet.add(inv.clientName.trim());
+            });
+            return Array.from(clientSet).sort();
         }
 
         function updateDynamicClients() {
@@ -1259,48 +1443,25 @@
             }
         }
 
+        // Vykreslení tabulky ve správě firem
         function renderClientsModalTable() {
             const tbody = document.getElementById('clients-list-table-body');
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            const user = auth.currentUser || currentUser;
-            let displayClients = [];
-
-            if (window.isDemoMode) {
-                displayClients = [
-                    { id: 'd1', name: 'TechVision s.r.o.', pairingCode: 'TEC-821' },
-                    { id: 'd2', name: 'Kavárna Liberec s.r.o.', pairingCode: 'KAV-319' },
-                    { id: 'd3', name: 'Jan Novák - Design', pairingCode: 'NOV-552' }
-                ];
-            } else if (user && currentRole === 'accountant') {
-                displayClients = customClients.filter(c => c.accountantId === user.uid || c.userId === user.uid || !c.accountantId);
-            }
-
-            if (displayClients.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 text-xs">Zatím nemáte vytvořené žádné klientské firmy. Zadejte název výše a vytvořte první firmu.</td></tr>`;
+            const allClients = getAllClientNames();
+            if (allClients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400 text-xs">Žádné firmy.</td></tr>`;
                 return;
             }
 
-            displayClients.forEach(client => {
-                const count = invoices.filter(i => {
-                    if (window.isDemoMode) return (i.clientName || 'TechVision s.r.o.') === client.name;
-                    return i.clientName === client.name && (i.accountantId === user?.uid || i.userId === user?.uid);
-                }).length;
-
-                const pin = client.pairingCode || 'PIN-999';
-
+            allClients.forEach(clientName => {
+                const count = invoices.filter(i => (i.clientName || 'TechVision s.r.o.') === clientName).length;
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/80 transition";
                 tr.innerHTML = `
                     <td class="p-3 pl-4 font-semibold text-slate-800">
-                        ${client.name}
-                    </td>
-                    <td class="p-3 text-center">
-                        <button onclick="copyPairingCode('${pin}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-mono font-bold text-xs border border-indigo-200 transition" title="Klikněte pro zkopírování PINu pro klienta">
-                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                            <span>${pin}</span>
-                        </button>
+                        ${clientName}
                     </td>
                     <td class="p-3 text-center">
                         <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
@@ -1309,10 +1470,10 @@
                     </td>
                     <td class="p-3 text-right pr-4 whitespace-nowrap">
                         <div class="flex items-center justify-end gap-1.5">
-                            <button onclick="renameClient('${client.id}', '${encodeURIComponent(client.name)}')" class="px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center gap-1">
+                            <button onclick="renameClient('${encodeURIComponent(clientName)}')" class="px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center gap-1">
                                 <i data-lucide="edit-2" class="w-3.5 h-3.5"></i> Přejmenovat
                             </button>
-                            <button onclick="deleteClient('${client.id}', '${encodeURIComponent(client.name)}')" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Smazat firmu">
+                            <button onclick="deleteClient('${encodeURIComponent(clientName)}')" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Smazat firmu">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
@@ -1323,36 +1484,21 @@
             lucide.createIcons();
         }
 
-        window.copyPairingCode = function(code) {
-            navigator.clipboard.writeText(code).then(() => {
-                showToast(`Párovací PIN "${code}" byl zkopírován do schránky! Předejte ho klientovi.`, "success");
-            }).catch(() => {
-                prompt("Zkopírujte si párovací PIN pro klienta:", code);
-            });
-        };
-
+        // Přidání firmy
         async function addNewClient(name) {
             const clean = name.trim();
             if (!clean) return;
-
-            const user = auth.currentUser || currentUser;
-            const accountantId = user ? user.uid : 'demo';
-            const newPin = generatePairingPin();
-
             try {
                 await addDoc(collection(db, "clients"), {
                     name: clean,
-                    pairingCode: newPin,
-                    accountantId: accountantId,
-                    userId: accountantId,
                     createdAt: new Date().toISOString()
                 });
-                showToast(`Firma "${clean}" založena s párovacím PINem ${newPin}!`, "success");
+                showToast(`Firma "${clean}" byla úspěšně přidána!`, "success");
             } catch (err) {
                 console.error("Chyba při ukládání firmy do Firestore:", err);
-                alert("CHYBA UKLÁDÁNÍ DO FIREBASE:\n" + err.message + "\nZkontrolujte pravidla (Rules) v konzoli Firestore!");
                 updateDynamicClients();
                 renderClientsModalTable();
+                showToast(`Firma "${clean}" byla přidána lokálně!`, "info");
             }
         }
 
@@ -1369,56 +1515,62 @@
             input.value = '';
         };
 
-        window.renameClient = async function(clientId, encodedOldName) {
+        // Přejmenování firmy (včetně automatického přejmenování všech jejích faktur)
+        window.renameClient = async function(encodedOldName) {
             const oldName = decodeURIComponent(encodedOldName);
             const newName = prompt(`Přejmenovat firmu "${oldName}" na:`, oldName);
             if (!newName || !newName.trim() || newName.trim() === oldName) return;
             const cleanNew = newName.trim();
-            const user = auth.currentUser || currentUser;
 
             try {
-                if (clientId && !clientId.startsWith('d')) {
-                    await updateDoc(doc(db, "clients", clientId), { name: cleanNew });
+                // 1. Aktualizovat záznam v kolekci clients
+                const clientDoc = customClients.find(c => c.name === oldName);
+                if (clientDoc) {
+                    await updateDoc(doc(db, "clients", clientDoc.id), { name: cleanNew });
+                } else {
+                    await addDoc(collection(db, "clients"), { name: cleanNew, createdAt: new Date().toISOString() });
                 }
 
-                const affectedInvoices = invoices.filter(inv => inv.clientName === oldName && (inv.accountantId === user?.uid || window.isDemoMode));
+                // 2. Aktualizovat všechny existující faktury této firmy
+                const affectedInvoices = invoices.filter(inv => inv.clientName === oldName);
                 for (const inv of affectedInvoices) {
                     await updateDoc(doc(db, "invoices", inv.id), { clientName: cleanNew });
                 }
 
-                showToast(`Firma byla přejmenována na "${cleanNew}"`, "success");
+                showToast(`Firma byla přejmenována na "${cleanNew}" (aktualizováno ${affectedInvoices.length} dokladů)`, "success");
             } catch (err) {
                 console.error("Chyba při přejmenování:", err);
                 showToast("Chyba při přejmenování firmy: " + err.message, "warning");
             }
         };
 
-        window.deleteClient = async function(clientId, encodedName) {
+        // Smazání firmy
+        window.deleteClient = async function(encodedName) {
             const name = decodeURIComponent(encodedName);
-            const user = auth.currentUser || currentUser;
-            const docCount = invoices.filter(i => i.clientName === name && (i.accountantId === user?.uid || window.isDemoMode)).length;
+            const docCount = invoices.filter(i => (i.clientName || 'TechVision s.r.o.') === name).length;
 
             let confirmMsg = `Opravdu chcete smazat firmu "${name}" ze seznamu?`;
             if (docCount > 0) {
-                confirmMsg = `POZOR: Firma "${name}" má v systému ${docCount} dokladů! Pokračovat ve smazání firmy?`;
+                confirmMsg = `POZOR: Firma "${name}" má v systému ${docCount} dokladů! Pokud ji smažete ze seznamu, doklady zůstanou v databázi, ale firma zmizí z nabídky firem. Pokračovat?`;
             }
 
             if (!confirm(confirmMsg)) return;
 
             try {
-                if (clientId && !clientId.startsWith('d')) {
-                    await deleteDoc(doc(db, "clients", clientId));
+                const clientDocs = customClients.filter(c => c.name === name);
+                for (const c of clientDocs) {
+                    await deleteDoc(doc(db, "clients", c.id));
                 }
-                customClients = customClients.filter(c => c.id !== clientId);
-                showToast(`Firma "${name}" byla úspěšně odstraněna.`, "info");
+                showToast(`Firma "${name}" byla odstraněna.`, "info");
                 updateDynamicClients();
                 renderClientsModalTable();
             } catch (err) {
                 console.error("Chyba při mazání firmy:", err);
-                alert("Chyba při mazání firmy z databáze: " + err.message);
+                showToast("Chyba při mazání firmy: " + err.message, "warning");
             }
         };
 
+        // Smazání faktury
         window.deleteInvoice = async function(id) {
             if (!id) return;
             const inv = invoices.find(i => i.id === id);
@@ -1442,21 +1594,37 @@
             currentRole = role;
             const clientView = document.getElementById('client-view');
             const accountantView = document.getElementById('accountant-view');
+            
             const btnClient = document.getElementById('role-btn-client');
             const btnAcc = document.getElementById('role-btn-accountant');
+            
+            const mobClient = document.getElementById('mob-nav-client');
+            const mobAcc = document.getElementById('mob-nav-accountant');
 
             if (role === 'client') {
                 clientView.classList.remove('hidden');
                 accountantView.classList.add('hidden');
-                if (btnClient) btnClient.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-blue-600 text-white";
-                if (btnAcc) btnAcc.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white";
+
+                btnClient.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-blue-600 text-white shadow-sm";
+                btnAcc.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200";
+
+                mobClient.className = "flex flex-col items-center justify-center text-blue-600 font-medium text-[11px]";
+                mobAcc.className = "flex flex-col items-center justify-center text-slate-400 font-medium text-[11px]";
+
                 renderClientInvoices();
+                showToast("Přepnuto do prostředí: Klient (OSVČ/Firma)", "info");
             } else {
                 clientView.classList.add('hidden');
                 accountantView.classList.remove('hidden');
-                if (btnAcc) btnAcc.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-blue-600 text-white";
-                if (btnClient) btnClient.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white";
+
+                btnAcc.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-blue-600 text-white shadow-sm";
+                btnClient.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200";
+
+                mobAcc.className = "flex flex-col items-center justify-center text-blue-600 font-medium text-[11px]";
+                mobClient.className = "flex flex-col items-center justify-center text-slate-400 font-medium text-[11px]";
+
                 renderAccountantInvoices();
+                showToast("Přepnuto do prostředí: Účetní kancelář", "info");
             }
         }
 
@@ -1468,16 +1636,8 @@
             const searchQuery = document.getElementById('client-search').value.toLowerCase();
             tbody.innerHTML = '';
 
-            const user = auth.currentUser || currentUser;
-            let filtered = [];
-
-            if (window.isDemoMode) {
-                filtered = invoices.filter(inv => !inv.userId || inv.isDemo || inv.clientName === 'TechVision s.r.o.');
-            } else if (user && currentRole === 'client') {
-                filtered = invoices.filter(inv => (inv.userId === user.uid) || (inv.clientName === activeClientCompany && !inv.isDemo));
-            } else if (user && currentRole === 'accountant') {
-                filtered = invoices.filter(inv => (inv.accountantId === user.uid || inv.userId === user.uid));
-            }
+            const comp = (currentUser && currentRole === 'client') ? activeClientCompany : (activeClientCompany || 'TechVision s.r.o.');
+            let filtered = invoices.filter(inv => (inv.clientName || 'TechVision s.r.o.') === comp);
 
             if (currentClientFilter === 'pending') filtered = filtered.filter(inv => inv.status === 'pending');
             if (currentClientFilter === 'approved') filtered = filtered.filter(inv => inv.status === 'approved');
@@ -1495,7 +1655,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
-                            Zatím nemáte žádné nahrané doklady. Klikněte na tlačítko "Naskenovat doklad" nahoře.
+                            Žádné doklady nenalezeny. Nahrajte nový doklad pomocí tlačítka skenovat.
                         </td>
                     </tr>
                 `;
@@ -1513,7 +1673,7 @@
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-slate-50/80 transition";
                     tr.innerHTML = `
-                        <td class="p-3 pl-4">
+                                                <td class="p-3 pl-4">
                             <div class="font-bold text-slate-900">${inv.vendor || '-'}</div>
                             <div class="text-xs text-slate-500 font-mono flex items-center gap-1.5 flex-wrap">
                                 <span>${inv.invoiceNumber ? 'Číslo: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '')}</span>
@@ -1545,7 +1705,7 @@
             }
 
             lucide.createIcons();
-            updateClientStats(filtered);
+            updateClientStats();
         }
 
         function filterClientInvoices(status) {
@@ -1559,15 +1719,15 @@
             renderClientInvoices(status);
         }
 
-        function updateClientStats(filteredList) {
-            const list = filteredList || [];
-            const pending = list.filter(i => i.status === 'pending').length;
-            const approved = list.filter(i => i.status === 'approved').length;
-            const rejected = list.filter(i => i.status === 'action_needed' || i.status === 'rejected').length;
-            const totalSum = list.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+        function updateClientStats() {
+            const clientInvoices = invoices.filter(inv => (inv.clientName || 'TechVision s.r.o.') === 'TechVision s.r.o.');
+            const pending = clientInvoices.filter(i => i.status === 'pending').length;
+            const approved = clientInvoices.filter(i => i.status === 'approved').length;
+            const rejected = clientInvoices.filter(i => i.status === 'action_needed').length;
+            const totalSum = clientInvoices.reduce((sum, i) => sum + Number(i.amount || 0), 0);
 
             document.getElementById('stat-client-total').textContent = `${totalSum.toLocaleString('cs-CZ')} Kč`;
-            document.getElementById('stat-client-count').textContent = list.length;
+            document.getElementById('stat-client-count').textContent = clientInvoices.length;
             document.getElementById('stat-client-pending').textContent = pending;
             document.getElementById('stat-client-approved').textContent = approved;
             document.getElementById('stat-client-rejected').textContent = rejected;
@@ -1577,19 +1737,12 @@
             const tbody = document.getElementById('accountant-invoice-table-body');
             const clientFilter = document.getElementById('acc-client-select').value;
             const statusFilter = document.getElementById('acc-status-select').value;
+
             tbody.innerHTML = '';
 
-            const user = auth.currentUser || currentUser;
-            let filtered = [];
-
-            if (window.isDemoMode) {
-                filtered = [...invoices];
-            } else if (user && currentRole === 'accountant') {
-                filtered = invoices.filter(inv => inv.accountantId === user.uid || inv.userId === user.uid);
-            }
-
+            let filtered = [...invoices];
             if (clientFilter !== 'all') {
-                filtered = filtered.filter(i => i.clientName === clientFilter);
+                filtered = filtered.filter(i => (i.clientName || 'TechVision s.r.o.') === clientFilter);
             }
             if (statusFilter !== 'all') {
                 filtered = filtered.filter(i => statusFilter === 'action_needed' ? (i.status === 'action_needed' || i.status === 'rejected') : i.status === statusFilter);
@@ -1599,7 +1752,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
-                            Váš klientský inbox je prázdný. Založte firmu přes "+ Nová firma" a předejte klientovi PIN pro nahrávání dokladů.
+                            Žádné doklady neodpovídají vybraným filtrům.
                         </td>
                     </tr>
                 `;
@@ -1618,7 +1771,7 @@
                     tr.className = "hover:bg-slate-50/80 transition";
                     tr.innerHTML = `
                         <td class="p-3 pl-4">
-                            <div class="font-bold text-slate-900 text-xs">${inv.clientName || 'Klient'}</div>
+                            <div class="font-bold text-slate-900 text-xs">${inv.clientName || 'TechVision s.r.o.'}</div>
                             <span class="text-[10px] text-slate-400">ID: ${inv.id}</span>
                         </td>
                         <td class="p-3">
@@ -1626,18 +1779,12 @@
                             <div class="text-[11px] text-slate-400">IČO: ${inv.ico || '-'}</div>
                         </td>
                         <td class="p-3 text-xs">
-                            <div class="text-slate-800 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div>
-                            <div class="text-slate-500 text-[11px]">DUZP: ${inv.dateTax || inv.dateIssue || '-'}</div>
-                            <div class="text-slate-400 text-[11px]">Splatnost: ${inv.dateDue || '-'}</div>
+                            <div class="text-slate-700 font-medium">Splatnost: ${inv.dateDue || '-'}</div>
+                            <div class="text-slate-400 font-mono text-[11px]">VS: ${inv.vs || '-'}</div>
                         </td>
                         <td class="p-3">
                             <div class="font-bold text-slate-900 text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div>
-                            <div class="text-[10px] text-slate-500">
-                                Základ: ${inv.baseAmount ? Number(inv.baseAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}
-                            </div>
-                            <div class="text-[10px] text-slate-400">
-                                DPH (${inv.vatRate || 21}%): ${inv.vatAmount ? Number(inv.vatAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}
-                            </div>
+                            <div class="text-[10px] text-slate-400">DPH ${inv.vatRate || 21}%</div>
                         </td>
                         <td class="p-3">${statusBadge}</td>
                         <td class="p-3 text-right pr-4 whitespace-nowrap">
@@ -1657,19 +1804,18 @@
             }
 
             lucide.createIcons();
-            updateAccountantStats(filtered);
+            updateAccountantStats();
         }
 
-        function updateAccountantStats(filteredList) {
-            const list = filteredList || [];
-            const pending = list.filter(i => i.status === 'pending').length;
-            const approved = list.filter(i => i.status === 'approved').length;
-            const totalVolume = list.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+        function updateAccountantStats() {
+            const pending = invoices.filter(i => i.status === 'pending').length;
+            const approved = invoices.filter(i => i.status === 'approved').length;
+            const totalVolume = invoices.reduce((sum, i) => sum + Number(i.amount || 0), 0);
 
             document.getElementById('acc-stat-pending').textContent = pending;
             document.getElementById('acc-stat-approved').textContent = approved;
             document.getElementById('acc-stat-volume').textContent = `${totalVolume.toLocaleString('cs-CZ')} Kč`;
-            document.getElementById('acc-stat-total-count').textContent = `Celkem ${list.length} dokladů`;
+            document.getElementById('acc-stat-total-count').textContent = `Celkem ${invoices.length} dokladů`;
         }
 
         function triggerScan() {
@@ -1787,6 +1933,7 @@
         async function saveExtractedInvoice(e) {
             e.preventDefault();
 
+            // Bezpečná optimalizace náhledu fotky pod 1 MB pro Firestore
             let safeImgUrl = '';
             const previewEl = document.getElementById('scan-preview-img');
             if (previewEl && previewEl.src && previewEl.src.startsWith('data:image')) {
@@ -1798,15 +1945,10 @@
                 safeImgUrl = canvas.toDataURL('image/jpeg', 0.5);
             }
 
-            const user = auth.currentUser || currentUser;
-            const chosenClient = (currentRole === 'client') ? activeClientCompany : (document.getElementById('field-client-name')?.value || activeClientCompany || 'Moje Firma');
+            const chosenClient = (currentRole === 'client') ? activeClientCompany : (document.getElementById('field-client-name')?.value || activeClientCompany || 'TechVision s.r.o.');
 
             const newInvoice = {
                 clientName: chosenClient,
-                userId: user ? user.uid : 'demo-user',
-                userEmail: user ? user.email : 'demo@demo.cz',
-                accountantId: (currentRole === 'accountant' && user) ? user.uid : (currentUserData?.accountantId || 'demo'),
-                isDemo: window.isDemoMode,
                 vendor: document.getElementById('field-vendor').value || 'Neznámý dodavatel',
                 ico: document.getElementById('field-ico').value || '',
                 invoiceNumber: document.getElementById('field-invoice-num').value || '',
@@ -1837,6 +1979,7 @@
             }
         }
 
+        // Automatický dopočet finančních částek (Základ, DPH, Celkem) ve skeneru
         window.calculateScanAmounts = function(source = 'total') {
             const baseInput = document.getElementById('field-base-amount');
             const vatInput = document.getElementById('field-vat-amount');
@@ -1874,6 +2017,7 @@
             }
         };
 
+        // Automatický dopočet finančních částek v detailu dokladu
         window.calculateDetailAmounts = function(source = 'total') {
             const baseInput = document.getElementById('detail-base-amount');
             const vatInput = document.getElementById('detail-vat-amount');
@@ -1911,6 +2055,7 @@
             }
         };
 
+        // Image Viewer State in Detail Modal
         let detailZoom = 1;
         let detailRotation = 0;
 
@@ -1956,9 +2101,11 @@
             document.getElementById('detail-modal-title').textContent = `Detail a editace dokladu`;
             document.getElementById('detail-doc-id').textContent = `ID: ${inv.id}`;
 
+            // Reset lupy a rotace obrázku
             resetDetailImg();
             document.getElementById('detail-img-preview').src = inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu';
 
+            // Naplnění výběru firem
             const clientSelect = document.getElementById('detail-client-select');
             if (clientSelect) {
                 clientSelect.innerHTML = '';
@@ -1966,9 +2113,10 @@
                 allClients.forEach(name => {
                     clientSelect.add(new Option(name, name));
                 });
-                clientSelect.value = inv.clientName || allClients[0] || '';
+                clientSelect.value = inv.clientName || 'TechVision s.r.o.';
             }
 
+            // Předvyplnění editovatelných polí
             document.getElementById('detail-vendor').value = inv.vendor || '';
             document.getElementById('detail-ico').value = inv.ico || '';
             document.getElementById('detail-invoice-num').value = inv.invoiceNumber || inv.vs || '';
@@ -1985,6 +2133,7 @@
             document.getElementById('detail-account').value = inv.accountNumber || '';
             document.getElementById('detail-comment-note').value = inv.note || '';
 
+            // Stavový odznak a zvýraznění tlačítek
             const badge = document.getElementById('detail-status-badge');
             const btnPending = document.getElementById('btn-status-pending');
             const btnAction = document.getElementById('btn-status-action_needed');
@@ -2008,36 +2157,31 @@
                 if (btnAction) btnAction.classList.add('ring-2', 'ring-offset-1', 'ring-rose-500', 'font-bold');
             }
 
-            // Přizpůsobení tlačítek a polí podle role (Klient vs Účetní)
+            // Přizpůsobení tlačítek podle role (Klient vs Účetní)
             const accButtons = document.getElementById('detail-acc-buttons');
             const clientButtons = document.getElementById('detail-client-buttons');
             const noteLabel = document.getElementById('detail-note-label');
-            const clientAssignmentBox = document.getElementById('detail-client-assignment-box');
-            const isdocBtn = document.getElementById('btn-download-single-isdoc');
             
             if (currentRole === 'client') {
                 if (accButtons) accButtons.classList.add('hidden');
                 if (clientButtons) clientButtons.classList.remove('hidden');
                 if (noteLabel) noteLabel.textContent = 'Poznámka / doplňující zpráva pro účetní';
-                if (clientAssignmentBox) clientAssignmentBox.classList.add('hidden');
-                if (isdocBtn) isdocBtn.classList.add('hidden');
             } else {
                 if (accButtons) accButtons.classList.remove('hidden');
                 if (clientButtons) clientButtons.classList.add('hidden');
                 if (noteLabel) noteLabel.textContent = 'Poznámka pro klienta (v případě vrácení k doplnění)';
-                if (clientAssignmentBox) clientAssignmentBox.classList.remove('hidden');
-                if (isdocBtn) isdocBtn.classList.remove('hidden');
             }
 
             openModal('detail-modal');
         }
 
+        // Uložení ručně opravených údajů dokladu do Firestore
         window.saveDetailChanges = async function(e) {
             if (e) e.preventDefault();
             if (!selectedInvoiceId) return;
 
             const updated = {
-                clientName: (currentRole === 'client') ? activeClientCompany : (document.getElementById('detail-client-select')?.value || activeClientCompany),
+                clientName: document.getElementById('detail-client-select').value,
                 vendor: document.getElementById('detail-vendor').value.trim() || 'Neznámý dodavatel',
                 ico: document.getElementById('detail-ico').value.trim(),
                 invoiceNumber: document.getElementById('detail-invoice-num').value.trim(),
@@ -2065,6 +2209,7 @@
             }
         };
 
+        // Klientské odeslání účetní z detailu dokladu
         async function clientSubmitInvoice() {
             if (!selectedInvoiceId) return;
             const noteText = document.getElementById('detail-comment-note').value;
@@ -2082,6 +2227,7 @@
             }
         }
 
+        // Bezpečné smazání aktuálně otevřené faktury v modálu
         function deleteCurrentInvoice() {
             if (selectedInvoiceId) {
                 deleteInvoice(selectedInvoiceId);
@@ -2091,8 +2237,9 @@
         async function updateInvoiceStatus(newStatus) {
             if (!selectedInvoiceId) return;
 
+            // Uložit změny v polích i nový stav současně
             const updated = {
-                clientName: (currentRole === 'client') ? activeClientCompany : (document.getElementById('detail-client-select')?.value || 'TechVision s.r.o.'),
+                clientName: document.getElementById('detail-client-select')?.value || 'TechVision s.r.o.',
                 vendor: document.getElementById('detail-vendor')?.value?.trim() || 'Neznámý dodavatel',
                 ico: document.getElementById('detail-ico')?.value?.trim() || '',
                 invoiceNumber: document.getElementById('detail-invoice-num')?.value?.trim() || '',
@@ -2133,6 +2280,8 @@
             }
         }
 
+
+        // ================= ISDOC GENERÁTOR A EXPORT (Money S3, Pohoda, Abra) =================
         function escapeXml(unsafe) {
             if (unsafe === undefined || unsafe === null) return '';
             return String(unsafe).replace(/[<>&'"]/g, function (c) {
@@ -2156,17 +2305,20 @@
             const vatAmount = Number(inv.vatAmount || 0).toFixed(2);
             const vatRate = Number(inv.vatRate || 21).toFixed(2);
             const vendorName = inv.vendor || 'Dodavatel';
-            const clientName = inv.clientName || 'Klient';
+            const clientName = inv.clientName || 'TechVision s.r.o.';
             const ico = inv.ico || '00000000';
             const vs = inv.vs || docId.replace(/\D/g, '') || '0';
             const bankAccount = inv.accountNumber || '';
             const paymentMethod = inv.paymentMethod || 'Převodem';
 
+            // Kód platební metody dle standardu UN/CEFACT 4461
+            // 31 = převodem, 10 = hotově, 48 = kartou, 97 = zápočtem
             let paymentCode = '31';
             if (paymentMethod === 'Hotově') paymentCode = '10';
             else if (paymentMethod === 'Kartou') paymentCode = '48';
             else if (paymentMethod === 'Zápočtem') paymentCode = '97';
 
+            // Validní ISDOC 6.0.1 struktura kompatibilní s Money S3, Pohoda, Abra Flexi
             return `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="http://isdoc.cz/namespace/2013" version="6.0.1">
   <DocumentType>1</DocumentType>
@@ -2252,6 +2404,7 @@
 </Invoice>`;
         }
 
+        // Pomocná funkce pro spuštění stažení souboru v prohlížeči
         function triggerDownload(content, filename, mimeType) {
             const blob = new Blob([content], { type: mimeType });
             const url = URL.createObjectURL(blob);
@@ -2264,8 +2417,8 @@
             URL.revokeObjectURL(url);
         }
 
+        // Stažení ISDOC pro jednu konkrétní fakturu z detailu
         window.downloadSingleISDOC = function(id) {
-            const user = auth.currentUser || currentUser;
             const targetId = id || selectedInvoiceId;
             let inv = invoices.find(i => i.id === targetId);
             if (!inv) {
@@ -2273,6 +2426,7 @@
                 return;
             }
 
+            // Pokud je otevřen detail tohoto dokladu, vezmeme aktuální hodnoty z formuláře
             if (selectedInvoiceId === targetId) {
                 inv = {
                     ...inv,
@@ -2301,19 +2455,13 @@
             showToast(`ISDOC soubor "${filename}" byl úspěšně stažen!`, "success");
         };
 
+        // Hlavní exportní funkce
         function exportInvoices(format) {
             const clientFilter = document.getElementById('acc-client-select')?.value || 'all';
-            const user = auth.currentUser || currentUser;
-            let list = [];
-
-            if (window.isDemoMode) {
-                list = invoices.filter(i => i.status === 'approved');
-            } else if (user && currentRole === 'accountant') {
-                list = invoices.filter(i => i.status === 'approved' && (i.accountantId === user.uid || i.userId === user.uid));
-            }
+            let list = invoices.filter(i => i.status === 'approved');
 
             if (clientFilter !== 'all') {
-                list = list.filter(i => i.clientName === clientFilter);
+                list = list.filter(i => (i.clientName || 'TechVision s.r.o.') === clientFilter);
             }
 
             if (list.length === 0) {
@@ -2322,6 +2470,7 @@
             }
 
             if (format === 'isdoc') {
+                // Stažení ISDOC pro zaúčtované doklady
                 list.forEach((inv, idx) => {
                     setTimeout(() => {
                         const xml = generateISDOCXml(inv);
@@ -2331,6 +2480,7 @@
                 });
                 showToast(`Vygenerováno a staženo ${list.length} ISDOC souborů pro Money S3 / Pohodu!`, "success");
             } else if (format === 'csv') {
+                // CSV export s diakritikou (UTF-8 s BOM pro Excel / Money)
                 const headers = ["Firma/Klient", "CisloFaktury", "VS", "Dodavatel", "ICO", "Typ", "ZpusobUhrady", "DatumVystaveni", "DUZP", "DatumSplatnosti", "ZakladDaně", "SazbaDPH", "VyseDPH", "CelkemCZK", "Ucet"];
                 const rows = list.map(i => [
                     `"${(i.clientName || '').replace(/"/g, '""')}"`,
@@ -2355,6 +2505,7 @@
                 showToast(`Exportováno ${list.length} dokladů do CSV!`, "success");
             }
         }
+
 
         function openModal(id) {
             document.getElementById(id).classList.remove('hidden');
@@ -2398,6 +2549,7 @@
             }, 3500);
         }
 
+        // Zpřístupnění funkcí pro HTML kliknutí (onclick)
         window.switchRole = switchRole;
         window.triggerScan = triggerScan;
         window.handleFileSelect = handleFileSelect;
@@ -2413,7 +2565,6 @@
         window.deleteClient = deleteClient;
         window.addNewClientFromInput = addNewClientFromInput;
         window.renderClientsModalTable = renderClientsModalTable;
-        window.copyPairingCode = copyPairingCode;
         window.filterClientInvoices = filterClientInvoices;
         window.renderClientInvoices = renderClientInvoices;
         window.renderAccountantInvoices = renderAccountantInvoices;
@@ -2421,8 +2572,9 @@
         window.handleAuthSubmit = handleAuthSubmit;
         window.handleLogout = handleLogout;
         window.setAuthMode = setAuthMode;
-        window.updateRoleTypeUI = updateRoleTypeUI;
+        window.toggleCompanyInput = toggleCompanyInput;
         window.continueAsDemo = continueAsDemo;
+        window.focusAuthCard = focusAuthCard;
         window.openModal = openModal;
         window.closeModal = closeModal;
         window.showToast = showToast;
