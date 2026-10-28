@@ -1,4 +1,4 @@
-// Aktualizovaná verze app.js (vysoké rozlišení) - 2026-10-28 20:12:10
+// Aktualizovaná verze app.js (vysoké rozlišení + vícestránkový sken + opravené křížky na mobilu)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
@@ -28,6 +28,9 @@ let invoices = [];
 let currentClientFilter = 'all';
 let authMode = 'signin';
 window.isDemoMode = false;
+
+// Globální stav pro vícestránkové skenování
+window.scannedPages = [];
 
 const invoicesQuery = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
 onSnapshot(invoicesQuery, (snapshot) => {
@@ -1054,11 +1057,11 @@ function renderAccountantInvoices() {
         filtered.forEach(inv => {
             let statusBadge = '';
             if (inv.status === 'pending') {
-                statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">Nová k vyřízení</span>`;
+                statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">Nová k vyřízení</span>`;
             } else if (inv.status === 'approved') {
-                statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">Zaúčtováno</span>`;
+                statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">Zaúčtováno</span>`;
             } else {
-                statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">K doplnění</span>`;
+                statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">Vraceno k doplnění</span>`;
             }
 
             const tr = document.createElement('tr');
@@ -1120,15 +1123,26 @@ function updateAccountantStats(filteredList) {
     document.getElementById('acc-stat-total-count').textContent = `Celkem ${list.length} dokladů`;
 }
 
-function triggerScan() {
-    openModal('scan-modal');
+// ================= SKENOVÁNÍ VÍCE STRAN A OPENAI =================
+window.triggerScan = function() {
+    window.scannedPages = [];
+    activeScanPageIdx = 0;
+    
+    document.getElementById('scan-preview-img').src = '';
+    
+    // Obnova UI skeneru
     document.getElementById('scan-dropzone').classList.remove('hidden');
     document.getElementById('scan-preview-img').classList.add('hidden');
     document.getElementById('scan-loading').classList.add('hidden');
     document.getElementById('scan-line-anim').classList.add('hidden');
-}
+    
+    const pageControls = document.getElementById('scan-pages-controls');
+    if (pageControls) pageControls.remove();
+    
+    openModal('scan-modal');
+};
 
-function handleFileSelect(event) {
+window.handleFileSelect = function(event) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -1141,7 +1155,6 @@ function handleFileSelect(event) {
     reader.onload = function(e) {
         const img = new Image();
         img.onload = async function() {
-            // Zachování vysokého rozlišení pro perfektní čitelnost textu faktury (až 1800 px)
             const canvas = document.createElement('canvas');
             const MAX_DIM = 1800;
             let width = img.width;
@@ -1166,18 +1179,66 @@ function handleFileSelect(event) {
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Komprese 0.78 vytváří ostrý obraz o velikosti cca 250-380 KB (bezpečně pod 1MB limitem Firestore)
             const base64Image = canvas.toDataURL('image/jpeg', 0.78);
-            document.getElementById('scan-preview-img').src = base64Image;
+            
+            // Uložení stránky do pole
+            window.scannedPages.push(base64Image);
+            activeScanPageIdx = window.scannedPages.length - 1;
+            
+            // Zobrazení aktuální stránky
+            document.getElementById('scan-preview-img').src = window.scannedPages[activeScanPageIdx];
 
-            await processWithOpenAI(base64Image);
+            // Přidání UI pro listování a přidání strany
+            updateScanPagesUI();
+
+            await processWithOpenAI();
         };
         img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+};
+
+function updateScanPagesUI() {
+    let pageControls = document.getElementById('scan-pages-controls');
+    
+    if (!pageControls) {
+        pageControls = document.createElement('div');
+        pageControls.id = 'scan-pages-controls';
+        pageControls.className = 'w-full flex items-center justify-between bg-slate-800 p-2 border-t border-slate-700';
+        
+        const previewContainer = document.getElementById('scan-preview-img').parentElement;
+        previewContainer.appendChild(pageControls);
+    }
+    
+    pageControls.innerHTML = `
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="switchScanPage(-1)" class="p-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50" ${activeScanPageIdx === 0 ? 'disabled' : ''}>
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <span class="text-xs font-bold text-white">Strana ${activeScanPageIdx + 1} / ${window.scannedPages.length}</span>
+            <button type="button" onclick="switchScanPage(1)" class="p-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50" ${activeScanPageIdx === window.scannedPages.length - 1 ? 'disabled' : ''}>
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <label class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg cursor-pointer transition flex items-center gap-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Další strana
+            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)">
+        </label>
+    `;
+    lucide.createIcons();
 }
 
-async function processWithOpenAI(base64Image) {
+window.switchScanPage = function(dir) {
+    if (dir === -1 && activeScanPageIdx > 0) activeScanPageIdx--;
+    if (dir === 1 && activeScanPageIdx < window.scannedPages.length - 1) activeScanPageIdx++;
+    
+    document.getElementById('scan-preview-img').src = window.scannedPages[activeScanPageIdx];
+    updateScanPagesUI();
+};
+
+async function processWithOpenAI() {
+    if (window.scannedPages.length === 0) return;
+
     let apiKey = localStorage.getItem('openai_key');
     if (!apiKey) {
         apiKey = prompt("Pro reálné skenování vložte váš OpenAI API klíč (začíná na sk-...):");
@@ -1189,7 +1250,23 @@ async function processWithOpenAI(base64Image) {
         localStorage.setItem('openai_key', apiKey);
     }
 
+    document.getElementById('scan-loading').classList.remove('hidden');
+    document.getElementById('scan-line-anim').classList.remove('hidden');
+
     try {
+        // Příprava vícestránkového pole zpráv
+        const contentArray = [
+            {
+                type: "text",
+                text: "Vytáhni data z této vícestránkové faktury přesně do JSON s klíči: 'vendor' (Název dodavatele), 'ico' (IČO dodavatele), 'invoiceNumber' (Číslo faktury / dokladu), 'vs' (Variabilní symbol, pokud chybí použij číslo faktury), 'dateIssue' (Datum vystavení ve formátu YYYY-MM-DD), 'dateTax' (Datum zdanitelného plnění / DUZP YYYY-MM-DD), 'dateDue' (Datum splatnosti YYYY-MM-DD), 'baseAmount' (Základ daně bez DPH jako číslo s tečkou bez Kč), 'vatRate' (Sazba DPH: číslo 21, 12 nebo 0), 'vatAmount' (Výše DPH v Kč jako číslo s tečkou), 'amount' (Celková částka k úhradě s DPH jako číslo s tečkou), 'paymentMethod' (Způsob úhrady: 'Převodem', 'Kartou', 'Hotově', 'Zápočtem' nebo 'Dobírka'), 'account' (Číslo bankovního účtu / IBAN)."
+            }
+        ];
+
+        // Přidání každé vyfocené strany do OpenAI promptu
+        window.scannedPages.forEach(pageB64 => {
+            contentArray.push({ type: "image_url", image_url: { url: pageB64 } });
+        });
+
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -1202,13 +1279,7 @@ async function processWithOpenAI(base64Image) {
                 messages: [
                     {
                         role: "user",
-                        content: [
-                            {
-                                type: "text",
-                                text: "Vytáhni data z této faktury/účtenky přesně do JSON s klíči: 'vendor' (Název dodavatele), 'ico' (IČO dodavatele), 'invoiceNumber' (Číslo faktury / dokladu), 'vs' (Variabilní symbol, pokud chybí použij číslo faktury), 'dateIssue' (Datum vystavení ve formátu YYYY-MM-DD), 'dateTax' (Datum zdanitelného plnění / DUZP YYYY-MM-DD), 'dateDue' (Datum splatnosti YYYY-MM-DD), 'baseAmount' (Základ daně bez DPH jako číslo s tečkou bez Kč), 'vatRate' (Sazba DPH: číslo 21, 12 nebo 0), 'vatAmount' (Výše DPH v Kč jako číslo s tečkou), 'amount' (Celková částka k úhradě s DPH jako číslo s tečkou), 'paymentMethod' (Způsob úhrady: 'Převodem', 'Kartou', 'Hotově', 'Zápočtem' nebo 'Dobírka'), 'account' (Číslo bankovního účtu / IBAN)."
-                            },
-                            { type: "image_url", image_url: { url: base64Image } }
-                        ]
+                        content: contentArray
                     }
                 ]
             })
@@ -1232,7 +1303,7 @@ async function processWithOpenAI(base64Image) {
             document.getElementById('field-account').value = parsed.account || "";
 
             calculateScanAmounts();
-            showToast("Faktura úspěšně přečtena přes umělou inteligenci!", "success");
+            showToast("Faktura úspěšně přečtena!", "success");
         } else {
             alert("AI nemohla fakturu přečíst. Zkuste to znovu.");
         }
@@ -1245,15 +1316,8 @@ async function processWithOpenAI(base64Image) {
     }
 }
 
-async function saveExtractedInvoice(e) {
+window.saveExtractedInvoice = async function(e) {
     e.preventDefault();
-
-    let safeImgUrl = '';
-    const previewEl = document.getElementById('scan-preview-img');
-    if (previewEl && previewEl.src && previewEl.src.startsWith('data:image')) {
-        // Plné ostré rozlišení (1800 px) připravené v handleFileSelect
-        safeImgUrl = previewEl.src;
-    }
 
     const user = auth.currentUser || currentUser;
     const chosenClient = (currentRole === 'client') ? activeClientCompany : (document.getElementById('field-client-name')?.value || activeClientCompany || 'Moje Firma');
@@ -1280,7 +1344,8 @@ async function saveExtractedInvoice(e) {
         accountNumber: document.getElementById('field-account').value || '',
         status: 'pending',
         note: '',
-        imgUrl: safeImgUrl,
+        imgUrl: window.scannedPages.length > 0 ? window.scannedPages[0] : '',
+        imgUrls: window.scannedPages.length > 0 ? window.scannedPages : [], // Pole vícestránkového scanu
         createdAt: new Date().toISOString()
     };
 
@@ -1288,11 +1353,12 @@ async function saveExtractedInvoice(e) {
         await addDoc(collection(db, "invoices"), newInvoice);
         closeModal('scan-modal');
         showToast(`Doklad byl uložen pod firmu "${chosenClient}"!`, "success");
+        window.scannedPages = []; // Vyčistit paměť stránek
     } catch (err) {
         console.error("Chyba při zápisu do Firestore:", err);
         alert("CHYBA UKLÁDÁNÍ DO FIREBASE:\n" + err.message);
     }
-}
+};
 
 window.calculateScanAmounts = function(source = 'total') {
     const baseInput = document.getElementById('field-base-amount');
@@ -1368,8 +1434,11 @@ window.calculateDetailAmounts = function(source = 'total') {
     }
 };
 
+// ================= ZOBRAZENÍ DETAILU A LUPA =================
 let detailZoom = 1;
 let detailRotation = 0;
+let currentInvoicePages = [];
+let activeDetailPageIdx = 0;
 
 function updateDetailImgTransform() {
     const img = document.getElementById('detail-img-preview');
@@ -1396,30 +1465,77 @@ window.resetDetailImg = function() {
     updateDetailImgTransform();
 };
 
+window.switchDetailPage = function(dir) {
+    if (dir === -1 && activeDetailPageIdx > 0) activeDetailPageIdx--;
+    if (dir === 1 && activeDetailPageIdx < currentInvoicePages.length - 1) activeDetailPageIdx++;
+    
+    document.getElementById('detail-img-preview').src = currentInvoicePages[activeDetailPageIdx] || '';
+    updateDetailPagesUI();
+    resetDetailImg();
+};
+
+function updateDetailPagesUI() {
+    let controls = document.getElementById('detail-pages-controls');
+    const container = document.getElementById('detail-img-preview').parentElement;
+
+    if (currentInvoicePages && currentInvoicePages.length > 1) {
+        if (!controls) {
+            controls = document.createElement('div');
+            controls.id = 'detail-pages-controls';
+            controls.className = 'absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-slate-900/90 backdrop-blur border border-slate-700 text-white rounded-full flex items-center gap-3 px-4 py-1.5 shadow-lg z-10';
+            container.appendChild(controls);
+        }
+        controls.innerHTML = `
+            <button type="button" onclick="switchDetailPage(-1)" class="p-1 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed" ${activeDetailPageIdx === 0 ? 'disabled' : ''}>
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            </button>
+            <span class="text-xs font-bold w-16 text-center">Str ${activeDetailPageIdx + 1} / ${currentInvoicePages.length}</span>
+            <button type="button" onclick="switchDetailPage(1)" class="p-1 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed" ${activeDetailPageIdx === currentInvoicePages.length - 1 ? 'disabled' : ''}>
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+            </button>
+        `;
+        lucide.createIcons();
+    } else if (controls) {
+        controls.remove();
+    }
+}
+
+// 3) KŘÍŽEK PRO ZAVŘENÍ VE FULLSCREENU
 window.openDetailImgFull = function() {
-    const img = document.getElementById('detail-img-preview');
-    if (img && img.src && !img.src.includes('placehold.co')) {
+    const imgUrl = currentInvoicePages[activeDetailPageIdx] || document.getElementById('detail-img-preview').src;
+    
+    if (imgUrl && !imgUrl.includes('placehold.co')) {
         const w = window.open("");
         w.document.write(`
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Originální náhled dokladu - Plné rozlišení</title>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Originální náhled dokladu</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
                 <style>
-                    body { margin: 0; background: #0b0f19; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; box-sizing: border-box; }
-                    img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: zoom-in; }
+                    body { margin: 0; padding: 0; background: #0b0f19; display: flex; flex-direction: column; align-items: center; min-height: 100vh; font-family: sans-serif; }
+                    .header { position: sticky; top: 0; width: 100%; background: rgba(15, 23, 42, 0.95); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 50; border-bottom: 1px solid #1e293b; backdrop-filter: blur(8px); }
+                    .close-btn { background: #ef4444; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+                    .close-btn:active { background: #dc2626; transform: scale(0.96); }
+                    .img-container { padding: 16px; width: 100%; display: flex; justify-content: center; box-sizing: border-box; overflow: auto; }
+                    img { max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: zoom-in; transition: transform 0.2s; }
                 </style>
             </head>
             <body>
-                <img src="${img.src}" onclick="this.style.maxWidth = this.style.maxWidth === 'none' ? '100%' : 'none'; this.style.cursor = this.style.maxWidth === 'none' ? 'zoom-out' : 'zoom-in';" title="Klikněte pro 100% přiblížení v plné velikosti">
+                <div class="header">
+                    <span style="color: #94a3b8; font-size: 12px; font-weight: 600;">Detail dokladu</span>
+                    <button class="close-btn" onclick="window.close()">✕ Zavřít okno</button>
+                </div>
+                <div class="img-container">
+                    <img src="${imgUrl}" onclick="this.style.maxWidth = this.style.maxWidth === 'none' ? '100%' : 'none'; this.style.cursor = this.style.maxWidth === 'none' ? 'zoom-out' : 'zoom-in';">
+                </div>
             </body>
             </html>
         `);
     }
 };
 
-function openDetailModal(id) {
+window.openDetailModal = function(id) {
     selectedInvoiceId = id;
     window.selectedInvoiceId = id;
     const inv = invoices.find(i => i.id === id);
@@ -1429,8 +1545,13 @@ function openDetailModal(id) {
     document.getElementById('detail-doc-id').textContent = `ID: ${inv.id}`;
     document.getElementById('detail-created-at').textContent = inv.createdAt ? `Nahráno: ${formatDateTime(inv.createdAt)}` : '';
 
+    // Podpora starých 1-stránkových faktur (imgUrl) i nových (imgUrls)
+    currentInvoicePages = inv.imgUrls && inv.imgUrls.length > 0 ? inv.imgUrls : [inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu'];
+    activeDetailPageIdx = 0;
+
+    document.getElementById('detail-img-preview').src = currentInvoicePages[0];
+    updateDetailPagesUI();
     resetDetailImg();
-    document.getElementById('detail-img-preview').src = inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu';
 
     const clientSelect = document.getElementById('detail-client-select');
     if (clientSelect) {
@@ -1468,15 +1589,15 @@ function openDetailModal(id) {
     });
 
     if (inv.status === 'pending') {
-        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800";
+        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300";
         badge.textContent = "Rozpracováno";
         if (btnPending) btnPending.classList.add('ring-2', 'ring-offset-1', 'ring-amber-500', 'font-bold');
     } else if (inv.status === 'approved') {
-        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800";
+        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300";
         badge.textContent = "Zaúčtováno";
         if (btnApproved) btnApproved.classList.add('ring-2', 'ring-offset-1', 'ring-emerald-700', 'font-bold');
     } else {
-        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800";
+        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300";
         badge.textContent = "K doplnění";
         if (btnAction) btnAction.classList.add('ring-2', 'ring-offset-1', 'ring-rose-500', 'font-bold');
     }
@@ -1502,7 +1623,7 @@ function openDetailModal(id) {
     }
 
     openModal('detail-modal');
-}
+};
 
 window.saveDetailChanges = async function(e) {
     if (e) e.preventDefault();
@@ -1537,7 +1658,7 @@ window.saveDetailChanges = async function(e) {
     }
 };
 
-async function clientSubmitInvoice() {
+window.clientSubmitInvoice = async function() {
     if (!selectedInvoiceId) return;
     const noteText = document.getElementById('detail-comment-note').value;
     try {
@@ -1552,15 +1673,15 @@ async function clientSubmitInvoice() {
         console.error("Chyba při odesílání účetní:", err);
         showToast("Chyba při odesílání: " + err.message, "warning");
     }
-}
+};
 
-function deleteCurrentInvoice() {
+window.deleteCurrentInvoice = function() {
     if (selectedInvoiceId) {
         deleteInvoice(selectedInvoiceId);
     }
-}
+};
 
-async function updateInvoiceStatus(newStatus) {
+window.updateInvoiceStatus = async function(newStatus) {
     if (!selectedInvoiceId) return;
 
     const updated = {
@@ -1603,7 +1724,7 @@ async function updateInvoiceStatus(newStatus) {
         console.error("Chyba při aktualizaci stavu:", err);
         showToast("Chyba při ukládání stavu: " + err.message, "warning");
     }
-}
+};
 
 function escapeXml(unsafe) {
     if (unsafe === undefined || unsafe === null) return '';
@@ -1773,7 +1894,7 @@ window.downloadSingleISDOC = function(id) {
     showToast(`ISDOC soubor "${filename}" byl úspěšně stažen!`, "success");
 };
 
-function exportInvoices(format) {
+window.exportInvoices = function(format) {
     const clientFilter = document.getElementById('acc-client-select')?.value || 'all';
     const user = auth.currentUser || currentUser;
     let list = [];
@@ -1809,7 +1930,7 @@ function openModal(id) {
     document.getElementById(id).classList.remove('hidden');
 }
 
-function closeModal(id) {
+window.closeModal = function(id) {
     document.getElementById(id).classList.add('hidden');
 }
 
@@ -1847,44 +1968,7 @@ function showToast(message, type = 'info') {
     }, 3500);
 }
 
-window.switchRole = switchRole;
-window.triggerScan = triggerScan;
-window.handleFileSelect = handleFileSelect;
-window.saveExtractedInvoice = saveExtractedInvoice;
-window.openDetailModal = openDetailModal;
-window.updateInvoiceStatus = updateInvoiceStatus;
-window.deleteInvoice = deleteInvoice;
-window.deleteCurrentInvoice = deleteCurrentInvoice;
-window.saveDetailChanges = saveDetailChanges;
-window.downloadSingleISDOC = downloadSingleISDOC;
-window.clientSubmitInvoice = clientSubmitInvoice;
-window.renameClient = renameClient;
-window.deleteClient = deleteClient;
-window.addNewClientFromInput = addNewClientFromInput;
-window.renderClientsModalTable = renderClientsModalTable;
-window.openClientDetailModal = openClientDetailModal;
-window.saveClientDetailChanges = saveClientDetailChanges;
-window.copyModalPin = copyModalPin;
-window.toggleProfileDropdown = toggleProfileDropdown;
-window.openAccountSettingsModal = openAccountSettingsModal;
-window.saveAccountSettings = saveAccountSettings;
-window.openChangePasswordModal = openChangePasswordModal;
-window.handleChangePassword = handleChangePassword;
-window.sendResetPasswordLink = sendResetPasswordLink;
-window.handleForgotPassword = handleForgotPassword;
-window.toggleTheme = toggleTheme;
-window.copyPairingCode = copyPairingCode;
-window.filterClientInvoices = filterClientInvoices;
-window.renderClientInvoices = renderClientInvoices;
-window.renderAccountantInvoices = renderAccountantInvoices;
-window.exportInvoices = exportInvoices;
-window.handleAuthSubmit = handleAuthSubmit;
-window.handleLogout = handleLogout;
-window.setAuthMode = setAuthMode;
-window.updateRoleTypeUI = updateRoleTypeUI;
-window.continueAsDemo = continueAsDemo;
 window.openModal = openModal;
-window.closeModal = closeModal;
 window.showToast = showToast;
 
 window.addEventListener('DOMContentLoaded', () => {
