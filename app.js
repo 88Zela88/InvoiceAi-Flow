@@ -1,7 +1,8 @@
-// Aktualizovaná verze app.js (vícestránkový scan + oprava chyb + zavírací tlačítko fullscreenu) - 2026-10-28 21:40
+// Aktualizovaná verze app.js (Firebase Storage) - 2026-10-28 20:54:01
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCAx_UsY1kCL01fobO6fWkXpbLC93XF1Vo",
@@ -16,6 +17,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 let currentUser = null;
 let currentUserData = null;
@@ -28,14 +30,6 @@ let invoices = [];
 let currentClientFilter = 'all';
 let authMode = 'signin';
 window.isDemoMode = false;
-
-// Globální stav pro vícestránkové skenování
-window.scannedPages = [];
-window.activeScanPageIdx = 0;
-
-// Globální stav pro listování v detailu faktury
-window.currentInvoicePages = [];
-window.activeDetailPageIdx = 0;
 
 const invoicesQuery = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
 onSnapshot(invoicesQuery, (snapshot) => {
@@ -109,7 +103,7 @@ function checkDateMatch(inv, preset, fromDate, toDate) {
     return true;
 }
 
-function handleClientDatePresetChange() {
+window.handleClientDatePresetChange = function() {
     const val = document.getElementById('client-date-preset')?.value;
     const customBox = document.getElementById('client-custom-dates');
     if (customBox) {
@@ -117,9 +111,9 @@ function handleClientDatePresetChange() {
         else customBox.classList.add('hidden');
     }
     renderClientInvoices();
-}
+};
 
-function handleAccDatePresetChange() {
+window.handleAccDatePresetChange = function() {
     const val = document.getElementById('acc-date-preset')?.value;
     const customBox = document.getElementById('acc-custom-dates');
     if (customBox) {
@@ -127,7 +121,7 @@ function handleAccDatePresetChange() {
         else customBox.classList.add('hidden');
     }
     renderAccountantInvoices();
-}
+};
 
 // ================= FIREBASE AUTHENTICATION LOGIKA =================
 onAuthStateChanged(auth, async (user) => {
@@ -191,7 +185,7 @@ onAuthStateChanged(auth, async (user) => {
     renderAccountantInvoices();
 });
 
-function setAuthMode(mode) {
+window.setAuthMode = function(mode) {
     authMode = mode;
     const landIn = document.getElementById('landing-tab-signin');
     const landUp = document.getElementById('landing-tab-signup');
@@ -215,9 +209,9 @@ function setAuthMode(mode) {
         if (submitLabel) submitLabel.textContent = "Vytvořit nový účet";
         if (forgotBox) forgotBox.classList.add('hidden');
     }
-}
+};
 
-function updateRoleTypeUI(role) {
+window.updateRoleTypeUI = function(role) {
     const accBox = document.getElementById('accountant-company-box');
     const cliBox = document.getElementById('client-pairing-box');
     const labelAcc = document.getElementById('label-role-accountant');
@@ -234,9 +228,9 @@ function updateRoleTypeUI(role) {
         if (labelCli) { labelCli.classList.add('border-blue-500', 'bg-blue-50/40'); labelCli.classList.remove('border-slate-200'); }
         if (labelAcc) { labelAcc.classList.remove('border-blue-500', 'bg-blue-50/40'); labelAcc.classList.add('border-slate-200'); }
     }
-}
+};
 
-function continueAsDemo() {
+window.continueAsDemo = function() {
     window.isDemoMode = true;
     currentUser = null;
     currentUserData = null;
@@ -262,9 +256,9 @@ function continueAsDemo() {
     renderClientsModalTable();
     renderClientInvoices();
     renderAccountantInvoices();
-}
+};
 
-async function handleAuthSubmit(e) {
+window.handleAuthSubmit = async function(e) {
     e.preventDefault();
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
@@ -331,9 +325,9 @@ async function handleAuthSubmit(e) {
         }
         alert("Chyba ověření: " + msg);
     }
-}
+};
 
-async function handleForgotPassword() {
+window.handleForgotPassword = async function() {
     let email = document.getElementById('auth-email')?.value?.trim();
     if (!email) {
         email = prompt("Zadejte svůj e-mail pro zaslání odkazu pro obnovení hesla:");
@@ -351,9 +345,9 @@ async function handleForgotPassword() {
         }
         alert("Chyba při odesílání: " + msg);
     }
-}
+};
 
-async function handleLogout() {
+window.handleLogout = async function() {
     try {
         await signOut(auth);
         currentUser = null;
@@ -380,9 +374,9 @@ async function handleLogout() {
     } catch (err) {
         console.error("Chyba při odhlašování:", err);
     }
-}
+};
 
-function toggleProfileDropdown() {
+window.toggleProfileDropdown = function() {
     const menu = document.getElementById('profile-dropdown-menu');
     const chevron = document.getElementById('profile-dropdown-chevron');
     if (menu) {
@@ -394,7 +388,7 @@ function toggleProfileDropdown() {
             closeProfileDropdown();
         }
     }
-}
+};
 
 function closeProfileDropdown() {
     const menu = document.getElementById('profile-dropdown-menu');
@@ -410,12 +404,12 @@ document.addEventListener('click', (e) => {
     }
 });
 
-function toggleTheme() {
+window.toggleTheme = function() {
     const html = document.documentElement;
     const isDark = html.classList.toggle('dark');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     updateThemeUI(isDark);
-}
+};
 
 function updateThemeUI(isDark) {
     const icon = document.getElementById('theme-icon');
@@ -443,16 +437,16 @@ if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && w
     updateThemeUI(false);
 }
 
-function openAccountSettingsModal() {
+window.openAccountSettingsModal = function() {
     closeProfileDropdown();
     const user = auth.currentUser;
     document.getElementById('settings-email').value = user ? user.email : 'demo@email.cz';
     document.getElementById('settings-company').value = currentRole === 'accountant' ? activeAccountantCompany : activeClientCompany;
     document.getElementById('settings-company-label').textContent = currentRole === 'accountant' ? 'Název účetní kanceláře' : 'Název vaší firmy';
     openModal('account-settings-modal');
-}
+};
 
-async function saveAccountSettings(e) {
+window.saveAccountSettings = async function(e) {
     e.preventDefault();
     const newName = document.getElementById('settings-company').value.trim();
     if (!newName) return;
@@ -479,17 +473,17 @@ async function saveAccountSettings(e) {
         showToast("V demo režimu bylo nastavení změněno lokálně.", "info");
         closeModal('account-settings-modal');
     }
-}
+};
 
-function openChangePasswordModal() {
+window.openChangePasswordModal = function() {
     closeProfileDropdown();
     document.getElementById('current-password').value = '';
     document.getElementById('new-password').value = '';
     document.getElementById('confirm-new-password').value = '';
     openModal('change-password-modal');
-}
+};
 
-async function handleChangePassword(e) {
+window.handleChangePassword = async function(e) {
     e.preventDefault();
     const currentPass = document.getElementById('current-password').value;
     const p1 = document.getElementById('new-password').value;
@@ -521,9 +515,9 @@ async function handleChangePassword(e) {
             alert("Chyba při změně hesla: " + err.message);
         }
     }
-}
+};
 
-async function sendResetPasswordLink() {
+window.sendResetPasswordLink = async function() {
     const user = auth.currentUser;
     const email = user ? user.email : prompt("Zadejte svůj e-mail pro zaslání odkazu na reset hesla:");
     if (!email) return;
@@ -535,7 +529,7 @@ async function sendResetPasswordLink() {
     } catch (err) {
         alert("Chyba při odesílání e-mailu: " + err.message);
     }
-}
+};
 
 let customClients = [];
 
@@ -693,7 +687,7 @@ function renderClientsModalTable() {
     lucide.createIcons();
 }
 
-function openClientDetailModal(clientId) {
+window.openClientDetailModal = function(clientId) {
     selectedClientIdForModal = clientId;
     let client = null;
 
@@ -726,14 +720,14 @@ function openClientDetailModal(clientId) {
     document.getElementById('modal-client-notes').value = client.notes || '';
 
     openModal('client-info-modal');
-}
+};
 
-function copyModalPin() {
+window.copyModalPin = function() {
     const pin = document.getElementById('modal-client-pin').textContent;
     copyPairingCode(pin);
-}
+};
 
-async function saveClientDetailChanges(e) {
+window.saveClientDetailChanges = async function(e) {
     e.preventDefault();
     if (!selectedClientIdForModal) return;
 
@@ -764,15 +758,15 @@ async function saveClientDetailChanges(e) {
         console.error("Chyba při ukládání klienta:", err);
         alert("Chyba při ukládání klienta: " + err.message);
     }
-}
+};
 
-function copyPairingCode(code) {
+window.copyPairingCode = function(code) {
     navigator.clipboard.writeText(code).then(() => {
         showToast(`Párovací PIN "${code}" byl zkopírován do schránky! Předejte ho klientovi.`, "success");
     }).catch(() => {
         prompt("Zkopírujte si párovací PIN pro klienta:", code);
     });
-}
+};
 
 async function addNewClient(name) {
     const clean = name.trim();
@@ -799,20 +793,20 @@ async function addNewClient(name) {
     }
 }
 
-async function addNewClientPrompt() {
+window.addNewClientPrompt = async function() {
     const newName = prompt("Zadejte název nové firmy nebo jméno klienta:");
     if (!newName || !newName.trim()) return;
     await addNewClient(newName);
-}
+};
 
-async function addNewClientFromInput() {
+window.addNewClientFromInput = async function() {
     const input = document.getElementById('new-client-input');
     if (!input || !input.value.trim()) return;
     await addNewClient(input.value);
     input.value = '';
-}
+};
 
-async function renameClient(clientId, encodedOldName) {
+window.renameClient = async function(clientId, encodedOldName) {
     const oldName = decodeURIComponent(encodedOldName);
     const newName = prompt(`Přejmenovat firmu "${oldName}" na:`, oldName);
     if (!newName || !newName.trim() || newName.trim() === oldName) return;
@@ -834,9 +828,9 @@ async function renameClient(clientId, encodedOldName) {
         console.error("Chyba při přejmenování:", err);
         showToast("Chyba při přejmenování firmy: " + err.message, "warning");
     }
-}
+};
 
-async function deleteClient(clientId, encodedName) {
+window.deleteClient = async function(clientId, encodedName) {
     const name = decodeURIComponent(encodedName);
     const user = auth.currentUser || currentUser;
     const docCount = invoices.filter(i => i.clientName === name && (i.accountantId === user?.uid || window.isDemoMode)).length;
@@ -860,9 +854,9 @@ async function deleteClient(clientId, encodedName) {
         console.error("Chyba při mazání firmy:", err);
         alert("Chyba při mazání firmy z databáze: " + err.message);
     }
-}
+};
 
-async function deleteInvoice(id) {
+window.deleteInvoice = async function(id) {
     if (!id) return;
     const inv = invoices.find(i => i.id === id);
     const vendorName = inv ? inv.vendor : 'tento doklad';
@@ -879,7 +873,7 @@ async function deleteInvoice(id) {
         console.error("Chyba při mazání dokladu z Firestore:", err);
         showToast("Chyba při mazání dokladu: " + err.message, "warning");
     }
-}
+};
 
 function switchRole(role) {
     currentRole = role;
@@ -1062,11 +1056,11 @@ function renderAccountantInvoices() {
         filtered.forEach(inv => {
             let statusBadge = '';
             if (inv.status === 'pending') {
-                statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">Nová k vyřízení</span>`;
+                statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">Nová k vyřízení</span>`;
             } else if (inv.status === 'approved') {
-                statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">Zaúčtováno</span>`;
+                statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">Zaúčtováno</span>`;
             } else {
-                statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">Vraceno k doplnění</span>`;
+                statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">K doplnění</span>`;
             }
 
             const tr = document.createElement('tr');
@@ -1128,23 +1122,12 @@ function updateAccountantStats(filteredList) {
     document.getElementById('acc-stat-total-count').textContent = `Celkem ${list.length} dokladů`;
 }
 
-// ================= SKENOVÁNÍ VÍCE STRAN A OPENAI =================
 function triggerScan() {
-    window.scannedPages = [];
-    window.activeScanPageIdx = 0;
-    
-    document.getElementById('scan-preview-img').src = '';
-    
-    // Obnova UI skeneru
+    openModal('scan-modal');
     document.getElementById('scan-dropzone').classList.remove('hidden');
     document.getElementById('scan-preview-img').classList.add('hidden');
     document.getElementById('scan-loading').classList.add('hidden');
     document.getElementById('scan-line-anim').classList.add('hidden');
-    
-    const pageControls = document.getElementById('scan-pages-controls');
-    if (pageControls) pageControls.remove();
-    
-    openModal('scan-modal');
 }
 
 function handleFileSelect(event) {
@@ -1160,6 +1143,7 @@ function handleFileSelect(event) {
     reader.onload = function(e) {
         const img = new Image();
         img.onload = async function() {
+            // Zachování vysokého rozlišení pro perfektní čitelnost textu faktury (až 1800 px)
             const canvas = document.createElement('canvas');
             const MAX_DIM = 1800;
             let width = img.width;
@@ -1184,66 +1168,18 @@ function handleFileSelect(event) {
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, width, height);
 
+            // Komprese 0.78 vytváří ostrý obraz o velikosti cca 250-380 KB (bezpečně pod 1MB limitem Firestore)
             const base64Image = canvas.toDataURL('image/jpeg', 0.78);
-            
-            // Uložení stránky do pole
-            window.scannedPages.push(base64Image);
-            window.activeScanPageIdx = window.scannedPages.length - 1;
-            
-            // Zobrazení aktuální stránky
-            document.getElementById('scan-preview-img').src = window.scannedPages[window.activeScanPageIdx];
+            document.getElementById('scan-preview-img').src = base64Image;
 
-            // Přidání UI pro listování a přidání strany
-            updateScanPagesUI();
-
-            await processWithOpenAI();
+            await processWithOpenAI(base64Image);
         };
         img.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
 
-function updateScanPagesUI() {
-    let pageControls = document.getElementById('scan-pages-controls');
-    
-    if (!pageControls) {
-        pageControls = document.createElement('div');
-        pageControls.id = 'scan-pages-controls';
-        pageControls.className = 'w-full flex items-center justify-between bg-slate-800 p-2 border-t border-slate-700';
-        
-        const previewContainer = document.getElementById('scan-preview-img').parentElement;
-        previewContainer.appendChild(pageControls);
-    }
-    
-    pageControls.innerHTML = `
-        <div class="flex items-center gap-2">
-            <button type="button" onclick="switchScanPage(-1)" class="p-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50" ${window.activeScanPageIdx === 0 ? 'disabled' : ''}>
-                <i data-lucide="chevron-left" class="w-4 h-4"></i>
-            </button>
-            <span class="text-xs font-bold text-white">Strana ${window.activeScanPageIdx + 1} / ${window.scannedPages.length}</span>
-            <button type="button" onclick="switchScanPage(1)" class="p-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50" ${window.activeScanPageIdx === window.scannedPages.length - 1 ? 'disabled' : ''}>
-                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-            </button>
-        </div>
-        <label class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg cursor-pointer transition flex items-center gap-1">
-            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Další strana
-            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)">
-        </label>
-    `;
-    lucide.createIcons();
-}
-
-function switchScanPage(dir) {
-    if (dir === -1 && window.activeScanPageIdx > 0) window.activeScanPageIdx--;
-    if (dir === 1 && window.activeScanPageIdx < window.scannedPages.length - 1) window.activeScanPageIdx++;
-    
-    document.getElementById('scan-preview-img').src = window.scannedPages[window.activeScanPageIdx];
-    updateScanPagesUI();
-}
-
-async function processWithOpenAI() {
-    if (window.scannedPages.length === 0) return;
-
+async function processWithOpenAI(base64Image) {
     let apiKey = localStorage.getItem('openai_key');
     if (!apiKey) {
         apiKey = prompt("Pro reálné skenování vložte váš OpenAI API klíč (začíná na sk-...):");
@@ -1255,23 +1191,7 @@ async function processWithOpenAI() {
         localStorage.setItem('openai_key', apiKey);
     }
 
-    document.getElementById('scan-loading').classList.remove('hidden');
-    document.getElementById('scan-line-anim').classList.remove('hidden');
-
     try {
-        // Příprava vícestránkového pole zpráv
-        const contentArray = [
-            {
-                type: "text",
-                text: "Vytáhni data z této vícestránkové faktury přesně do JSON s klíči: 'vendor' (Název dodavatele), 'ico' (IČO dodavatele), 'invoiceNumber' (Číslo faktury / dokladu), 'vs' (Variabilní symbol, pokud chybí použij číslo faktury), 'dateIssue' (Datum vystavení ve formátu YYYY-MM-DD), 'dateTax' (Datum zdanitelného plnění / DUZP YYYY-MM-DD), 'dateDue' (Datum splatnosti YYYY-MM-DD), 'baseAmount' (Základ daně bez DPH jako číslo s tečkou bez Kč), 'vatRate' (Sazba DPH: číslo 21, 12 nebo 0), 'vatAmount' (Výše DPH v Kč jako číslo s tečkou), 'amount' (Celková částka k úhradě s DPH jako číslo s tečkou), 'paymentMethod' (Způsob úhrady: 'Převodem', 'Kartou', 'Hotově', 'Zápočtem' nebo 'Dobírka'), 'account' (Číslo bankovního účtu / IBAN)."
-            }
-        ];
-
-        // Přidání každé vyfocené strany do OpenAI promptu
-        window.scannedPages.forEach(pageB64 => {
-            contentArray.push({ type: "image_url", image_url: { url: pageB64 } });
-        });
-
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -1284,7 +1204,13 @@ async function processWithOpenAI() {
                 messages: [
                     {
                         role: "user",
-                        content: contentArray
+                        content: [
+                            {
+                                type: "text",
+                                text: "Vytáhni data z této faktury/účtenky přesně do JSON s klíči: 'vendor' (Název dodavatele), 'ico' (IČO dodavatele), 'invoiceNumber' (Číslo faktury / dokladu), 'vs' (Variabilní symbol, pokud chybí použij číslo faktury), 'dateIssue' (Datum vystavení ve formátu YYYY-MM-DD), 'dateTax' (Datum zdanitelného plnění / DUZP YYYY-MM-DD), 'dateDue' (Datum splatnosti YYYY-MM-DD), 'baseAmount' (Základ daně bez DPH jako číslo s tečkou bez Kč), 'vatRate' (Sazba DPH: číslo 21, 12 nebo 0), 'vatAmount' (Výše DPH v Kč jako číslo s tečkou), 'amount' (Celková částka k úhradě s DPH jako číslo s tečkou), 'paymentMethod' (Způsob úhrady: 'Převodem', 'Kartou', 'Hotově', 'Zápočtem' nebo 'Dobírka'), 'account' (Číslo bankovního účtu / IBAN)."
+                            },
+                            { type: "image_url", image_url: { url: base64Image } }
+                        ]
                     }
                 ]
             })
@@ -1308,7 +1234,7 @@ async function processWithOpenAI() {
             document.getElementById('field-account').value = parsed.account || "";
 
             calculateScanAmounts();
-            showToast("Faktura úspěšně přečtena!", "success");
+            showToast("Faktura úspěšně přečtena přes umělou inteligenci!", "success");
         } else {
             alert("AI nemohla fakturu přečíst. Zkuste to znovu.");
         }
@@ -1324,7 +1250,12 @@ async function processWithOpenAI() {
 async function saveExtractedInvoice(e) {
     e.preventDefault();
 
-    let safeImgUrl = window.scannedPages.length > 0 ? window.scannedPages[0] : '';
+    let safeImgUrl = '';
+    const previewEl = document.getElementById('scan-preview-img');
+    if (previewEl && previewEl.src && previewEl.src.startsWith('data:image')) {
+        // Plné ostré rozlišení (1800 px) připravené v handleFileSelect
+        safeImgUrl = previewEl.src;
+    }
 
     const user = auth.currentUser || currentUser;
     const chosenClient = (currentRole === 'client') ? activeClientCompany : (document.getElementById('field-client-name')?.value || activeClientCompany || 'Moje Firma');
@@ -1352,7 +1283,6 @@ async function saveExtractedInvoice(e) {
         status: 'pending',
         note: '',
         imgUrl: safeImgUrl,
-        imgUrls: window.scannedPages.length > 0 ? window.scannedPages : [], // Pole vícestránkového scanu
         createdAt: new Date().toISOString()
     };
 
@@ -1360,14 +1290,13 @@ async function saveExtractedInvoice(e) {
         await addDoc(collection(db, "invoices"), newInvoice);
         closeModal('scan-modal');
         showToast(`Doklad byl uložen pod firmu "${chosenClient}"!`, "success");
-        window.scannedPages = [];
     } catch (err) {
         console.error("Chyba při zápisu do Firestore:", err);
         alert("CHYBA UKLÁDÁNÍ DO FIREBASE:\n" + err.message);
     }
 }
 
-function calculateScanAmounts(source = 'total') {
+window.calculateScanAmounts = function(source = 'total') {
     const baseInput = document.getElementById('field-base-amount');
     const vatInput = document.getElementById('field-vat-amount');
     const totalInput = document.getElementById('field-amount');
@@ -1402,9 +1331,9 @@ function calculateScanAmounts(source = 'total') {
             totalInput.value = total.toFixed(2);
         }
     }
-}
+};
 
-function calculateDetailAmounts(source = 'total') {
+window.calculateDetailAmounts = function(source = 'total') {
     const baseInput = document.getElementById('detail-base-amount');
     const vatInput = document.getElementById('detail-vat-amount');
     const totalInput = document.getElementById('detail-amount');
@@ -1439,9 +1368,8 @@ function calculateDetailAmounts(source = 'total') {
             totalInput.value = total.toFixed(2);
         }
     }
-}
+};
 
-// ================= ZOBRAZENÍ DETAILU A LUPA =================
 let detailZoom = 1;
 let detailRotation = 0;
 
@@ -1454,90 +1382,44 @@ function updateDetailImgTransform() {
     if (lvl) lvl.textContent = `${Math.round(detailZoom * 100)}%`;
 }
 
-function zoomDetailImg(delta) {
+window.zoomDetailImg = function(delta) {
     detailZoom = Math.max(0.5, Math.min(3.5, Math.round((detailZoom + delta) * 10) / 10));
     updateDetailImgTransform();
-}
+};
 
-function rotateDetailImg() {
+window.rotateDetailImg = function() {
     detailRotation = (detailRotation + 90) % 360;
     updateDetailImgTransform();
-}
+};
 
-function resetDetailImg() {
+window.resetDetailImg = function() {
     detailZoom = 1;
     detailRotation = 0;
     updateDetailImgTransform();
-}
+};
 
-function switchDetailPage(dir) {
-    if (dir === -1 && window.activeDetailPageIdx > 0) window.activeDetailPageIdx--;
-    if (dir === 1 && window.activeDetailPageIdx < window.currentInvoicePages.length - 1) window.activeDetailPageIdx++;
-    
-    document.getElementById('detail-img-preview').src = window.currentInvoicePages[window.activeDetailPageIdx] || '';
-    updateDetailPagesUI();
-    resetDetailImg();
-}
-
-function updateDetailPagesUI() {
-    let controls = document.getElementById('detail-pages-controls');
-    const container = document.getElementById('detail-img-preview').parentElement;
-
-    if (window.currentInvoicePages && window.currentInvoicePages.length > 1) {
-        if (!controls) {
-            controls = document.createElement('div');
-            controls.id = 'detail-pages-controls';
-            controls.className = 'absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-slate-900/90 backdrop-blur border border-slate-700 text-white rounded-full flex items-center gap-3 px-4 py-1.5 shadow-lg z-10';
-            container.appendChild(controls);
-        }
-        controls.innerHTML = `
-            <button type="button" onclick="switchDetailPage(-1)" class="p-1 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed" ${window.activeDetailPageIdx === 0 ? 'disabled' : ''}>
-                <i data-lucide="chevron-left" class="w-5 h-5"></i>
-            </button>
-            <span class="text-xs font-bold w-16 text-center">Str ${window.activeDetailPageIdx + 1} / ${window.currentInvoicePages.length}</span>
-            <button type="button" onclick="switchDetailPage(1)" class="p-1 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed" ${window.activeDetailPageIdx === window.currentInvoicePages.length - 1 ? 'disabled' : ''}>
-                <i data-lucide="chevron-right" class="w-5 h-5"></i>
-            </button>
-        `;
-        lucide.createIcons();
-    } else if (controls) {
-        controls.remove();
-    }
-}
-
-function openDetailImgFull() {
-    const imgUrl = window.currentInvoicePages[window.activeDetailPageIdx] || document.getElementById('detail-img-preview').src;
-    
-    if (imgUrl && !imgUrl.includes('placehold.co')) {
+window.openDetailImgFull = function() {
+    const img = document.getElementById('detail-img-preview');
+    if (img && img.src && !img.src.includes('placehold.co')) {
         const w = window.open("");
         w.document.write(`
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Originální náhled dokladu</title>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+                <title>Originální náhled dokladu - Plné rozlišení</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <style>
-                    body { margin: 0; padding: 0; background: #0b0f19; display: flex; flex-direction: column; align-items: center; min-height: 100vh; font-family: sans-serif; }
-                    .header { position: sticky; top: 0; width: 100%; background: rgba(15, 23, 42, 0.95); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 50; border-bottom: 1px solid #1e293b; backdrop-filter: blur(8px); }
-                    .close-btn { background: #ef4444; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-                    .close-btn:active { background: #dc2626; transform: scale(0.96); }
-                    .img-container { padding: 16px; width: 100%; display: flex; justify-content: center; box-sizing: border-box; overflow: auto; }
-                    img { max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: zoom-in; transition: transform 0.2s; }
+                    body { margin: 0; background: #0b0f19; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+                    img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: zoom-in; }
                 </style>
             </head>
             <body>
-                <div class="header">
-                    <span style="color: #94a3b8; font-size: 12px; font-weight: 600;">Detail dokladu</span>
-                    <button class="close-btn" onclick="window.close()">✕ Zavřít okno</button>
-                </div>
-                <div class="img-container">
-                    <img src="${imgUrl}" onclick="this.style.maxWidth = this.style.maxWidth === 'none' ? '100%' : 'none'; this.style.cursor = this.style.maxWidth === 'none' ? 'zoom-out' : 'zoom-in';">
-                </div>
+                <img src="${img.src}" onclick="this.style.maxWidth = this.style.maxWidth === 'none' ? '100%' : 'none'; this.style.cursor = this.style.maxWidth === 'none' ? 'zoom-out' : 'zoom-in';" title="Klikněte pro 100% přiblížení v plné velikosti">
             </body>
             </html>
         `);
     }
-}
+};
 
 function openDetailModal(id) {
     selectedInvoiceId = id;
@@ -1549,13 +1431,8 @@ function openDetailModal(id) {
     document.getElementById('detail-doc-id').textContent = `ID: ${inv.id}`;
     document.getElementById('detail-created-at').textContent = inv.createdAt ? `Nahráno: ${formatDateTime(inv.createdAt)}` : '';
 
-    // Podpora starých 1-stránkových faktur (imgUrl) i nových (imgUrls)
-    window.currentInvoicePages = inv.imgUrls && inv.imgUrls.length > 0 ? inv.imgUrls : [inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu'];
-    window.activeDetailPageIdx = 0;
-
-    document.getElementById('detail-img-preview').src = window.currentInvoicePages[0];
-    updateDetailPagesUI();
     resetDetailImg();
+    document.getElementById('detail-img-preview').src = inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu';
 
     const clientSelect = document.getElementById('detail-client-select');
     if (clientSelect) {
@@ -1629,7 +1506,7 @@ function openDetailModal(id) {
     openModal('detail-modal');
 }
 
-async function saveDetailChanges(e) {
+window.saveDetailChanges = async function(e) {
     if (e) e.preventDefault();
     if (!selectedInvoiceId) return;
 
@@ -1660,7 +1537,7 @@ async function saveDetailChanges(e) {
         console.error("Chyba při ukládání změn dokladu:", err);
         showToast("Chyba při ukládání změn: " + err.message, "warning");
     }
-}
+};
 
 async function clientSubmitInvoice() {
     if (!selectedInvoiceId) return;
@@ -1972,13 +1849,9 @@ function showToast(message, type = 'info') {
     }, 3500);
 }
 
-// ---------------- EXPORTY DO WINDOW OBJEKTU ----------------
-// Tímto garantujeme, že inline funkce v index.html volané přes onclick="nazevFunkce()"
-// přesně najdou definice těchto funkcí v modulu.
 window.switchRole = switchRole;
 window.triggerScan = triggerScan;
 window.handleFileSelect = handleFileSelect;
-window.switchScanPage = switchScanPage;
 window.saveExtractedInvoice = saveExtractedInvoice;
 window.openDetailModal = openDetailModal;
 window.updateInvoiceStatus = updateInvoiceStatus;
@@ -2015,11 +1888,6 @@ window.continueAsDemo = continueAsDemo;
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.showToast = showToast;
-window.zoomDetailImg = zoomDetailImg;
-window.resetDetailImg = resetDetailImg;
-window.rotateDetailImg = rotateDetailImg;
-window.openDetailImgFull = openDetailImgFull;
-window.switchDetailPage = switchDetailPage;
 
 window.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
