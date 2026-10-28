@@ -1,3 +1,4 @@
+// Aktualizovaná verze app.js (vysoké rozlišení) - 2026-10-28 20:12:10
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
@@ -27,10 +28,6 @@ let invoices = [];
 let currentClientFilter = 'all';
 let authMode = 'signin';
 window.isDemoMode = false;
-
-// Stav pro vícestránkové skenování
-let scannedPages = [];
-let activeScanPageIdx = 0;
 
 const invoicesQuery = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
 onSnapshot(invoicesQuery, (snapshot) => {
@@ -1131,7 +1128,6 @@ function triggerScan() {
     document.getElementById('scan-line-anim').classList.add('hidden');
 }
 
-// 1) VYSOKÉ ROZLIŠENÍ (až 1800 px)
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1145,6 +1141,7 @@ function handleFileSelect(event) {
     reader.onload = function(e) {
         const img = new Image();
         img.onload = async function() {
+            // Zachování vysokého rozlišení pro perfektní čitelnost textu faktury (až 1800 px)
             const canvas = document.createElement('canvas');
             const MAX_DIM = 1800;
             let width = img.width;
@@ -1169,6 +1166,7 @@ function handleFileSelect(event) {
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, width, height);
 
+            // Komprese 0.78 vytváří ostrý obraz o velikosti cca 250-380 KB (bezpečně pod 1MB limitem Firestore)
             const base64Image = canvas.toDataURL('image/jpeg', 0.78);
             document.getElementById('scan-preview-img').src = base64Image;
 
@@ -1247,13 +1245,13 @@ async function processWithOpenAI(base64Image) {
     }
 }
 
-// 2) ODSTRANĚNÍ DRUHOTNÉHO ZMENŠENÍ NA 300x400 px
 async function saveExtractedInvoice(e) {
     e.preventDefault();
 
     let safeImgUrl = '';
     const previewEl = document.getElementById('scan-preview-img');
     if (previewEl && previewEl.src && previewEl.src.startsWith('data:image')) {
+        // Plné ostré rozlišení (1800 px) připravené v handleFileSelect
         safeImgUrl = previewEl.src;
     }
 
@@ -1398,7 +1396,6 @@ window.resetDetailImg = function() {
     updateDetailImgTransform();
 };
 
-// 3) PLNOHODNOTNÝ CELOOBRAZOVKOVÝ PROHLÍŽEČ S MOŽNOSTÍ ZOOMU
 window.openDetailImgFull = function() {
     const img = document.getElementById('detail-img-preview');
     if (img && img.src && !img.src.includes('placehold.co')) {
