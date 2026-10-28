@@ -183,15 +183,28 @@
                                         <input type="radio" name="auth-role" value="client" onchange="updateRoleTypeUI('client')" class="text-blue-600 focus:ring-blue-500">
                                         <div class="text-xs">
                                             <strong class="block text-slate-800">Klient / Firma</strong>
-                                            <span class="text-[10px] text-slate-500">Pouze skenování dokladů</span>
+                                            <span class="text-[10px] text-slate-500">Skenování dokladů</span>
                                         </div>
                                     </label>
                                 </div>
                             </div>
 
-                            <div id="company-name-container">
-                                <label id="auth-company-label" class="block text-xs font-semibold text-slate-700 mb-1">Název účetní kanceláře / firmy</label>
-                                <input type="text" id="auth-company" placeholder="např. ProFit účetnictví s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <!-- Dynamic fields based on role -->
+                            <div id="accountant-company-box">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Název účetní kanceláře / firmy</label>
+                                <input type="text" id="auth-accountant-company" placeholder="např. ProFit účetnictví s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+
+                            <div id="client-pairing-box" class="hidden space-y-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Párovací kód od vaší účetní (PIN)</label>
+                                    <input type="text" id="auth-pairing-code" placeholder="např. PEK-742" class="w-full px-3 py-2 border border-blue-300 rounded-xl text-sm font-mono font-bold uppercase tracking-wider text-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-blue-50/30">
+                                    <p class="text-[11px] text-slate-500 mt-1">Zadejte 6místný kód, který vám předala účetní. Účet se automaticky spáruje s vaší firmou.</p>
+                                </div>
+                                <div class="pt-1">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nebo název firmy (pokud kód nemáte)</label>
+                                    <input type="text" id="auth-client-company" placeholder="např. Moje Firma s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
                             </div>
                         </div>
 
@@ -378,7 +391,7 @@
                         </button>
                         <button onclick="openModal('clients-modal')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
                             <i data-lucide="building-2" class="w-4 h-4"></i>
-                            Správa firem
+                            Správa firem & PINů
                         </button>
                         <button onclick="exportInvoices('isdoc')" class="px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
                             <i data-lucide="file-code" class="w-4 h-4"></i>
@@ -843,17 +856,17 @@
         </div>
     </div>
 
-    <!-- Modal 4: Správa klientů a firem -->
+    <!-- Modal 4: Správa klientů a firem (s párovacími PINy pro Model B) -->
     <div id="clients-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
+        <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
             <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
                         <i data-lucide="building-2" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-900 text-base">Správa firem a klientů</h3>
-                        <p class="text-xs text-slate-500">Přejmenování, smazání a přidávání klientských firem</p>
+                        <h3 class="font-bold text-slate-900 text-base">Správa klientských firem & PINů</h3>
+                        <p class="text-xs text-slate-500">Předávejte klientům vygenerovaný PIN pro automatické spárování</p>
                     </div>
                 </div>
                 <button onclick="closeModal('clients-modal')" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
@@ -866,7 +879,7 @@
                     <input type="text" id="new-client-input" placeholder="Zadejte název nové firmy..." class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     <button onclick="addNewClientFromInput()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm">
                         <i data-lucide="plus" class="w-4 h-4"></i>
-                        Přidat firmu
+                        Založit firmu & vytvořit PIN
                     </button>
                 </div>
 
@@ -875,7 +888,8 @@
                         <thead>
                             <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
                                 <th class="p-3 pl-4">Název firmy</th>
-                                <th class="p-3 text-center">Počet dokladů</th>
+                                <th class="p-3 text-center">Párovací PIN pro klienta</th>
+                                <th class="p-3 text-center">Doklady</th>
                                 <th class="p-3 text-right pr-4">Akce</th>
                             </tr>
                         </thead>
@@ -895,7 +909,7 @@
     <!-- Firebase SDK a aplikační logika -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -915,7 +929,7 @@
         let currentUser = null;
         let currentUserData = null;
         let currentRole = 'client';
-        let activeClientCompany = 'TechVision s.r.o.';
+        let activeClientCompany = 'Moje Firma s.r.o.';
         let activeAccountantCompany = 'Účetní kancelář';
         let selectedInvoiceId = null;
         let invoices = [];
@@ -942,12 +956,13 @@
             currentUser = user;
             const landingPage = document.getElementById('landing-page');
             const appContainer = document.getElementById('app');
-            const switcherContainer = document.getElementById('demo-switcher-container');
+            const demoSwitcher = document.getElementById('demo-switcher-container');
 
             if (user) {
                 window.isDemoMode = false;
                 if (landingPage) landingPage.classList.add('hidden');
                 if (appContainer) appContainer.classList.remove('hidden');
+                if (demoSwitcher) demoSwitcher.classList.add('hidden');
 
                 document.getElementById('user-display-email').textContent = user.email || 'Přihlášený uživatel';
                 document.getElementById('user-avatar').textContent = (user.email ? user.email[0].toUpperCase() : 'U');
@@ -976,9 +991,7 @@
 
                 document.getElementById('user-display-role').textContent = currentRole === 'accountant' ? (activeAccountantCompany || 'Účetní kancelář') : `Klient (${activeClientCompany})`;
 
-                // V ostrém přihlášení je přepínač skrytý
-                if (switcherContainer) switcherContainer.classList.add('hidden');
-
+                // Zobrazení odpovídajícího zobrazení podle role
                 if (currentRole === 'client') {
                     switchRole('client');
                 } else {
@@ -1021,19 +1034,19 @@
         };
 
         window.updateRoleTypeUI = function(role) {
-            const labelEl = document.getElementById('auth-company-label');
-            const inputEl = document.getElementById('auth-company');
+            const accBox = document.getElementById('accountant-company-box');
+            const cliBox = document.getElementById('client-pairing-box');
             const labelAcc = document.getElementById('label-role-accountant');
             const labelCli = document.getElementById('label-role-client');
 
             if (role === 'accountant') {
-                if (labelEl) labelEl.textContent = 'Název účetní kanceláře / firmy';
-                if (inputEl) inputEl.placeholder = 'např. ProFit účetnictví s.r.o.';
+                if (accBox) accBox.classList.remove('hidden');
+                if (cliBox) cliBox.classList.add('hidden');
                 if (labelAcc) { labelAcc.classList.add('border-blue-500', 'bg-blue-50/40'); labelAcc.classList.remove('border-slate-200'); }
                 if (labelCli) { labelCli.classList.remove('border-blue-500', 'bg-blue-50/40'); labelCli.classList.add('border-slate-200'); }
             } else {
-                if (labelEl) labelEl.textContent = 'Název vaší firmy / OSVČ';
-                if (inputEl) inputEl.placeholder = 'např. TechVision s.r.o.';
+                if (accBox) accBox.classList.add('hidden');
+                if (cliBox) cliBox.classList.remove('hidden');
                 if (labelCli) { labelCli.classList.add('border-blue-500', 'bg-blue-50/40'); labelCli.classList.remove('border-slate-200'); }
                 if (labelAcc) { labelAcc.classList.remove('border-blue-500', 'bg-blue-50/40'); labelAcc.classList.add('border-slate-200'); }
             }
@@ -1049,17 +1062,17 @@
 
             const landingPage = document.getElementById('landing-page');
             const appContainer = document.getElementById('app');
-            const switcher = document.getElementById('demo-switcher-container');
+            const demoSwitcher = document.getElementById('demo-switcher-container');
 
             if (landingPage) landingPage.classList.add('hidden');
             if (appContainer) appContainer.classList.remove('hidden');
-            if (switcher) switcher.classList.remove('hidden');
+            if (demoSwitcher) demoSwitcher.classList.remove('hidden');
 
             document.getElementById('current-client-badge').textContent = `Firma: TechVision s.r.o.`;
             document.getElementById('user-display-email').textContent = 'Demo Návštěvník';
             document.getElementById('user-display-role').textContent = 'Zkušební Demo';
 
-            showToast("Vstoupili jste do zkušebního demo režimu se vzorovými daty.", "info");
+            showToast("Vstoupili jste do zkušebního demo režimu.", "info");
             lucide.createIcons();
             updateDynamicClients();
             renderClientInvoices();
@@ -1072,27 +1085,53 @@
             const password = document.getElementById('auth-password').value;
             const roleEl = document.querySelector('input[name="auth-role"]:checked');
             const role = roleEl ? roleEl.value : 'accountant';
-            const companyName = document.getElementById('auth-company')?.value?.trim() || (role === 'accountant' ? 'Moje Účetní Kancelář' : 'Moje Firma s.r.o.');
 
             if (!email || !password) return;
 
             try {
                 if (authMode === 'signup') {
+                    let finalCompany = '';
+                    let linkedAccountantId = '';
+
+                    if (role === 'accountant') {
+                        finalCompany = document.getElementById('auth-accountant-company')?.value?.trim() || 'Moje Účetní Kancelář';
+                    } else {
+                        // Klient: Model B párovací PIN
+                        const pinInput = document.getElementById('auth-pairing-code')?.value?.trim().toUpperCase();
+                        const clientNameInput = document.getElementById('auth-client-company')?.value?.trim();
+
+                        if (pinInput) {
+                            // Vyhledáme firmu s tímto PINem v kolekci clients
+                            const qPin = query(collection(db, "clients"), where("pairingCode", "==", pinInput));
+                            const pinSnap = await getDocs(qPin);
+
+                            if (!pinSnap.empty) {
+                                const foundClient = pinSnap.docs[0].data();
+                                finalCompany = foundClient.name;
+                                linkedAccountantId = foundClient.accountantId || '';
+                                showToast(`Účet byl úspěšně spárován s firmou ${finalCompany}!`, "success");
+                            } else {
+                                alert(`Zadaný párovací kód "${pinInput}" nebyl nalezen. Zkontrolujte prosím kód od vaší účetní kanceláře.`);
+                                return;
+                            }
+                        } else {
+                            finalCompany = clientNameInput || 'Moje Firma s.r.o.';
+                        }
+                    }
+
                     const cred = await createUserWithEmailAndPassword(auth, email, password);
                     await setDoc(doc(db, "users", cred.user.uid), {
                         email: email,
                         role: role,
-                        company: companyName,
+                        company: finalCompany,
+                        accountantId: linkedAccountantId,
                         createdAt: new Date().toISOString()
                     });
 
-                    // Přidáme firmu do seznamu
-                    await addDoc(collection(db, "clients"), {
-                        name: companyName,
-                        accountantId: role === 'accountant' ? cred.user.uid : 'client-self',
-                        userId: cred.user.uid,
-                        createdAt: new Date().toISOString()
-                    });
+                    // Pokud účetní registruje svou firmu, přidáme ji do seznamu clients
+                    if (role === 'accountant') {
+                        await addNewClient(finalCompany);
+                    }
 
                     showToast("Registrace proběhla úspěšně!", "success");
                 } else {
@@ -1148,7 +1187,17 @@
             updateDynamicClients();
         });
 
-        // Automatické načtení a aktualizace seznamu firem
+        // Model B: Generátor unikátního šestimístného PINu (např. PEK-742)
+        function generatePairingPin() {
+            const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            const numbers = "23456789";
+            let pin = "";
+            for (let i = 0; i < 3; i++) pin += letters.charAt(Math.floor(Math.random() * letters.length));
+            pin += "-";
+            for (let i = 0; i < 3; i++) pin += numbers.charAt(Math.floor(Math.random() * numbers.length));
+            return pin;
+        }
+
         function getAllClientNames() {
             const clientSet = new Set();
 
@@ -1214,23 +1263,42 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            const allClients = getAllClientNames();
-            if (allClients.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400 text-xs">Zatím nemáte vytvořené žádné klientské firmy.</td></tr>`;
+            let displayClients = [];
+
+            if (window.isDemoMode) {
+                displayClients = [
+                    { id: 'd1', name: 'TechVision s.r.o.', pairingCode: 'TEC-821' },
+                    { id: 'd2', name: 'Kavárna Liberec s.r.o.', pairingCode: 'KAV-319' },
+                    { id: 'd3', name: 'Jan Novák - Design', pairingCode: 'NOV-552' }
+                ];
+            } else if (currentUser && currentRole === 'accountant') {
+                displayClients = customClients.filter(c => c.accountantId === currentUser.uid || c.userId === currentUser.uid);
+            }
+
+            if (displayClients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 text-xs">Zatím nemáte vytvořené žádné klientské firmy. Zadejte název výše a vytvořte první firmu.</td></tr>`;
                 return;
             }
 
-            allClients.forEach(clientName => {
+            displayClients.forEach(client => {
                 const count = invoices.filter(i => {
-                    if (window.isDemoMode) return (i.clientName || 'TechVision s.r.o.') === clientName;
-                    return i.clientName === clientName && (i.accountantId === currentUser?.uid || i.userId === currentUser?.uid);
+                    if (window.isDemoMode) return (i.clientName || 'TechVision s.r.o.') === client.name;
+                    return i.clientName === client.name && (i.accountantId === currentUser?.uid || i.userId === currentUser?.uid);
                 }).length;
+
+                const pin = client.pairingCode || 'PIN-999';
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/80 transition";
                 tr.innerHTML = `
                     <td class="p-3 pl-4 font-semibold text-slate-800">
-                        ${clientName}
+                        ${client.name}
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="copyPairingCode('${pin}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-mono font-bold text-xs border border-indigo-200 transition" title="Klikněte pro zkopírování PINu pro klienta">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>${pin}</span>
+                        </button>
                     </td>
                     <td class="p-3 text-center">
                         <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
@@ -1239,10 +1307,10 @@
                     </td>
                     <td class="p-3 text-right pr-4 whitespace-nowrap">
                         <div class="flex items-center justify-end gap-1.5">
-                            <button onclick="renameClient('${encodeURIComponent(clientName)}')" class="px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center gap-1">
+                            <button onclick="renameClient('${encodeURIComponent(client.name)}')" class="px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center gap-1">
                                 <i data-lucide="edit-2" class="w-3.5 h-3.5"></i> Přejmenovat
                             </button>
-                            <button onclick="deleteClient('${encodeURIComponent(clientName)}')" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Smazat firmu">
+                            <button onclick="deleteClient('${encodeURIComponent(client.name)}')" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Smazat firmu">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
@@ -1253,17 +1321,27 @@
             lucide.createIcons();
         }
 
+        window.copyPairingCode = function(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                showToast(`Párovací PIN "${code}" byl zkopírován do schránky! Předejte ho klientovi.`, "success");
+            }).catch(() => {
+                prompt("Zkopírujte si párovací PIN pro klienta:", code);
+            });
+        };
+
         async function addNewClient(name) {
             const clean = name.trim();
             if (!clean) return;
+            const newPin = generatePairingPin();
             try {
                 await addDoc(collection(db, "clients"), {
                     name: clean,
+                    pairingCode: newPin,
                     accountantId: currentUser ? currentUser.uid : 'demo',
                     userId: currentUser ? currentUser.uid : 'demo',
                     createdAt: new Date().toISOString()
                 });
-                showToast(`Firma "${clean}" byla úspěšně přidána!`, "success");
+                showToast(`Firma "${clean}" založena s párovacím PINem ${newPin}!`, "success");
             } catch (err) {
                 console.error("Chyba při ukládání firmy do Firestore:", err);
                 updateDynamicClients();
@@ -1297,6 +1375,7 @@
                 } else {
                     await addDoc(collection(db, "clients"), {
                         name: cleanNew,
+                        pairingCode: generatePairingPin(),
                         accountantId: currentUser ? currentUser.uid : 'demo',
                         createdAt: new Date().toISOString()
                     });
@@ -1517,7 +1596,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
-                            Váš klientský inbox je prázdný. Založte firmu přes "+ Nová firma" nebo naskenujte první doklad.
+                            Váš klientský inbox je prázdný. Založte firmu přes "+ Nová firma" a předejte klientovi PIN pro nahrávání dokladů.
                         </td>
                     </tr>
                 `;
@@ -2306,7 +2385,6 @@
             }, 3500);
         }
 
-        // Zpřístupnění funkcí pro HTML kliknutí (onclick)
         window.switchRole = switchRole;
         window.triggerScan = triggerScan;
         window.handleFileSelect = handleFileSelect;
@@ -2322,6 +2400,7 @@
         window.deleteClient = deleteClient;
         window.addNewClientFromInput = addNewClientFromInput;
         window.renderClientsModalTable = renderClientsModalTable;
+        window.copyPairingCode = copyPairingCode;
         window.filterClientInvoices = filterClientInvoices;
         window.renderClientInvoices = renderClientInvoices;
         window.renderAccountantInvoices = renderAccountantInvoices;
@@ -2329,6 +2408,7 @@
         window.handleAuthSubmit = handleAuthSubmit;
         window.handleLogout = handleLogout;
         window.setAuthMode = setAuthMode;
+        window.updateRoleTypeUI = updateRoleTypeUI;
         window.continueAsDemo = continueAsDemo;
         window.openModal = openModal;
         window.closeModal = closeModal;
