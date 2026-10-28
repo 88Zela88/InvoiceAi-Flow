@@ -168,6 +168,13 @@
                             </div>
                         </div>
 
+                        <!-- 2) Odkaz Zapomenuté heslo? -->
+                        <div id="forgot-password-box" class="flex justify-end -mt-1">
+                            <button type="button" onclick="handleForgotPassword()" class="text-xs text-blue-600 hover:text-blue-700 hover:underline font-medium transition">
+                                Zapomenuté heslo?
+                            </button>
+                        </div>
+
                         <!-- Registration fields -->
                         <div id="signup-extra-fields" class="space-y-3 hidden pt-2 border-t border-slate-100">
                             <div>
@@ -778,7 +785,7 @@
                                 <input type="text" id="detail-invoice-num" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Variabilní Symbol (VS)</label>
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Variabilní Symbol (VS)</label>
                                 <input type="text" id="detail-vs" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                             <div>
@@ -832,12 +839,12 @@
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-blue-700 dark:text-blue-400 mb-1">Částka celkem s DPH (Kč)</label>
-                                    <input type="number" step="0.01" id="detail-amount" oninput="calculateDetailAmounts('total')" required placeholder="0.00" class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700 rounded-lg text-xs font-bold text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <input type="number" step="0.01" id="detail-amount" oninput="calculateDetailAmounts('total')" required placeholder="0.00" class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700 rounded-lg text-sm font-bold text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                 </div>
                             </div>
 
                             <div class="sm:col-span-2">
-                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Číslo účtu pro platbu / IBAN</label>
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Číslo bankovního účtu pro platbu / IBAN</label>
                                 <input type="text" id="detail-account" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                         </div>
@@ -1121,7 +1128,13 @@
                 </button>
             </div>
 
+            <!-- 1) Změna hesla se stávajícím heslem -->
             <form onsubmit="handleChangePassword(event)" class="p-6 space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Stávající (aktuální) heslo</label>
+                    <input type="password" id="current-password" required placeholder="Zadejte vaše současné heslo" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                </div>
+
                 <div>
                     <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nové heslo</label>
                     <input type="password" id="new-password" required minlength="6" placeholder="Minimálně 6 znaků" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
@@ -1154,7 +1167,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCAx_UsY1kCL01fobO6fWkXpbLC93XF1Vo",
@@ -1343,6 +1356,7 @@
             const landTitle = document.getElementById('landing-auth-title');
             const extraFields = document.getElementById('signup-extra-fields');
             const submitLabel = document.getElementById('auth-submit-label');
+            const forgotBox = document.getElementById('forgot-password-box');
 
             if (mode === 'signin') {
                 if (landIn) landIn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm";
@@ -1350,12 +1364,14 @@
                 if (landTitle) landTitle.textContent = "Přihlášení do systému";
                 if (extraFields) extraFields.classList.add('hidden');
                 if (submitLabel) submitLabel.textContent = "Přihlásit se do systému";
+                if (forgotBox) forgotBox.classList.remove('hidden');
             } else {
                 if (landUp) landUp.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm";
                 if (landIn) landIn.className = "flex-1 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
                 if (landTitle) landTitle.textContent = "Vytvoření nového účtu";
                 if (extraFields) extraFields.classList.remove('hidden');
                 if (submitLabel) submitLabel.textContent = "Vytvořit nový účet";
+                if (forgotBox) forgotBox.classList.add('hidden');
             }
         };
 
@@ -1475,6 +1491,27 @@
             }
         };
 
+        // 2) Odeslání odkazu na zapomenuté heslo
+        window.handleForgotPassword = async function() {
+            let email = document.getElementById('auth-email')?.value?.trim();
+            if (!email) {
+                email = prompt("Zadejte svůj e-mail pro zaslání odkazu pro obnovení hesla:");
+            }
+            if (!email) return;
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert(`Odkaz pro obnovení hesla byl odeslán na adresu ${email}. Zkontrolujte si prosím svou e-mailovou schránku.`);
+                showToast("E-mail pro obnovu hesla byl odeslán!", "success");
+            } catch (err) {
+                let msg = err.message;
+                if (err.code === 'auth/user-not-found') {
+                    msg = "Účet s tímto e-mailem nebyl nalezen.";
+                }
+                alert("Chyba při odesílání: " + msg);
+            }
+        };
+
         // 1) Čištění přihlašovacích údajů po odhlášení
         window.handleLogout = async function() {
             try {
@@ -1506,7 +1543,6 @@
             }
         };
 
-        // 3) Rolovací menu profilu, Dark mode, Nastavení & Heslo
         window.toggleProfileDropdown = function() {
             const menu = document.getElementById('profile-dropdown-menu');
             const chevron = document.getElementById('profile-dropdown-chevron');
@@ -1560,7 +1596,6 @@
             lucide.createIcons();
         }
 
-        // Inicializace tématu podle uložení
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
             updateThemeUI(true);
@@ -1609,34 +1644,44 @@
 
         window.openChangePasswordModal = function() {
             closeProfileDropdown();
+            document.getElementById('current-password').value = '';
             document.getElementById('new-password').value = '';
             document.getElementById('confirm-new-password').value = '';
             openModal('change-password-modal');
         };
 
+        // 1) Změna hesla s povinným ověřením stávajícího hesla
         window.handleChangePassword = async function(e) {
             e.preventDefault();
+            const currentPass = document.getElementById('current-password').value;
             const p1 = document.getElementById('new-password').value;
             const p2 = document.getElementById('confirm-new-password').value;
 
             if (p1 !== p2) {
-                alert("Hesla se neshodují! Zadejte obě hesla stejně.");
+                alert("Nová hesla se neshodují! Zadejte obě nová hesla stejně.");
                 return;
             }
 
             const user = auth.currentUser;
-            if (!user) {
+            if (!user || !user.email) {
                 alert("Pro změnu hesla musíte být přihlášeni.");
                 return;
             }
 
             try {
+                // Ověření platnosti stávajícího hesla před změnou
+                const credential = EmailAuthProvider.credential(user.email, currentPass);
+                await reauthenticateWithCredential(user, credential);
+
+                // Úspěšná změna hesla
                 await updatePassword(user, p1);
                 showToast("Vaše heslo bylo úspěšně změněno!", "success");
                 closeModal('change-password-modal');
             } catch (err) {
-                if (err.code === 'auth/requires-recent-login') {
-                    alert("Z bezpečnostních důvodů se prosím odhlaste a znovu přihlaste před změnou hesla, nebo použijte e-mailový odkaz.");
+                if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                    alert("Zadané stávající heslo není správné. Zkontrolujte prosím své současné heslo.");
+                } else if (err.code === 'auth/weak-password') {
+                    alert("Nové heslo musí mít alespoň 6 znaků.");
                 } else {
                     alert("Chyba při změně hesla: " + err.message);
                 }
@@ -1657,7 +1702,6 @@
             }
         };
 
-        // 2) Klientská karta a detail klienta ve správě firem
         let customClients = [];
 
         const clientsQuery = query(collection(db, "clients"), orderBy("name", "asc"));
@@ -2586,7 +2630,6 @@
                 if (btnAction) btnAction.classList.add('ring-2', 'ring-offset-1', 'ring-rose-500', 'font-bold');
             }
 
-            // Přizpůsobení tlačítek a polí podle role (Klient vs Účetní)
             const accButtons = document.getElementById('detail-acc-buttons');
             const clientButtons = document.getElementById('detail-client-buttons');
             const noteLabel = document.getElementById('detail-note-label');
@@ -2977,6 +3020,7 @@
         window.openChangePasswordModal = openChangePasswordModal;
         window.handleChangePassword = handleChangePassword;
         window.sendResetPasswordLink = sendResetPasswordLink;
+        window.handleForgotPassword = handleForgotPassword;
         window.toggleTheme = toggleTheme;
         window.copyPairingCode = copyPairingCode;
         window.filterClientInvoices = filterClientInvoices;
