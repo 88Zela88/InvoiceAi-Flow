@@ -1140,20 +1140,33 @@ function handleFileSelect(event) {
     reader.onload = function(e) {
         const img = new Image();
         img.onload = async function() {
+            // Zachování vysokého rozlišení pro perfektní čitelnost textu faktury (až 1800 px)
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1000;
+            const MAX_DIM = 1800;
             let width = img.width;
             let height = img.height;
-            if (width > MAX_WIDTH) {
-                height = Math.round((height * MAX_WIDTH) / width);
-                width = MAX_WIDTH;
+
+            if (width > height) {
+                if (width > MAX_DIM) {
+                    height = Math.round((height * MAX_DIM) / width);
+                    width = MAX_DIM;
+                }
+            } else {
+                if (height > MAX_DIM) {
+                    width = Math.round((width * MAX_DIM) / height);
+                    height = MAX_DIM;
+                }
             }
+
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, width, height);
 
-            const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+            // Komprese 0.78 vytváří ostrý obraz o velikosti cca 250-380 KB (bezpečně pod 1MB limitem Firestore)
+            const base64Image = canvas.toDataURL('image/jpeg', 0.78);
             document.getElementById('scan-preview-img').src = base64Image;
 
             await processWithOpenAI(base64Image);
@@ -1237,12 +1250,8 @@ async function saveExtractedInvoice(e) {
     let safeImgUrl = '';
     const previewEl = document.getElementById('scan-preview-img');
     if (previewEl && previewEl.src && previewEl.src.startsWith('data:image')) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 300;
-        canvas.height = 400;
-        ctx.drawImage(previewEl, 0, 0, 300, 400);
-        safeImgUrl = canvas.toDataURL('image/jpeg', 0.5);
+        // Plné ostré rozlišení (1800 px) připravené v handleFileSelect
+        safeImgUrl = previewEl.src;
     }
 
     const user = auth.currentUser || currentUser;
@@ -1390,7 +1399,22 @@ window.openDetailImgFull = function() {
     const img = document.getElementById('detail-img-preview');
     if (img && img.src && !img.src.includes('placehold.co')) {
         const w = window.open("");
-        w.document.write(`<title>Originální náhled dokladu</title><body style="margin:0;background:#090d16;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="${img.src}" style="max-height:98vh;max-width:98vw;object-fit:contain;border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,0.8);"></body>`);
+        w.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Originální náhled dokladu - Plné rozlišení</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body { margin: 0; background: #0b0f19; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+                    img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: zoom-in; }
+                </style>
+            </head>
+            <body>
+                <img src="${img.src}" onclick="this.style.maxWidth = this.style.maxWidth === 'none' ? '100%' : 'none'; this.style.cursor = this.style.maxWidth === 'none' ? 'zoom-out' : 'zoom-in';" title="Klikněte pro 100% přiblížení v plné velikosti">
+            </body>
+            </html>
+        `);
     }
 };
 
