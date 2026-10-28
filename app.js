@@ -1,4 +1,4 @@
-// Aktualizovaná verze app.js (vysoké rozlišení + vícestránkový sken + opravené křížky na mobilu)
+// Aktualizovaná verze app.js (vícestránkový scan + oprava chyb + zavírací tlačítko fullscreenu) - 2026-10-28 21:40
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
@@ -31,6 +31,11 @@ window.isDemoMode = false;
 
 // Globální stav pro vícestránkové skenování
 window.scannedPages = [];
+window.activeScanPageIdx = 0;
+
+// Globální stav pro listování v detailu faktury
+window.currentInvoicePages = [];
+window.activeDetailPageIdx = 0;
 
 const invoicesQuery = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
 onSnapshot(invoicesQuery, (snapshot) => {
@@ -104,7 +109,7 @@ function checkDateMatch(inv, preset, fromDate, toDate) {
     return true;
 }
 
-window.handleClientDatePresetChange = function() {
+function handleClientDatePresetChange() {
     const val = document.getElementById('client-date-preset')?.value;
     const customBox = document.getElementById('client-custom-dates');
     if (customBox) {
@@ -112,9 +117,9 @@ window.handleClientDatePresetChange = function() {
         else customBox.classList.add('hidden');
     }
     renderClientInvoices();
-};
+}
 
-window.handleAccDatePresetChange = function() {
+function handleAccDatePresetChange() {
     const val = document.getElementById('acc-date-preset')?.value;
     const customBox = document.getElementById('acc-custom-dates');
     if (customBox) {
@@ -122,7 +127,7 @@ window.handleAccDatePresetChange = function() {
         else customBox.classList.add('hidden');
     }
     renderAccountantInvoices();
-};
+}
 
 // ================= FIREBASE AUTHENTICATION LOGIKA =================
 onAuthStateChanged(auth, async (user) => {
@@ -186,7 +191,7 @@ onAuthStateChanged(auth, async (user) => {
     renderAccountantInvoices();
 });
 
-window.setAuthMode = function(mode) {
+function setAuthMode(mode) {
     authMode = mode;
     const landIn = document.getElementById('landing-tab-signin');
     const landUp = document.getElementById('landing-tab-signup');
@@ -210,9 +215,9 @@ window.setAuthMode = function(mode) {
         if (submitLabel) submitLabel.textContent = "Vytvořit nový účet";
         if (forgotBox) forgotBox.classList.add('hidden');
     }
-};
+}
 
-window.updateRoleTypeUI = function(role) {
+function updateRoleTypeUI(role) {
     const accBox = document.getElementById('accountant-company-box');
     const cliBox = document.getElementById('client-pairing-box');
     const labelAcc = document.getElementById('label-role-accountant');
@@ -229,9 +234,9 @@ window.updateRoleTypeUI = function(role) {
         if (labelCli) { labelCli.classList.add('border-blue-500', 'bg-blue-50/40'); labelCli.classList.remove('border-slate-200'); }
         if (labelAcc) { labelAcc.classList.remove('border-blue-500', 'bg-blue-50/40'); labelAcc.classList.add('border-slate-200'); }
     }
-};
+}
 
-window.continueAsDemo = function() {
+function continueAsDemo() {
     window.isDemoMode = true;
     currentUser = null;
     currentUserData = null;
@@ -257,9 +262,9 @@ window.continueAsDemo = function() {
     renderClientsModalTable();
     renderClientInvoices();
     renderAccountantInvoices();
-};
+}
 
-window.handleAuthSubmit = async function(e) {
+async function handleAuthSubmit(e) {
     e.preventDefault();
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
@@ -326,9 +331,9 @@ window.handleAuthSubmit = async function(e) {
         }
         alert("Chyba ověření: " + msg);
     }
-};
+}
 
-window.handleForgotPassword = async function() {
+async function handleForgotPassword() {
     let email = document.getElementById('auth-email')?.value?.trim();
     if (!email) {
         email = prompt("Zadejte svůj e-mail pro zaslání odkazu pro obnovení hesla:");
@@ -346,9 +351,9 @@ window.handleForgotPassword = async function() {
         }
         alert("Chyba při odesílání: " + msg);
     }
-};
+}
 
-window.handleLogout = async function() {
+async function handleLogout() {
     try {
         await signOut(auth);
         currentUser = null;
@@ -375,9 +380,9 @@ window.handleLogout = async function() {
     } catch (err) {
         console.error("Chyba při odhlašování:", err);
     }
-};
+}
 
-window.toggleProfileDropdown = function() {
+function toggleProfileDropdown() {
     const menu = document.getElementById('profile-dropdown-menu');
     const chevron = document.getElementById('profile-dropdown-chevron');
     if (menu) {
@@ -389,7 +394,7 @@ window.toggleProfileDropdown = function() {
             closeProfileDropdown();
         }
     }
-};
+}
 
 function closeProfileDropdown() {
     const menu = document.getElementById('profile-dropdown-menu');
@@ -405,12 +410,12 @@ document.addEventListener('click', (e) => {
     }
 });
 
-window.toggleTheme = function() {
+function toggleTheme() {
     const html = document.documentElement;
     const isDark = html.classList.toggle('dark');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     updateThemeUI(isDark);
-};
+}
 
 function updateThemeUI(isDark) {
     const icon = document.getElementById('theme-icon');
@@ -438,16 +443,16 @@ if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && w
     updateThemeUI(false);
 }
 
-window.openAccountSettingsModal = function() {
+function openAccountSettingsModal() {
     closeProfileDropdown();
     const user = auth.currentUser;
     document.getElementById('settings-email').value = user ? user.email : 'demo@email.cz';
     document.getElementById('settings-company').value = currentRole === 'accountant' ? activeAccountantCompany : activeClientCompany;
     document.getElementById('settings-company-label').textContent = currentRole === 'accountant' ? 'Název účetní kanceláře' : 'Název vaší firmy';
     openModal('account-settings-modal');
-};
+}
 
-window.saveAccountSettings = async function(e) {
+async function saveAccountSettings(e) {
     e.preventDefault();
     const newName = document.getElementById('settings-company').value.trim();
     if (!newName) return;
@@ -474,17 +479,17 @@ window.saveAccountSettings = async function(e) {
         showToast("V demo režimu bylo nastavení změněno lokálně.", "info");
         closeModal('account-settings-modal');
     }
-};
+}
 
-window.openChangePasswordModal = function() {
+function openChangePasswordModal() {
     closeProfileDropdown();
     document.getElementById('current-password').value = '';
     document.getElementById('new-password').value = '';
     document.getElementById('confirm-new-password').value = '';
     openModal('change-password-modal');
-};
+}
 
-window.handleChangePassword = async function(e) {
+async function handleChangePassword(e) {
     e.preventDefault();
     const currentPass = document.getElementById('current-password').value;
     const p1 = document.getElementById('new-password').value;
@@ -516,9 +521,9 @@ window.handleChangePassword = async function(e) {
             alert("Chyba při změně hesla: " + err.message);
         }
     }
-};
+}
 
-window.sendResetPasswordLink = async function() {
+async function sendResetPasswordLink() {
     const user = auth.currentUser;
     const email = user ? user.email : prompt("Zadejte svůj e-mail pro zaslání odkazu na reset hesla:");
     if (!email) return;
@@ -530,7 +535,7 @@ window.sendResetPasswordLink = async function() {
     } catch (err) {
         alert("Chyba při odesílání e-mailu: " + err.message);
     }
-};
+}
 
 let customClients = [];
 
@@ -688,7 +693,7 @@ function renderClientsModalTable() {
     lucide.createIcons();
 }
 
-window.openClientDetailModal = function(clientId) {
+function openClientDetailModal(clientId) {
     selectedClientIdForModal = clientId;
     let client = null;
 
@@ -721,14 +726,14 @@ window.openClientDetailModal = function(clientId) {
     document.getElementById('modal-client-notes').value = client.notes || '';
 
     openModal('client-info-modal');
-};
+}
 
-window.copyModalPin = function() {
+function copyModalPin() {
     const pin = document.getElementById('modal-client-pin').textContent;
     copyPairingCode(pin);
-};
+}
 
-window.saveClientDetailChanges = async function(e) {
+async function saveClientDetailChanges(e) {
     e.preventDefault();
     if (!selectedClientIdForModal) return;
 
@@ -759,15 +764,15 @@ window.saveClientDetailChanges = async function(e) {
         console.error("Chyba při ukládání klienta:", err);
         alert("Chyba při ukládání klienta: " + err.message);
     }
-};
+}
 
-window.copyPairingCode = function(code) {
+function copyPairingCode(code) {
     navigator.clipboard.writeText(code).then(() => {
         showToast(`Párovací PIN "${code}" byl zkopírován do schránky! Předejte ho klientovi.`, "success");
     }).catch(() => {
         prompt("Zkopírujte si párovací PIN pro klienta:", code);
     });
-};
+}
 
 async function addNewClient(name) {
     const clean = name.trim();
@@ -794,20 +799,20 @@ async function addNewClient(name) {
     }
 }
 
-window.addNewClientPrompt = async function() {
+async function addNewClientPrompt() {
     const newName = prompt("Zadejte název nové firmy nebo jméno klienta:");
     if (!newName || !newName.trim()) return;
     await addNewClient(newName);
-};
+}
 
-window.addNewClientFromInput = async function() {
+async function addNewClientFromInput() {
     const input = document.getElementById('new-client-input');
     if (!input || !input.value.trim()) return;
     await addNewClient(input.value);
     input.value = '';
-};
+}
 
-window.renameClient = async function(clientId, encodedOldName) {
+async function renameClient(clientId, encodedOldName) {
     const oldName = decodeURIComponent(encodedOldName);
     const newName = prompt(`Přejmenovat firmu "${oldName}" na:`, oldName);
     if (!newName || !newName.trim() || newName.trim() === oldName) return;
@@ -829,9 +834,9 @@ window.renameClient = async function(clientId, encodedOldName) {
         console.error("Chyba při přejmenování:", err);
         showToast("Chyba při přejmenování firmy: " + err.message, "warning");
     }
-};
+}
 
-window.deleteClient = async function(clientId, encodedName) {
+async function deleteClient(clientId, encodedName) {
     const name = decodeURIComponent(encodedName);
     const user = auth.currentUser || currentUser;
     const docCount = invoices.filter(i => i.clientName === name && (i.accountantId === user?.uid || window.isDemoMode)).length;
@@ -855,9 +860,9 @@ window.deleteClient = async function(clientId, encodedName) {
         console.error("Chyba při mazání firmy:", err);
         alert("Chyba při mazání firmy z databáze: " + err.message);
     }
-};
+}
 
-window.deleteInvoice = async function(id) {
+async function deleteInvoice(id) {
     if (!id) return;
     const inv = invoices.find(i => i.id === id);
     const vendorName = inv ? inv.vendor : 'tento doklad';
@@ -874,7 +879,7 @@ window.deleteInvoice = async function(id) {
         console.error("Chyba při mazání dokladu z Firestore:", err);
         showToast("Chyba při mazání dokladu: " + err.message, "warning");
     }
-};
+}
 
 function switchRole(role) {
     currentRole = role;
@@ -1124,9 +1129,9 @@ function updateAccountantStats(filteredList) {
 }
 
 // ================= SKENOVÁNÍ VÍCE STRAN A OPENAI =================
-window.triggerScan = function() {
+function triggerScan() {
     window.scannedPages = [];
-    activeScanPageIdx = 0;
+    window.activeScanPageIdx = 0;
     
     document.getElementById('scan-preview-img').src = '';
     
@@ -1140,9 +1145,9 @@ window.triggerScan = function() {
     if (pageControls) pageControls.remove();
     
     openModal('scan-modal');
-};
+}
 
-window.handleFileSelect = function(event) {
+function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -1183,10 +1188,10 @@ window.handleFileSelect = function(event) {
             
             // Uložení stránky do pole
             window.scannedPages.push(base64Image);
-            activeScanPageIdx = window.scannedPages.length - 1;
+            window.activeScanPageIdx = window.scannedPages.length - 1;
             
             // Zobrazení aktuální stránky
-            document.getElementById('scan-preview-img').src = window.scannedPages[activeScanPageIdx];
+            document.getElementById('scan-preview-img').src = window.scannedPages[window.activeScanPageIdx];
 
             // Přidání UI pro listování a přidání strany
             updateScanPagesUI();
@@ -1196,7 +1201,7 @@ window.handleFileSelect = function(event) {
         img.src = e.target.result;
     };
     reader.readAsDataURL(file);
-};
+}
 
 function updateScanPagesUI() {
     let pageControls = document.getElementById('scan-pages-controls');
@@ -1212,11 +1217,11 @@ function updateScanPagesUI() {
     
     pageControls.innerHTML = `
         <div class="flex items-center gap-2">
-            <button type="button" onclick="switchScanPage(-1)" class="p-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50" ${activeScanPageIdx === 0 ? 'disabled' : ''}>
+            <button type="button" onclick="switchScanPage(-1)" class="p-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50" ${window.activeScanPageIdx === 0 ? 'disabled' : ''}>
                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
             </button>
-            <span class="text-xs font-bold text-white">Strana ${activeScanPageIdx + 1} / ${window.scannedPages.length}</span>
-            <button type="button" onclick="switchScanPage(1)" class="p-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50" ${activeScanPageIdx === window.scannedPages.length - 1 ? 'disabled' : ''}>
+            <span class="text-xs font-bold text-white">Strana ${window.activeScanPageIdx + 1} / ${window.scannedPages.length}</span>
+            <button type="button" onclick="switchScanPage(1)" class="p-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50" ${window.activeScanPageIdx === window.scannedPages.length - 1 ? 'disabled' : ''}>
                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
         </div>
@@ -1228,13 +1233,13 @@ function updateScanPagesUI() {
     lucide.createIcons();
 }
 
-window.switchScanPage = function(dir) {
-    if (dir === -1 && activeScanPageIdx > 0) activeScanPageIdx--;
-    if (dir === 1 && activeScanPageIdx < window.scannedPages.length - 1) activeScanPageIdx++;
+function switchScanPage(dir) {
+    if (dir === -1 && window.activeScanPageIdx > 0) window.activeScanPageIdx--;
+    if (dir === 1 && window.activeScanPageIdx < window.scannedPages.length - 1) window.activeScanPageIdx++;
     
-    document.getElementById('scan-preview-img').src = window.scannedPages[activeScanPageIdx];
+    document.getElementById('scan-preview-img').src = window.scannedPages[window.activeScanPageIdx];
     updateScanPagesUI();
-};
+}
 
 async function processWithOpenAI() {
     if (window.scannedPages.length === 0) return;
@@ -1316,8 +1321,10 @@ async function processWithOpenAI() {
     }
 }
 
-window.saveExtractedInvoice = async function(e) {
+async function saveExtractedInvoice(e) {
     e.preventDefault();
+
+    let safeImgUrl = window.scannedPages.length > 0 ? window.scannedPages[0] : '';
 
     const user = auth.currentUser || currentUser;
     const chosenClient = (currentRole === 'client') ? activeClientCompany : (document.getElementById('field-client-name')?.value || activeClientCompany || 'Moje Firma');
@@ -1344,7 +1351,7 @@ window.saveExtractedInvoice = async function(e) {
         accountNumber: document.getElementById('field-account').value || '',
         status: 'pending',
         note: '',
-        imgUrl: window.scannedPages.length > 0 ? window.scannedPages[0] : '',
+        imgUrl: safeImgUrl,
         imgUrls: window.scannedPages.length > 0 ? window.scannedPages : [], // Pole vícestránkového scanu
         createdAt: new Date().toISOString()
     };
@@ -1353,14 +1360,14 @@ window.saveExtractedInvoice = async function(e) {
         await addDoc(collection(db, "invoices"), newInvoice);
         closeModal('scan-modal');
         showToast(`Doklad byl uložen pod firmu "${chosenClient}"!`, "success");
-        window.scannedPages = []; // Vyčistit paměť stránek
+        window.scannedPages = [];
     } catch (err) {
         console.error("Chyba při zápisu do Firestore:", err);
         alert("CHYBA UKLÁDÁNÍ DO FIREBASE:\n" + err.message);
     }
-};
+}
 
-window.calculateScanAmounts = function(source = 'total') {
+function calculateScanAmounts(source = 'total') {
     const baseInput = document.getElementById('field-base-amount');
     const vatInput = document.getElementById('field-vat-amount');
     const totalInput = document.getElementById('field-amount');
@@ -1395,9 +1402,9 @@ window.calculateScanAmounts = function(source = 'total') {
             totalInput.value = total.toFixed(2);
         }
     }
-};
+}
 
-window.calculateDetailAmounts = function(source = 'total') {
+function calculateDetailAmounts(source = 'total') {
     const baseInput = document.getElementById('detail-base-amount');
     const vatInput = document.getElementById('detail-vat-amount');
     const totalInput = document.getElementById('detail-amount');
@@ -1432,13 +1439,11 @@ window.calculateDetailAmounts = function(source = 'total') {
             totalInput.value = total.toFixed(2);
         }
     }
-};
+}
 
 // ================= ZOBRAZENÍ DETAILU A LUPA =================
 let detailZoom = 1;
 let detailRotation = 0;
-let currentInvoicePages = [];
-let activeDetailPageIdx = 0;
 
 function updateDetailImgTransform() {
     const img = document.getElementById('detail-img-preview');
@@ -1449,36 +1454,36 @@ function updateDetailImgTransform() {
     if (lvl) lvl.textContent = `${Math.round(detailZoom * 100)}%`;
 }
 
-window.zoomDetailImg = function(delta) {
+function zoomDetailImg(delta) {
     detailZoom = Math.max(0.5, Math.min(3.5, Math.round((detailZoom + delta) * 10) / 10));
     updateDetailImgTransform();
-};
+}
 
-window.rotateDetailImg = function() {
+function rotateDetailImg() {
     detailRotation = (detailRotation + 90) % 360;
     updateDetailImgTransform();
-};
+}
 
-window.resetDetailImg = function() {
+function resetDetailImg() {
     detailZoom = 1;
     detailRotation = 0;
     updateDetailImgTransform();
-};
+}
 
-window.switchDetailPage = function(dir) {
-    if (dir === -1 && activeDetailPageIdx > 0) activeDetailPageIdx--;
-    if (dir === 1 && activeDetailPageIdx < currentInvoicePages.length - 1) activeDetailPageIdx++;
+function switchDetailPage(dir) {
+    if (dir === -1 && window.activeDetailPageIdx > 0) window.activeDetailPageIdx--;
+    if (dir === 1 && window.activeDetailPageIdx < window.currentInvoicePages.length - 1) window.activeDetailPageIdx++;
     
-    document.getElementById('detail-img-preview').src = currentInvoicePages[activeDetailPageIdx] || '';
+    document.getElementById('detail-img-preview').src = window.currentInvoicePages[window.activeDetailPageIdx] || '';
     updateDetailPagesUI();
     resetDetailImg();
-};
+}
 
 function updateDetailPagesUI() {
     let controls = document.getElementById('detail-pages-controls');
     const container = document.getElementById('detail-img-preview').parentElement;
 
-    if (currentInvoicePages && currentInvoicePages.length > 1) {
+    if (window.currentInvoicePages && window.currentInvoicePages.length > 1) {
         if (!controls) {
             controls = document.createElement('div');
             controls.id = 'detail-pages-controls';
@@ -1486,11 +1491,11 @@ function updateDetailPagesUI() {
             container.appendChild(controls);
         }
         controls.innerHTML = `
-            <button type="button" onclick="switchDetailPage(-1)" class="p-1 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed" ${activeDetailPageIdx === 0 ? 'disabled' : ''}>
+            <button type="button" onclick="switchDetailPage(-1)" class="p-1 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed" ${window.activeDetailPageIdx === 0 ? 'disabled' : ''}>
                 <i data-lucide="chevron-left" class="w-5 h-5"></i>
             </button>
-            <span class="text-xs font-bold w-16 text-center">Str ${activeDetailPageIdx + 1} / ${currentInvoicePages.length}</span>
-            <button type="button" onclick="switchDetailPage(1)" class="p-1 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed" ${activeDetailPageIdx === currentInvoicePages.length - 1 ? 'disabled' : ''}>
+            <span class="text-xs font-bold w-16 text-center">Str ${window.activeDetailPageIdx + 1} / ${window.currentInvoicePages.length}</span>
+            <button type="button" onclick="switchDetailPage(1)" class="p-1 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed" ${window.activeDetailPageIdx === window.currentInvoicePages.length - 1 ? 'disabled' : ''}>
                 <i data-lucide="chevron-right" class="w-5 h-5"></i>
             </button>
         `;
@@ -1500,9 +1505,8 @@ function updateDetailPagesUI() {
     }
 }
 
-// 3) KŘÍŽEK PRO ZAVŘENÍ VE FULLSCREENU
-window.openDetailImgFull = function() {
-    const imgUrl = currentInvoicePages[activeDetailPageIdx] || document.getElementById('detail-img-preview').src;
+function openDetailImgFull() {
+    const imgUrl = window.currentInvoicePages[window.activeDetailPageIdx] || document.getElementById('detail-img-preview').src;
     
     if (imgUrl && !imgUrl.includes('placehold.co')) {
         const w = window.open("");
@@ -1533,9 +1537,9 @@ window.openDetailImgFull = function() {
             </html>
         `);
     }
-};
+}
 
-window.openDetailModal = function(id) {
+function openDetailModal(id) {
     selectedInvoiceId = id;
     window.selectedInvoiceId = id;
     const inv = invoices.find(i => i.id === id);
@@ -1546,10 +1550,10 @@ window.openDetailModal = function(id) {
     document.getElementById('detail-created-at').textContent = inv.createdAt ? `Nahráno: ${formatDateTime(inv.createdAt)}` : '';
 
     // Podpora starých 1-stránkových faktur (imgUrl) i nových (imgUrls)
-    currentInvoicePages = inv.imgUrls && inv.imgUrls.length > 0 ? inv.imgUrls : [inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu'];
-    activeDetailPageIdx = 0;
+    window.currentInvoicePages = inv.imgUrls && inv.imgUrls.length > 0 ? inv.imgUrls : [inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu'];
+    window.activeDetailPageIdx = 0;
 
-    document.getElementById('detail-img-preview').src = currentInvoicePages[0];
+    document.getElementById('detail-img-preview').src = window.currentInvoicePages[0];
     updateDetailPagesUI();
     resetDetailImg();
 
@@ -1589,15 +1593,15 @@ window.openDetailModal = function(id) {
     });
 
     if (inv.status === 'pending') {
-        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300";
+        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800";
         badge.textContent = "Rozpracováno";
         if (btnPending) btnPending.classList.add('ring-2', 'ring-offset-1', 'ring-amber-500', 'font-bold');
     } else if (inv.status === 'approved') {
-        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300";
+        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800";
         badge.textContent = "Zaúčtováno";
         if (btnApproved) btnApproved.classList.add('ring-2', 'ring-offset-1', 'ring-emerald-700', 'font-bold');
     } else {
-        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300";
+        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800";
         badge.textContent = "K doplnění";
         if (btnAction) btnAction.classList.add('ring-2', 'ring-offset-1', 'ring-rose-500', 'font-bold');
     }
@@ -1623,9 +1627,9 @@ window.openDetailModal = function(id) {
     }
 
     openModal('detail-modal');
-};
+}
 
-window.saveDetailChanges = async function(e) {
+async function saveDetailChanges(e) {
     if (e) e.preventDefault();
     if (!selectedInvoiceId) return;
 
@@ -1656,9 +1660,9 @@ window.saveDetailChanges = async function(e) {
         console.error("Chyba při ukládání změn dokladu:", err);
         showToast("Chyba při ukládání změn: " + err.message, "warning");
     }
-};
+}
 
-window.clientSubmitInvoice = async function() {
+async function clientSubmitInvoice() {
     if (!selectedInvoiceId) return;
     const noteText = document.getElementById('detail-comment-note').value;
     try {
@@ -1673,15 +1677,15 @@ window.clientSubmitInvoice = async function() {
         console.error("Chyba při odesílání účetní:", err);
         showToast("Chyba při odesílání: " + err.message, "warning");
     }
-};
+}
 
-window.deleteCurrentInvoice = function() {
+function deleteCurrentInvoice() {
     if (selectedInvoiceId) {
         deleteInvoice(selectedInvoiceId);
     }
-};
+}
 
-window.updateInvoiceStatus = async function(newStatus) {
+async function updateInvoiceStatus(newStatus) {
     if (!selectedInvoiceId) return;
 
     const updated = {
@@ -1724,7 +1728,7 @@ window.updateInvoiceStatus = async function(newStatus) {
         console.error("Chyba při aktualizaci stavu:", err);
         showToast("Chyba při ukládání stavu: " + err.message, "warning");
     }
-};
+}
 
 function escapeXml(unsafe) {
     if (unsafe === undefined || unsafe === null) return '';
@@ -1894,7 +1898,7 @@ window.downloadSingleISDOC = function(id) {
     showToast(`ISDOC soubor "${filename}" byl úspěšně stažen!`, "success");
 };
 
-window.exportInvoices = function(format) {
+function exportInvoices(format) {
     const clientFilter = document.getElementById('acc-client-select')?.value || 'all';
     const user = auth.currentUser || currentUser;
     let list = [];
@@ -1930,7 +1934,7 @@ function openModal(id) {
     document.getElementById(id).classList.remove('hidden');
 }
 
-window.closeModal = function(id) {
+function closeModal(id) {
     document.getElementById(id).classList.add('hidden');
 }
 
@@ -1968,8 +1972,54 @@ function showToast(message, type = 'info') {
     }, 3500);
 }
 
+// ---------------- EXPORTY DO WINDOW OBJEKTU ----------------
+// Tímto garantujeme, že inline funkce v index.html volané přes onclick="nazevFunkce()"
+// přesně najdou definice těchto funkcí v modulu.
+window.switchRole = switchRole;
+window.triggerScan = triggerScan;
+window.handleFileSelect = handleFileSelect;
+window.switchScanPage = switchScanPage;
+window.saveExtractedInvoice = saveExtractedInvoice;
+window.openDetailModal = openDetailModal;
+window.updateInvoiceStatus = updateInvoiceStatus;
+window.deleteInvoice = deleteInvoice;
+window.deleteCurrentInvoice = deleteCurrentInvoice;
+window.saveDetailChanges = saveDetailChanges;
+window.downloadSingleISDOC = downloadSingleISDOC;
+window.clientSubmitInvoice = clientSubmitInvoice;
+window.renameClient = renameClient;
+window.deleteClient = deleteClient;
+window.addNewClientFromInput = addNewClientFromInput;
+window.renderClientsModalTable = renderClientsModalTable;
+window.openClientDetailModal = openClientDetailModal;
+window.saveClientDetailChanges = saveClientDetailChanges;
+window.copyModalPin = copyModalPin;
+window.toggleProfileDropdown = toggleProfileDropdown;
+window.openAccountSettingsModal = openAccountSettingsModal;
+window.saveAccountSettings = saveAccountSettings;
+window.openChangePasswordModal = openChangePasswordModal;
+window.handleChangePassword = handleChangePassword;
+window.sendResetPasswordLink = sendResetPasswordLink;
+window.handleForgotPassword = handleForgotPassword;
+window.toggleTheme = toggleTheme;
+window.copyPairingCode = copyPairingCode;
+window.filterClientInvoices = filterClientInvoices;
+window.renderClientInvoices = renderClientInvoices;
+window.renderAccountantInvoices = renderAccountantInvoices;
+window.exportInvoices = exportInvoices;
+window.handleAuthSubmit = handleAuthSubmit;
+window.handleLogout = handleLogout;
+window.setAuthMode = setAuthMode;
+window.updateRoleTypeUI = updateRoleTypeUI;
+window.continueAsDemo = continueAsDemo;
 window.openModal = openModal;
+window.closeModal = closeModal;
 window.showToast = showToast;
+window.zoomDetailImg = zoomDetailImg;
+window.resetDetailImg = resetDetailImg;
+window.rotateDetailImg = rotateDetailImg;
+window.openDetailImgFull = openDetailImgFull;
+window.switchDetailPage = switchDetailPage;
 
 window.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
