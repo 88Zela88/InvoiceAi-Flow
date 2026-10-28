@@ -67,7 +67,6 @@
 
     <!-- ================= LANDING PAGE ================= -->
     <div id="landing-page" class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white flex flex-col">
-        <!-- Landing Navbar -->
         <header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-30">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -88,7 +87,6 @@
             </div>
         </header>
 
-        <!-- Hero Section with Login/Register Card -->
         <section class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 flex flex-col lg:flex-row items-center justify-between gap-12">
             <div class="flex-1 space-y-6 text-center lg:text-left">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
@@ -223,7 +221,6 @@
             </div>
         </section>
 
-        <!-- Footer -->
         <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
             <p>© 2026 InvoiceAI Flow. Vytvořeno pro moderní účetní kanceláře a jejich klienty.</p>
         </footer>
@@ -327,9 +324,10 @@
                     </div>
                 </div>
 
+                <!-- Client Filters Bar -->
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
-                        <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+                    <div class="p-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-slate-50/50">
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
                             <button onclick="filterClientInvoices('all')" id="filter-btn-all" class="client-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap">
                                 Všechny
                             </button>
@@ -343,9 +341,29 @@
                                 K dořešení
                             </button>
                         </div>
-                        <div class="relative min-w-[200px]">
-                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-                            <input type="text" id="client-search" onkeyup="renderClientInvoices()" placeholder="Hledat dodavatele, částku..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+
+                        <!-- Date Filter & Search for Client -->
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <div class="flex items-center gap-1.5">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                                <select id="client-date-preset" onchange="handleClientDatePresetChange()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                                    <option value="all">Všechna data</option>
+                                    <option value="today">Dnes</option>
+                                    <option value="week">Posledních 7 dní</option>
+                                    <option value="this_month">Tento měsíc</option>
+                                    <option value="last_month">Minulý měsíc</option>
+                                    <option value="custom">Vlastní rozsah (Od - Do)</option>
+                                </select>
+                            </div>
+                            <div id="client-custom-dates" class="hidden flex items-center gap-1 text-xs text-slate-600">
+                                <input type="date" id="client-date-from" onchange="renderClientInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <span>-</span>
+                                <input type="date" id="client-date-to" onchange="renderClientInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+                            <div class="relative min-w-[170px]">
+                                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+                                <input type="text" id="client-search" onkeyup="renderClientInvoices()" placeholder="Hledat..." class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
                         </div>
                     </div>
 
@@ -354,7 +372,7 @@
                             <thead>
                                 <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
                                     <th class="p-3 pl-4">Doklad / Dodavatel</th>
-                                    <th class="p-3">Datum / Splatnost</th>
+                                    <th class="p-3">Datum / Splatnost / Nahráno</th>
                                     <th class="p-3">Typ</th>
                                     <th class="p-3">Částka s DPH</th>
                                     <th class="p-3">Stav</th>
@@ -418,6 +436,7 @@
                     </div>
                 </div>
 
+                <!-- Accountant Filter Bar -->
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/60">
                         <div class="flex items-center gap-3">
@@ -426,13 +445,31 @@
                                 <option value="all">Všichni klienti</option>
                             </select>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <select id="acc-status-select" onchange="renderAccountantInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
                                 <option value="all">Všechny stavy</option>
                                 <option value="pending">Nové k vyřízení</option>
                                 <option value="approved">Zaúčtované</option>
                                 <option value="action_needed">Vrácené k doplnění</option>
                             </select>
+
+                            <div class="flex items-center gap-1.5 ml-2">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                                <select id="acc-date-preset" onchange="handleAccDatePresetChange()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                                    <option value="all">Všechna data</option>
+                                    <option value="today">Dnes</option>
+                                    <option value="week">Posledních 7 dní</option>
+                                    <option value="this_month">Tento měsíc</option>
+                                    <option value="last_month">Minulý měsíc</option>
+                                    <option value="custom">Vlastní rozsah (Od - Do)</option>
+                                </select>
+                            </div>
+
+                            <div id="acc-custom-dates" class="hidden flex items-center gap-1 text-xs text-slate-600">
+                                <input type="date" id="acc-date-from" onchange="renderAccountantInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <span>-</span>
+                                <input type="date" id="acc-date-to" onchange="renderAccountantInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
                         </div>
                     </div>
 
@@ -442,7 +479,7 @@
                                 <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
                                     <th class="p-3 pl-4">Klient</th>
                                     <th class="p-3">Dodavatel & IČO</th>
-                                    <th class="p-3">Číslo / DUZP / Splatnost</th>
+                                    <th class="p-3">Číslo / DUZP / Splatnost / Nahráno</th>
                                     <th class="p-3">Částka (Základ & DPH)</th>
                                     <th class="p-3">Stav</th>
                                     <th class="p-3 text-right pr-4">Kontrola & Akce</th>
@@ -685,7 +722,10 @@
                                 <label class="block text-[11px] uppercase font-bold text-blue-700 mb-1">Přiřazeno k firmě / klientovi:</label>
                                 <select id="detail-client-select" class="w-full px-2.5 py-1.5 bg-white border border-blue-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
                             </div>
-                            <span class="text-xs text-slate-400 font-mono self-end sm:self-center" id="detail-doc-id">ID: -</span>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-400 font-mono block" id="detail-doc-id">ID: -</span>
+                                <span class="text-[11px] text-blue-600 font-medium block" id="detail-created-at">Nahráno: -</span>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -943,6 +983,86 @@
             showToast("Chyba synchronizace databáze: " + error.message, "warning");
         });
 
+        // Pomocná funkce pro zobrazení data a času nahrání
+        function formatDateTime(isoString) {
+            if (!isoString) return '-';
+            try {
+                const d = new Date(isoString);
+                if (isNaN(d.getTime())) return isoString;
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                const hours = String(d.getHours()).padStart(2, '0');
+                const mins = String(d.getMinutes()).padStart(2, '0');
+                return `${day}.${month}.${year} ${hours}:${mins}`;
+            } catch {
+                return isoString;
+            }
+        }
+
+        // Pomocná funkce pro filtrování podle časového rozsahu
+        function checkDateMatch(inv, preset, fromDate, toDate) {
+            if (!preset || preset === 'all') return true;
+
+            let d = null;
+            if (inv.createdAt) {
+                d = new Date(inv.createdAt);
+            } else if (inv.dateIssue) {
+                d = new Date(inv.dateIssue);
+            }
+            if (!d || isNaN(d.getTime())) return true;
+
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+            if (preset === 'today') {
+                return dDate.getTime() === startOfToday.getTime();
+            } else if (preset === 'week') {
+                const sevenDaysAgo = new Date(startOfToday.getTime() - (7 * 24 * 60 * 60 * 1000));
+                return dDate >= sevenDaysAgo && dDate <= now;
+            } else if (preset === 'this_month') {
+                return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+            } else if (preset === 'last_month') {
+                const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+                const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+                return d.getFullYear() === lastMonthYear && d.getMonth() === lastMonth;
+            } else if (preset === 'custom') {
+                if (fromDate) {
+                    const f = new Date(fromDate);
+                    f.setHours(0, 0, 0, 0);
+                    if (d < f) return false;
+                }
+                if (toDate) {
+                    const t = new Date(toDate);
+                    t.setHours(23, 59, 59, 999);
+                    if (d > t) return false;
+                }
+                return true;
+            }
+            return true;
+        }
+
+        window.handleClientDatePresetChange = function() {
+            const val = document.getElementById('client-date-preset')?.value;
+            const customBox = document.getElementById('client-custom-dates');
+            if (customBox) {
+                if (val === 'custom') customBox.classList.remove('hidden');
+                else customBox.classList.add('hidden');
+            }
+            renderClientInvoices();
+        };
+
+        window.handleAccDatePresetChange = function() {
+            const val = document.getElementById('acc-date-preset')?.value;
+            const customBox = document.getElementById('acc-custom-dates');
+            if (customBox) {
+                if (val === 'custom') customBox.classList.remove('hidden');
+                else customBox.classList.add('hidden');
+            }
+            renderAccountantInvoices();
+        };
+
         // ================= FIREBASE AUTHENTICATION LOGIKA =================
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
@@ -1089,7 +1209,6 @@
                     if (role === 'accountant') {
                         finalCompany = document.getElementById('auth-accountant-company')?.value?.trim() || 'Moje Účetní Kancelář';
                     } else {
-                        // Klient: Model B párovací PIN
                         const pinInput = document.getElementById('auth-pairing-code')?.value?.trim().toUpperCase();
                         const clientNameInput = document.getElementById('auth-client-company')?.value?.trim();
 
@@ -1457,7 +1576,10 @@
                 currentClientFilter = filterStatus;
             }
             const tbody = document.getElementById('client-invoice-table-body');
-            const searchQuery = document.getElementById('client-search').value.toLowerCase();
+            const searchQuery = document.getElementById('client-search')?.value.toLowerCase() || '';
+            const datePreset = document.getElementById('client-date-preset')?.value || 'all';
+            const dateFrom = document.getElementById('client-date-from')?.value || '';
+            const dateTo = document.getElementById('client-date-to')?.value || '';
             tbody.innerHTML = '';
 
             const user = auth.currentUser || currentUser;
@@ -1475,11 +1597,15 @@
             if (currentClientFilter === 'approved') filtered = filtered.filter(inv => inv.status === 'approved');
             if (currentClientFilter === 'action_needed') filtered = filtered.filter(inv => inv.status === 'action_needed' || inv.status === 'rejected');
 
+            // Filtr podle data a času
+            filtered = filtered.filter(inv => checkDateMatch(inv, datePreset, dateFrom, dateTo));
+
             if (searchQuery) {
                 filtered = filtered.filter(inv => 
                     (inv.vendor && inv.vendor.toLowerCase().includes(searchQuery)) ||
                     (inv.amount && inv.amount.toString().includes(searchQuery)) ||
-                    (inv.vs && inv.vs.includes(searchQuery))
+                    (inv.vs && inv.vs.includes(searchQuery)) ||
+                    (inv.invoiceNumber && inv.invoiceNumber.toLowerCase().includes(searchQuery))
                 );
             }
 
@@ -1487,7 +1613,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
-                            Zatím nemáte žádné nahrané doklady. Klikněte na tlačítko "Naskenovat doklad" nahoře.
+                            Zatím nemáte žádné nahrané doklady odpovídající výběru. Klikněte na tlačítko "Naskenovat doklad" nahoře.
                         </td>
                     </tr>
                 `;
@@ -1514,6 +1640,7 @@
                         <td class="p-3 text-xs text-slate-600">
                             <div>Vystaveno: ${inv.dateIssue || '-'}</div>
                             <div class="text-slate-400">Splatnost: ${inv.dateDue || '-'}</div>
+                            <div class="text-[11px] text-blue-600 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div>
                         </td>
                         <td class="p-3 text-xs text-slate-600">
                             <div class="font-medium">${inv.type || 'Přijatá faktura'}</div>
@@ -1567,8 +1694,11 @@
 
         function renderAccountantInvoices() {
             const tbody = document.getElementById('accountant-invoice-table-body');
-            const clientFilter = document.getElementById('acc-client-select').value;
-            const statusFilter = document.getElementById('acc-status-select').value;
+            const clientFilter = document.getElementById('acc-client-select')?.value || 'all';
+            const statusFilter = document.getElementById('acc-status-select')?.value || 'all';
+            const datePreset = document.getElementById('acc-date-preset')?.value || 'all';
+            const dateFrom = document.getElementById('acc-date-from')?.value || '';
+            const dateTo = document.getElementById('acc-date-to')?.value || '';
             tbody.innerHTML = '';
 
             const user = auth.currentUser || currentUser;
@@ -1587,11 +1717,14 @@
                 filtered = filtered.filter(i => statusFilter === 'action_needed' ? (i.status === 'action_needed' || i.status === 'rejected') : i.status === statusFilter);
             }
 
+            // Filtr podle data
+            filtered = filtered.filter(inv => checkDateMatch(inv, datePreset, dateFrom, dateTo));
+
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
-                            Váš klientský inbox je prázdný. Založte firmu přes "+ Nová firma" a předejte klientovi PIN pro nahrávání dokladů.
+                            Žádné doklady neodpovídají vybraným filtrům.
                         </td>
                     </tr>
                 `;
@@ -1621,6 +1754,7 @@
                             <div class="text-slate-800 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div>
                             <div class="text-slate-500 text-[11px]">DUZP: ${inv.dateTax || inv.dateIssue || '-'}</div>
                             <div class="text-slate-400 text-[11px]">Splatnost: ${inv.dateDue || '-'}</div>
+                            <div class="text-[11px] text-blue-600 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div>
                         </td>
                         <td class="p-3">
                             <div class="font-bold text-slate-900 text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div>
@@ -1947,6 +2081,7 @@
 
             document.getElementById('detail-modal-title').textContent = `Detail a editace dokladu`;
             document.getElementById('detail-doc-id').textContent = `ID: ${inv.id}`;
+            document.getElementById('detail-created-at').textContent = inv.createdAt ? `Nahráno: ${formatDateTime(inv.createdAt)}` : '';
 
             resetDetailImg();
             document.getElementById('detail-img-preview').src = inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu';
@@ -2000,7 +2135,6 @@
                 if (btnAction) btnAction.classList.add('ring-2', 'ring-offset-1', 'ring-rose-500', 'font-bold');
             }
 
-            // Přizpůsobení tlačítek a polí podle role (Klient vs Účetní)
             const accButtons = document.getElementById('detail-acc-buttons');
             const clientButtons = document.getElementById('detail-client-buttons');
             const noteLabel = document.getElementById('detail-note-label');
@@ -2322,29 +2456,6 @@
                     }, idx * 250);
                 });
                 showToast(`Vygenerováno a staženo ${list.length} ISDOC souborů pro Money S3 / Pohodu!`, "success");
-            } else if (format === 'csv') {
-                const headers = ["Firma/Klient", "CisloFaktury", "VS", "Dodavatel", "ICO", "Typ", "ZpusobUhrady", "DatumVystaveni", "DUZP", "DatumSplatnosti", "ZakladDaně", "SazbaDPH", "VyseDPH", "CelkemCZK", "Ucet"];
-                const rows = list.map(i => [
-                    `"${(i.clientName || '').replace(/"/g, '""')}"`,
-                    `"${(i.invoiceNumber || '').replace(/"/g, '""')}"`,
-                    `"${(i.vs || '').replace(/"/g, '""')}"`,
-                    `"${(i.vendor || '').replace(/"/g, '""')}"`,
-                    `"${(i.ico || '').replace(/"/g, '""')}"`,
-                    `"${(i.type || '').replace(/"/g, '""')}"`,
-                    `"${(i.paymentMethod || 'Převodem').replace(/"/g, '""')}"`,
-                    `"${i.dateIssue || ''}"`,
-                    `"${i.dateTax || ''}"`,
-                    `"${i.dateDue || ''}"`,
-                    (i.baseAmount || 0),
-                    (i.vatRate || 21),
-                    (i.vatAmount || 0),
-                    (i.amount || 0),
-                    `"${(i.accountNumber || '').replace(/"/g, '""')}"`
-                ].join(";"));
-
-                const csvContent = "\uFEFF" + headers.join(";") + "\n" + rows.join("\n");
-                triggerDownload(csvContent, `faktury_export_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8');
-                showToast(`Exportováno ${list.length} dokladů do CSV!`, "success");
             }
         }
 
