@@ -2,7 +2,10 @@
 <html lang="cs" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
     <title>InvoiceAI Flow - Skenování faktur a správa účetnictví</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -48,9 +52,12 @@
         .pb-safe {
             padding-bottom: env(safe-area-inset-bottom, 1rem);
         }
+        .pt-safe {
+            padding-top: env(safe-area-inset-top, 0rem);
+        }
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
@@ -61,110 +68,80 @@
         }
     </style>
 </head>
-<body class="h-full text-slate-800 antialiased flex flex-col font-sans select-none">
+<body class="h-full text-slate-800 dark:text-slate-100 dark:bg-slate-950 antialiased flex flex-col font-sans select-none transition-colors duration-200">
 
     <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
 
     <!-- ================= LANDING PAGE ================= -->
     <div id="landing-page" class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white flex flex-col">
         <!-- Landing Navbar -->
-        <header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                        <i data-lucide="scan-line" class="w-6 h-6 text-white"></i>
+        <header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-30 pt-safe">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                        <i data-lucide="scan-line" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                     </div>
                     <div>
-                        <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">InvoiceAI</span>
-                        <span class="text-xs text-blue-400 block -mt-1 font-medium">Flow & Skenování</span>
+                        <span class="font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">InvoiceAI</span>
+                        <span class="text-[10px] sm:text-xs text-blue-400 block -mt-1 font-medium">Flow & Skenování</span>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
                     <button type="button" onclick="continueAsDemo()" class="text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 transition flex items-center gap-1.5">
                         <i data-lucide="play" class="w-3.5 h-3.5 text-emerald-400"></i>
-                        Zkušební demo režim
+                        <span>Demo režim</span>
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- Hero Section with Login/Register Card -->
-        <section class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 flex flex-col lg:flex-row items-center justify-between gap-12">
-            <div class="flex-1 space-y-6 text-center lg:text-left">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                    Chytré vytěžování faktur pomocí AI & ISDOC
-                </div>
-                <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-                    Konec ručního přepisování účtenek a faktur.
-                </h1>
-                <p class="text-base sm:text-lg text-slate-400 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                    Propojte své klienty s účetní kanceláří v reálném čase. Klient doklad jednoduše vyfotí mobilem, AI vyčte všechny položky a účetní ho jedním klikem importuje do <strong class="text-slate-200 font-semibold">Money S3</strong> nebo <strong class="text-slate-200 font-semibold">Pohody</strong>.
-                </p>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-left max-w-xl mx-auto lg:mx-0">
-                    <div class="p-3 bg-slate-900/80 rounded-2xl border border-slate-800">
-                        <i data-lucide="camera" class="w-5 h-5 text-blue-400 mb-1.5"></i>
-                        <strong class="block text-xs font-bold text-white">Skenování z mobilu</strong>
-                        <span class="text-[11px] text-slate-400">PWA aplikace přímo na ploše telefonu</span>
-                    </div>
-                    <div class="p-3 bg-slate-900/80 rounded-2xl border border-slate-800">
-                        <i data-lucide="cpu" class="w-5 h-5 text-indigo-400 mb-1.5"></i>
-                        <strong class="block text-xs font-bold text-white">Přesné AI vytěžení</strong>
-                        <span class="text-[11px] text-slate-400">IČO, DUZP, DPH, základ daně i VS</span>
-                    </div>
-                    <div class="p-3 bg-slate-900/80 rounded-2xl border border-slate-800">
-                        <i data-lucide="file-code" class="w-5 h-5 text-emerald-400 mb-1.5"></i>
-                        <strong class="block text-xs font-bold text-white">ISDOC 6.0.1 standard</strong>
-                        <span class="text-[11px] text-slate-400">Nativní import do Money S3 i Pohody</span>
-                    </div>
-                </div>
-
-                <div class="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-                    <button type="button" onclick="continueAsDemo()" class="w-full sm:w-auto px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition shadow-sm">
-                        <i data-lucide="play" class="w-4 h-4 text-emerald-400"></i>
-                        Vstoupit do zkušebního demo režimu (bez registrace)
-                    </button>
-                </div>
-            </div>
-
-            <!-- Login / Registration Card -->
-            <div class="w-full max-w-md" id="landing-auth-card-wrapper">
-                <div class="bg-white text-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 relative">
-                    <div class="flex items-center justify-between mb-5">
+        <!-- Hero Section with Mobile-First Order (Login card is top on mobile) -->
+        <section class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-16 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+            
+            <!-- 1) Login Card (order-1 on mobile so user doesn't scroll) -->
+            <div class="w-full max-w-md order-1 lg:order-2" id="landing-auth-card-wrapper">
+                <div class="bg-white text-slate-900 rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-100 relative">
+                    <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h2 class="text-xl font-bold text-slate-900" id="landing-auth-title">Přihlášení do systému</h2>
+                            <h2 class="text-lg sm:text-xl font-bold text-slate-900" id="landing-auth-title">Přihlášení do systému</h2>
                             <p class="text-xs text-slate-500 mt-0.5">Zadejte své přihlašovací údaje</p>
                         </div>
-                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                            <i data-lucide="lock" class="w-5 h-5"></i>
+                        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <i data-lucide="lock" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                         </div>
                     </div>
 
-                    <div class="flex p-1 bg-slate-100 rounded-xl border border-slate-200 mb-5">
-                        <button type="button" onclick="setAuthMode('signin')" id="landing-tab-signin" class="flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm">
+                    <div class="flex p-1 bg-slate-100 rounded-xl border border-slate-200 mb-4">
+                        <button type="button" onclick="setAuthMode('signin')" id="landing-tab-signin" class="flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm">
                             Přihlásit se
                         </button>
-                        <button type="button" onclick="setAuthMode('signup')" id="landing-tab-signup" class="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition">
+                        <button type="button" onclick="setAuthMode('signup')" id="landing-tab-signup" class="flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition">
                             Nová registrace
                         </button>
                     </div>
 
-                    <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                    <form onsubmit="handleAuthSubmit(event)" id="auth-form-landing" class="space-y-3.5">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">E-mailová adresa</label>
                             <div class="relative">
-                                <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
-                                <input type="email" id="auth-email" required placeholder="vas@email.cz" class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                                <input type="email" id="auth-email" required placeholder="vas@email.cz" class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Heslo</label>
                             <div class="relative">
-                                <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
-                                <input type="password" id="auth-password" required minlength="6" placeholder="Minimálně 6 znaků" class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                                <input type="password" id="auth-password" required minlength="6" placeholder="Minimálně 6 znaků" class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             </div>
+                        </div>
+
+                        <!-- Zapomenuté heslo -->
+                        <div id="forgot-password-box" class="flex justify-end -mt-1">
+                            <button type="button" onclick="handleForgotPassword()" class="text-[11px] text-blue-600 hover:text-blue-700 hover:underline font-medium transition">
+                                Zapomenuté heslo?
+                            </button>
                         </div>
 
                         <!-- Registration fields -->
@@ -172,18 +149,18 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">Zvolte typ účtu:</label>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 border-blue-500 bg-blue-50/40" id="label-role-accountant">
+                                    <label class="flex items-center gap-2 p-2 border rounded-xl cursor-pointer hover:bg-slate-50 border-blue-500 bg-blue-50/40" id="label-role-accountant">
                                         <input type="radio" name="auth-role" value="accountant" checked onchange="updateRoleTypeUI('accountant')" class="text-blue-600 focus:ring-blue-500">
                                         <div class="text-xs">
-                                            <strong class="block text-slate-800">Účetní kancelář</strong>
-                                            <span class="text-[10px] text-slate-500">Správa klientů & ISDOC</span>
+                                            <strong class="block text-slate-800 text-[11px] sm:text-xs">Účetní kancelář</strong>
+                                            <span class="text-[10px] text-slate-500 hidden sm:inline">Správa & ISDOC</span>
                                         </div>
                                     </label>
-                                    <label class="flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 border-slate-200" id="label-role-client">
+                                    <label class="flex items-center gap-2 p-2 border rounded-xl cursor-pointer hover:bg-slate-50 border-slate-200" id="label-role-client">
                                         <input type="radio" name="auth-role" value="client" onchange="updateRoleTypeUI('client')" class="text-blue-600 focus:ring-blue-500">
                                         <div class="text-xs">
-                                            <strong class="block text-slate-800">Klient / Firma</strong>
-                                            <span class="text-[10px] text-slate-500">Skenování dokladů</span>
+                                            <strong class="block text-slate-800 text-[11px] sm:text-xs">Klient / Firma</strong>
+                                            <span class="text-[10px] text-slate-500 hidden sm:inline">Skenování dokladů</span>
                                         </div>
                                     </label>
                                 </div>
@@ -191,281 +168,406 @@
 
                             <div id="accountant-company-box">
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Název účetní kanceláře / firmy</label>
-                                <input type="text" id="auth-accountant-company" placeholder="např. ProFit účetnictví s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <input type="text" id="auth-accountant-company" placeholder="např. ProFit účetnictví s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             </div>
 
                             <div id="client-pairing-box" class="hidden space-y-2">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Párovací kód od vaší účetní (PIN)</label>
-                                    <input type="text" id="auth-pairing-code" placeholder="např. PEK-742" class="w-full px-3 py-2 border border-blue-300 rounded-xl text-sm font-mono font-bold uppercase tracking-wider text-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-blue-50/30">
-                                    <p class="text-[11px] text-slate-500 mt-1">Zadejte 6místný kód od účetní. Účet se automaticky spáruje s vaší firmou.</p>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Párovací kód od účetní (PIN)</label>
+                                    <input type="text" id="auth-pairing-code" placeholder="např. PEK-742" class="w-full px-3 py-2 border border-blue-300 rounded-xl text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-blue-50/30">
+                                    <p class="text-[11px] text-slate-500 mt-1">Zadejte 6místný kód od účetní pro automatické spárování.</p>
                                 </div>
                                 <div class="pt-1">
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nebo název firmy (pokud kód nemáte)</label>
-                                    <input type="text" id="auth-client-company" placeholder="např. Moje Firma s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nebo název firmy (bez kódu)</label>
+                                    <input type="text" id="auth-client-company" placeholder="např. Moje Firma s.r.o." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                 </div>
                             </div>
                         </div>
 
-                        <button type="submit" id="auth-submit-btn" class="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition active:scale-95">
+                        <button type="submit" id="auth-submit-btn" class="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition active:scale-95">
                             <i data-lucide="log-in" class="w-4 h-4"></i>
                             <span id="auth-submit-label">Přihlásit se do systému</span>
                         </button>
                     </form>
 
-                    <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-center text-xs text-slate-500">
-                        <button type="button" onclick="continueAsDemo()" class="hover:text-blue-600 font-medium flex items-center gap-1">
+                    <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-center text-xs text-slate-500">
+                        <button type="button" onclick="continueAsDemo()" class="hover:text-blue-600 font-medium flex items-center gap-1 text-[11px] sm:text-xs">
                             <span>Vstoupit do zkušebního demo režimu</span>
                             <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
                 </div>
             </div>
+
+            <!-- 2) Marketing Text (order-2 on mobile, so it is below login) -->
+            <div class="flex-1 space-y-4 sm:space-y-6 text-center lg:text-left order-2 lg:order-1">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                    Chytré vytěžování faktur pomocí AI & ISDOC
+                </div>
+                <h1 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+                    Konec ručního přepisování účtenek a faktur.
+                </h1>
+                <p class="text-sm sm:text-base text-slate-400 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                    Propojte své klienty s účetní kanceláří v reálném čase. Klient doklad vyfotí mobilem, AI vyčte položky a účetní ho jedním klikem importuje do <strong class="text-slate-200 font-semibold">Money S3</strong> nebo <strong class="text-slate-200 font-semibold">Pohody</strong>.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-2 text-left max-w-xl mx-auto lg:mx-0">
+                    <div class="p-3 bg-slate-900/80 rounded-2xl border border-slate-800">
+                        <i data-lucide="camera" class="w-4 h-4 text-blue-400 mb-1"></i>
+                        <strong class="block text-xs font-bold text-white">Skenování z mobilu</strong>
+                        <span class="text-[11px] text-slate-400">PWA aplikace na ploše telefonu</span>
+                    </div>
+                    <div class="p-3 bg-slate-900/80 rounded-2xl border border-slate-800">
+                        <i data-lucide="cpu" class="w-4 h-4 text-indigo-400 mb-1"></i>
+                        <strong class="block text-xs font-bold text-white">Přesné AI vytěžení</strong>
+                        <span class="text-[11px] text-slate-400">IČO, DUZP, DPH a variabilní symbol</span>
+                    </div>
+                    <div class="p-3 bg-slate-900/80 rounded-2xl border border-slate-800">
+                        <i data-lucide="file-code" class="w-4 h-4 text-emerald-400 mb-1"></i>
+                        <strong class="block text-xs font-bold text-white">ISDOC 6.0.1 standard</strong>
+                        <span class="text-[11px] text-slate-400">Nativní import do Money S3 i Pohody</span>
+                    </div>
+                </div>
+            </div>
+
         </section>
 
         <!-- Footer -->
-        <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
+        <footer class="border-t border-slate-900 py-4 text-center text-[11px] text-slate-500">
             <p>© 2026 InvoiceAI Flow. Vytvořeno pro moderní účetní kanceláře a jejich klienty.</p>
         </footer>
     </div>
 
     <!-- ================= DASHBOARD APP ================= -->
-    <div id="app" class="flex-1 flex flex-col min-h-screen bg-slate-50 hidden">
+    <div id="app" class="flex-1 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 hidden">
         <!-- Top Navigation Bar -->
-        <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                            <i data-lucide="scan-line" class="w-6 h-6 text-white"></i>
+        <header class="bg-slate-900 dark:bg-slate-900 text-white sticky top-0 z-30 shadow-md border-b border-slate-800 pt-safe">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-14 sm:h-16">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                            <i data-lucide="scan-line" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                         </div>
                         <div>
-                            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">InvoiceAI</span>
-                            <span class="text-xs text-blue-400 block -mt-1 font-medium">Flow & Skenování</span>
+                            <span class="font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">InvoiceAI</span>
+                            <span class="text-[10px] sm:text-xs text-blue-400 block -mt-1 font-medium">Flow</span>
                         </div>
                     </div>
 
                     <div class="flex items-center space-x-2 sm:space-x-3">
-                        <button onclick="openModal('pwa-modal')" class="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 text-xs font-medium border border-slate-700">
+                        <button onclick="openModal('pwa-modal')" class="p-1.5 sm:p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 text-xs font-medium border border-slate-700">
                             <i data-lucide="smartphone" class="w-4 h-4 text-blue-400"></i>
                             <span class="hidden md:inline">Mobilní appka</span>
                         </button>
 
-                        <!-- Demo Mode Switcher (viditelný VÝHRADNĚ v demo režimu) -->
-                        <div id="demo-switcher-container" class="hidden bg-slate-800 p-1 rounded-xl border border-amber-500/30 flex items-center">
-                            <span class="px-2 text-[10px] uppercase font-bold text-amber-400">Demo</span>
-                            <button id="role-btn-client" onclick="switchRole('client')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-blue-600 text-white">
+                        <!-- Demo Mode Switcher -->
+                        <div id="demo-switcher-container" class="hidden bg-slate-800 p-0.5 rounded-xl border border-amber-500/30 flex items-center">
+                            <button id="role-btn-client" onclick="switchRole('client')" class="px-2 py-1 rounded-lg text-[11px] font-semibold transition bg-blue-600 text-white">
                                 Klient
                             </button>
-                            <button id="role-btn-accountant" onclick="switchRole('accountant')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white">
+                            <button id="role-btn-accountant" onclick="switchRole('accountant')" class="px-2 py-1 rounded-lg text-[11px] font-semibold transition text-slate-400 hover:text-white">
                                 Účetní
                             </button>
                         </div>
 
-                        <!-- User Profile Card -->
-                        <div id="auth-logged-in" class="flex items-center gap-2">
-                            <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center gap-2.5 shadow-sm">
-                                <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-sm" id="user-avatar">U</div>
+                        <!-- User Profile Dropdown Menu -->
+                        <div id="auth-logged-in" class="relative">
+                            <button type="button" onclick="toggleProfileDropdown()" id="profile-dropdown-btn" class="bg-slate-800 hover:bg-slate-700/80 border border-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-sm transition active:scale-95 text-left">
+                                <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-sm" id="user-avatar">U</div>
                                 <div class="text-left hidden sm:block">
-                                    <div class="text-xs font-bold text-white leading-tight" id="user-display-email">user@email.cz</div>
+                                    <div class="text-xs font-bold text-white leading-tight truncate max-w-[120px]" id="user-display-email">user@email.cz</div>
                                     <div class="text-[10px] text-blue-400 font-semibold" id="user-display-role">Účetní kancelář</div>
                                 </div>
-                            </div>
-                            <button onclick="handleLogout()" title="Odhlásit se z účtu" class="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition border border-slate-700">
-                                <i data-lucide="log-out" class="w-4 h-4"></i>
+                                <i data-lucide="chevron-down" id="profile-dropdown-chevron" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"></i>
                             </button>
+
+                            <!-- Rolovací Menu Profilu -->
+                            <div id="profile-dropdown-menu" class="hidden absolute right-0 mt-2 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50 text-slate-800 dark:text-slate-100 divide-y divide-slate-100 dark:divide-slate-800">
+                                <div class="px-4 py-2">
+                                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Přihlášený profil</p>
+                                    <p class="text-xs font-bold text-slate-900 dark:text-white truncate" id="menu-user-email">user@email.cz</p>
+                                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-800 truncate max-w-full" id="menu-user-company">Firma / Kancelář</span>
+                                </div>
+
+                                <div class="py-1">
+                                    <button type="button" onclick="openAccountSettingsModal()" class="w-full px-4 py-2 text-xs text-left font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 transition">
+                                        <i data-lucide="settings" class="w-4 h-4 text-blue-600"></i>
+                                        Nastavení účtu
+                                    </button>
+                                    <button type="button" onclick="openChangePasswordModal()" class="w-full px-4 py-2 text-xs text-left font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 transition">
+                                        <i data-lucide="key-round" class="w-4 h-4 text-amber-500"></i>
+                                        Změna hesla
+                                    </button>
+                                    <button type="button" onclick="toggleTheme()" class="w-full px-4 py-2 text-xs text-left font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-between transition">
+                                        <span class="flex items-center gap-2.5">
+                                            <i data-lucide="moon" id="theme-icon" class="w-4 h-4 text-indigo-500"></i>
+                                            <span id="theme-label">Tmavý režim</span>
+                                        </span>
+                                        <span class="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded" id="theme-badge">Vypnuto</span>
+                                    </button>
+                                </div>
+
+                                <div class="py-1">
+                                    <button type="button" onclick="handleLogout()" class="w-full px-4 py-2 text-xs text-left font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2.5 transition">
+                                        <i data-lucide="log-out" class="w-4 h-4 text-rose-500"></i>
+                                        Odhlásit se z aplikace
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </header>
 
-        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-8">
+        <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-8">
 
             <!-- ROLE 1: KLIENT VIEW -->
-            <div id="client-view" class="space-y-6">
-                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div id="client-view" class="space-y-4 sm:space-y-6">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
-                        <div class="flex items-center gap-2">
-                            <h1 class="text-xl font-bold text-slate-900">Přehled dokladů</h1>
-                            <span id="current-client-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Přehled dokladů</h1>
+                            <span id="current-client-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                 Firma: Moje Firma
                             </span>
                         </div>
-                        <p class="text-sm text-slate-500 mt-1">Skenujte faktury a účtenky přímo z mobilu. Účetní má k datům okamžitý přístup.</p>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Skenujte faktury přímo z mobilu. Účetní má k datům okamžitý přístup.</p>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="triggerScan()" class="w-full md:w-auto px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition active:scale-95">
+                    <div>
+                        <button onclick="triggerScan()" class="w-full md:w-auto px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition active:scale-95">
                             <i data-lucide="camera" class="w-4 h-4"></i>
                             Naskenovat doklad
                         </button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Tento měsíc</div>
-                        <div class="text-xl font-bold text-slate-900 mt-1" id="stat-client-total">0 Kč</div>
-                        <div class="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                            <span class="text-emerald-600 font-semibold" id="stat-client-count">0</span> dokladů celkem
-                        </div>
+                <!-- Stats Grid (Compact on mobile) -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+                    <div class="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="text-slate-500 text-[10px] sm:text-xs font-medium uppercase tracking-wider">Tento měsíc</div>
+                        <div class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mt-0.5" id="stat-client-total">0 Kč</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5"><span class="text-emerald-600 font-semibold" id="stat-client-count">0</span> dokladů</div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">K vyřešení / Nové</div>
-                        <div class="text-xl font-bold text-amber-600 mt-1" id="stat-client-pending">0</div>
-                        <div class="text-xs text-slate-500 mt-1">Čeká na kontrolu účetní</div>
+                    <div class="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="text-slate-500 text-[10px] sm:text-xs font-medium uppercase tracking-wider">K vyřešení</div>
+                        <div class="text-lg sm:text-xl font-bold text-amber-600 mt-0.5" id="stat-client-pending">0</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Čeká na účetní</div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Schváleno</div>
-                        <div class="text-xl font-bold text-emerald-600 mt-1" id="stat-client-approved">0</div>
-                        <div class="text-xs text-slate-500 mt-1">Zaúčtováno v systému</div>
+                    <div class="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="text-slate-500 text-[10px] sm:text-xs font-medium uppercase tracking-wider">Schváleno</div>
+                        <div class="text-lg sm:text-xl font-bold text-emerald-600 mt-0.5" id="stat-client-approved">0</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Zaúčtováno</div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Vraceno k doplnění</div>
-                        <div class="text-xl font-bold text-rose-600 mt-1" id="stat-client-rejected">0</div>
-                        <div class="text-xs text-rose-500 mt-1 font-medium">Vyžaduje vaši reakci</div>
+                    <div class="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="text-slate-500 text-[10px] sm:text-xs font-medium uppercase tracking-wider">K doplnění</div>
+                        <div class="text-lg sm:text-xl font-bold text-rose-600 mt-0.5" id="stat-client-rejected">0</div>
+                        <div class="text-[11px] text-rose-500 mt-0.5">Vyžaduje reakci</div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
-                        <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-                            <button onclick="filterClientInvoices('all')" id="filter-btn-all" class="client-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap">
+                <!-- Client Filters Bar -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col gap-2.5 bg-slate-50/50 dark:bg-slate-900/50">
+                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+                            <button onclick="filterClientInvoices('all')" id="filter-btn-all" class="client-filter-btn active px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap">
                                 Všechny
                             </button>
-                            <button onclick="filterClientInvoices('pending')" id="filter-btn-pending" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
+                            <button onclick="filterClientInvoices('pending')" id="filter-btn-pending" class="client-filter-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 whitespace-nowrap">
                                 Čekající
                             </button>
-                            <button onclick="filterClientInvoices('approved')" id="filter-btn-approved" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
+                            <button onclick="filterClientInvoices('approved')" id="filter-btn-approved" class="client-filter-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 whitespace-nowrap">
                                 Schválené
                             </button>
-                            <button onclick="filterClientInvoices('action_needed')" id="filter-btn-action_needed" class="client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap">
+                            <button onclick="filterClientInvoices('action_needed')" id="filter-btn-action_needed" class="client-filter-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 whitespace-nowrap">
                                 K dořešení
                             </button>
                         </div>
-                        <div class="relative min-w-[200px]">
-                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-                            <input type="text" id="client-search" onkeyup="renderClientInvoices()" placeholder="Hledat dodavatele, částku..." class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+
+                        <!-- Clean responsive filters -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div class="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                                <select id="client-date-preset" onchange="handleClientDatePresetChange()" class="w-full bg-transparent text-slate-700 dark:text-slate-200 text-xs py-1 focus:outline-none font-medium">
+                                    <option value="all">Všechna data</option>
+                                    <option value="today">Dnes</option>
+                                    <option value="week">Posledních 7 dní</option>
+                                    <option value="this_month">Tento měsíc</option>
+                                    <option value="last_month">Minulý měsíc</option>
+                                    <option value="custom">Vlastní rozsah (Od - Do)</option>
+                                </select>
+                            </div>
+                            <div class="relative">
+                                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+                                <input type="text" id="client-search" onkeyup="renderClientInvoices()" placeholder="Hledat dodavatele, částku..." class="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-white">
+                            </div>
+                        </div>
+
+                        <div id="client-custom-dates" class="hidden flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 pt-1">
+                            <span>Od:</span>
+                            <input type="date" id="client-date-from" onchange="renderClientInvoices()" class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <span>Do:</span>
+                            <input type="date" id="client-date-to" onchange="renderClientInvoices()" class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                                <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800">
                                     <th class="p-3 pl-4">Doklad / Dodavatel</th>
-                                    <th class="p-3">Datum / Splatnost</th>
+                                    <th class="p-3">Datum & Splatnost</th>
                                     <th class="p-3">Typ</th>
                                     <th class="p-3">Částka s DPH</th>
                                     <th class="p-3">Stav</th>
                                     <th class="p-3 text-right pr-4">Akce</th>
                                 </tr>
                             </thead>
-                            <tbody id="client-invoice-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                            <tbody id="client-invoice-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
             <!-- ROLE 2: ÚČETNÍ VIEW -->
-            <div id="accountant-view" class="space-y-6 hidden">
-                <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div id="accountant-view" class="space-y-4 sm:space-y-6 hidden">
+                <div class="bg-slate-900 text-white rounded-2xl p-4 sm:p-6 shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                         <div class="flex items-center gap-2">
-                            <span id="acc-agency-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                            <span id="acc-agency-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 truncate max-w-full">
                                 Účetní kancelář
                             </span>
                         </div>
-                        <h1 class="text-2xl font-bold mt-2">Klientský inbox dokladů</h1>
-                        <p class="text-slate-400 text-sm mt-1">Kontrola, schvalování AI vyťažených faktur a export do účetních systémů (Pohoda, Money S3).</p>
+                        <h1 class="text-lg sm:text-2xl font-bold mt-1.5 sm:mt-2">Klientský inbox dokladů</h1>
+                        <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Kontrola, schvalování AI faktur a export do Money S3 / Pohody.</p>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="triggerScan()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                        <button onclick="triggerScan()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
                             <i data-lucide="camera" class="w-4 h-4"></i>
-                            Naskenovat doklad
+                            <span>Naskenovat doklad</span>
                         </button>
                         <button onclick="openModal('clients-modal')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
                             <i data-lucide="building-2" class="w-4 h-4"></i>
-                            Správa firem & PINů
+                            <span>Správa firem & PINů</span>
                         </button>
-                        <button onclick="exportInvoices('isdoc')" class="px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                        <button onclick="exportInvoices('isdoc')" class="px-3 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition shadow-sm">
                             <i data-lucide="file-code" class="w-4 h-4"></i>
-                            Export ISDOC (Money S3 / Pohoda)
+                            <span>Export ISDOC</span>
                         </button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">K zpracování (Nové)</div>
-                        <div class="text-2xl font-bold text-amber-600 mt-1" id="acc-stat-pending">0</div>
-                        <p class="text-xs text-slate-500 mt-1">Vyžaduje kontrolu</p>
+                <!-- Stats Grid (Compact on mobile) -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+                    <div class="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="text-slate-500 text-[10px] sm:text-xs font-medium uppercase tracking-wider">K zpracování</div>
+                        <div class="text-lg sm:text-2xl font-bold text-amber-600 mt-0.5" id="acc-stat-pending">0</div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Vyžaduje kontrolu</p>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Zaúčtováno tento měsíc</div>
-                        <div class="text-2xl font-bold text-emerald-600 mt-1" id="acc-stat-approved">0</div>
-                        <p class="text-xs text-slate-500 mt-1">Připraveno pro účetní uzávěrku</p>
+                    <div class="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="text-slate-500 text-[10px] sm:text-xs font-medium uppercase tracking-wider">Zaúčtováno</div>
+                        <div class="text-lg sm:text-2xl font-bold text-emerald-600 mt-0.5" id="acc-stat-approved">0</div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Uzavřené doklady</p>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Objem v CZK</div>
-                        <div class="text-2xl font-bold text-slate-900 mt-1" id="acc-stat-volume">0 Kč</div>
-                        <p class="text-xs text-slate-500 mt-1" id="acc-stat-total-count">Celkem 0 dokladů</p>
+                    <div class="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="text-slate-500 text-[10px] sm:text-xs font-medium uppercase tracking-wider">Objem v CZK</div>
+                        <div class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mt-0.5 truncate" id="acc-stat-volume">0 Kč</div>
+                        <p class="text-[11px] text-slate-500 mt-0.5" id="acc-stat-total-count">Celkem 0 dokladů</p>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Průměrná přesnost AI</div>
-                        <div class="text-2xl font-bold text-indigo-600 mt-1">98.4%</div>
-                        <p class="text-xs text-emerald-600 mt-1 font-medium">↑ Bezchybná extrakce</p>
+                    <div class="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="text-slate-500 text-[10px] sm:text-xs font-medium uppercase tracking-wider">Přesnost AI</div>
+                        <div class="text-lg sm:text-2xl font-bold text-indigo-600 mt-0.5">98.4%</div>
+                        <p class="text-[11px] text-emerald-600 mt-0.5 font-medium">↑ Bezchybné</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/60">
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter klienta:</span>
-                            <select id="acc-client-select" onchange="renderAccountantInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
-                                <option value="all">Všichni klienti</option>
-                            </select>
+                <!-- 3) USPOŘÁDANÉ FILTRY DOKUMENTŮ PRO ÚČETNÍ -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 flex flex-col gap-2.5">
+                        
+                        <!-- Row 1: Klient dropdown (Full width on mobile) -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filtrovat klienta:</label>
+                            <div class="relative">
+                                <i data-lucide="building-2" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                                <select id="acc-client-select" onchange="renderAccountantInvoices()" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs rounded-xl pl-9 pr-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                                    <option value="all">Všichni klienti</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <select id="acc-status-select" onchange="renderAccountantInvoices()" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
-                                <option value="all">Všechny stavy</option>
-                                <option value="pending">Nové k vyřízení</option>
-                                <option value="approved">Zaúčtované</option>
-                                <option value="action_needed">Vrácené k doplnění</option>
-                            </select>
+
+                        <!-- Row 2: Stav & Datum (2 columns side-by-side on mobile) -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Stav dokladu:</label>
+                                <select id="acc-status-select" onchange="renderAccountantInvoices()" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs rounded-xl px-2.5 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                                    <option value="all">Všechny stavy</option>
+                                    <option value="pending">Nové k vyřízení</option>
+                                    <option value="approved">Zaúčtované</option>
+                                    <option value="action_needed">K doplnění</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Časové období:</label>
+                                <div class="relative">
+                                    <select id="acc-date-preset" onchange="handleAccDatePresetChange()" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs rounded-xl px-2.5 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+                                        <option value="all">Všechna data</option>
+                                        <option value="today">Dnes</option>
+                                        <option value="week">Posledních 7 dní</option>
+                                        <option value="this_month">Tento měsíc</option>
+                                        <option value="last_month">Minulý měsíc</option>
+                                        <option value="custom">Vlastní rozsah (Od - Do)</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Row 3: Custom Date Range (Conditionally shown) -->
+                        <div id="acc-custom-dates" class="hidden grid grid-cols-2 gap-2 pt-1">
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Datum od:</label>
+                                <input type="date" id="acc-date-from" onchange="renderAccountantInvoices()" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Datum do:</label>
+                                <input type="date" id="acc-date-to" onchange="renderAccountantInvoices()" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                                <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800">
                                     <th class="p-3 pl-4">Klient</th>
                                     <th class="p-3">Dodavatel & IČO</th>
                                     <th class="p-3">Číslo / DUZP / Splatnost</th>
                                     <th class="p-3">Částka (Základ & DPH)</th>
                                     <th class="p-3">Stav</th>
-                                    <th class="p-3 text-right pr-4">Kontrola & Akce</th>
+                                    <th class="p-3 text-right pr-4">Akce</th>
                                 </tr>
                             </thead>
-                            <tbody id="accountant-invoice-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                            <tbody id="accountant-invoice-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </main>
 
-        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 md:hidden pb-safe shadow-lg">
-            <div class="flex items-center justify-around h-16 px-4">
-                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center justify-center text-slate-600 hover:text-blue-600 font-medium text-[11px]">
-                    <i data-lucide="file-text" class="w-5 h-5 mb-0.5"></i>
+        <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-30 md:hidden pb-safe shadow-lg">
+            <div class="flex items-center justify-around h-14 sm:h-16 px-4">
+                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center justify-center text-slate-600 dark:text-slate-400 hover:text-blue-600 font-medium text-[10px] sm:text-[11px]">
+                    <i data-lucide="file-text" class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5"></i>
                     <span>Přehled</span>
                 </button>
-                <button onclick="triggerScan()" class="-mt-6 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/40 border-4 border-slate-50 active:scale-95 transition">
-                    <i data-lucide="camera" class="w-6 h-6"></i>
+                <button onclick="triggerScan()" class="-mt-5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/40 border-3 border-slate-50 dark:border-slate-900 active:scale-95 transition">
+                    <i data-lucide="camera" class="w-5 h-5 sm:w-6 sm:h-6"></i>
                 </button>
-                <button onclick="openModal('pwa-modal')" class="flex flex-col items-center justify-center text-slate-600 hover:text-blue-600 font-medium text-[11px]">
-                    <i data-lucide="smartphone" class="w-5 h-5 mb-0.5"></i>
+                <button onclick="openModal('pwa-modal')" class="flex flex-col items-center justify-center text-slate-600 dark:text-slate-400 hover:text-blue-600 font-medium text-[10px] sm:text-[11px]">
+                    <i data-lucide="smartphone" class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5"></i>
                     <span>Nápověda</span>
                 </button>
             </div>
@@ -473,89 +575,89 @@
     </div>
 
     <!-- Modal 1: AI Camera Scanner & Data Verification Modal -->
-    <div id="scan-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
-            <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+    <div id="scan-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                         <i data-lucide="sparkles" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-900 text-base">AI Skenování & Vyťaženie faktúry</h3>
-                        <p class="text-xs text-slate-500">Automatická detekce poli a kontrola údajů</p>
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">AI Skenování & Vyťaženie faktúry</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Automatická detekce poli a kontrola údajů</p>
                     </div>
                 </div>
-                <button onclick="closeModal('scan-modal')" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
+                <button onclick="closeModal('scan-modal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <div class="p-6 space-y-6">
-                <div class="relative bg-slate-900 rounded-2xl overflow-hidden min-h-[220px] flex items-center justify-center border border-slate-800">
+            <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                <div class="relative bg-slate-900 rounded-2xl overflow-hidden min-h-[190px] sm:min-h-[220px] flex items-center justify-center border border-slate-800">
                     <div id="scan-line-anim" class="scan-line hidden"></div>
-                    <img id="scan-preview-img" src="" alt="Skenovaný doklad" class="max-h-64 object-contain hidden transition opacity-90">
-                    <div id="scan-dropzone" class="text-center p-8">
-                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-slate-800 text-blue-400 flex items-center justify-center border border-slate-700">
-                            <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                    <img id="scan-preview-img" src="" alt="Skenovaný doklad" class="max-h-60 sm:max-h-64 object-contain hidden transition opacity-90">
+                    <div id="scan-dropzone" class="text-center p-6 sm:p-8">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-2.5 rounded-full bg-slate-800 text-blue-400 flex items-center justify-center border border-slate-700">
+                            <i data-lucide="upload-cloud" class="w-7 h-7 sm:w-8 sm:h-8"></i>
                         </div>
-                        <p class="text-white text-sm font-semibold">Nahrajte nebo vyfoťte fakturu</p>
-                        <p class="text-xs text-slate-400 mt-1">Podporované formáty: JPG, PNG, PDF</p>
-                        <label class="mt-4 inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl cursor-pointer transition">
+                        <p class="text-white text-xs sm:text-sm font-semibold">Nahrajte nebo vyfoťte fakturu</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Podporované formáty: JPG, PNG, PDF</p>
+                        <label class="mt-3.5 inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl cursor-pointer transition">
                             Vybrat soubor / Foto
                             <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)">
                         </label>
                     </div>
                     <div id="scan-loading" class="hidden absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center text-white p-4">
-                        <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                        <p class="font-bold text-sm">AI analyzuje strukturu dokladu...</p>
-                        <p class="text-xs text-slate-400 mt-1">Vytěžování IČO, DPH, DUZP a platebních údajů</p>
+                        <div class="w-9 h-9 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2.5"></div>
+                        <p class="font-bold text-xs sm:text-sm">AI analyzuje strukturu dokladu...</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Vytěžování IČO, DPH, DUZP a platebních údajů</p>
                     </div>
                 </div>
 
-                <form id="extracted-form" onsubmit="saveExtractedInvoice(event)" class="space-y-4">
+                <form id="extracted-form" onsubmit="saveExtractedInvoice(event)" class="space-y-3.5 sm:space-y-4">
                     <div class="flex items-center justify-between">
                         <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Vyťažené údaje z dokladu</h4>
-                        <span class="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
+                        <span class="text-xs text-emerald-600 font-medium bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-100 dark:border-emerald-800 flex items-center gap-1">
                             <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
                             Spolehlivost 99%
                         </span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="sm:col-span-2 bg-blue-50/60 p-3.5 rounded-2xl border border-blue-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div class="sm:col-span-2 bg-blue-50/60 dark:bg-slate-800/60 p-3 rounded-2xl border border-blue-100 dark:border-slate-700 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
                             <div class="flex-1">
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Přiřadit ke klientovi / firmě:</label>
-                                <select id="field-client-name" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Přiřadit ke klientovi / firmě:</label>
+                                <select id="field-client-name" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-800 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
                             </div>
-                            <div class="sm:mt-5 flex gap-2">
-                                <button type="button" onclick="addNewClientPrompt()" class="px-3 py-2 bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 text-xs font-semibold rounded-xl flex items-center justify-center gap-1 transition shadow-sm">
-                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> + Nová firma
+                            <div class="sm:mt-5 flex gap-1.5">
+                                <button type="button" onclick="addNewClientPrompt()" class="px-2.5 py-1.5 bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-slate-600 hover:bg-blue-50 text-xs font-semibold rounded-xl flex items-center justify-center gap-1 transition shadow-sm">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Nová firma
                                 </button>
-                                <button type="button" onclick="openModal('clients-modal')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1 transition">
+                                <button type="button" onclick="openModal('clients-modal')" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl flex items-center justify-center gap-1 transition">
                                     <i data-lucide="settings" class="w-3.5 h-3.5"></i> Spravovat
                                 </button>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Dodavatel</label>
-                            <input type="text" id="field-vendor" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Dodavatel</label>
+                            <input type="text" id="field-vendor" required class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">IČO Dodavatele</label>
-                            <input type="text" id="field-ico" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">IČO Dodavatele</label>
+                            <input type="text" id="field-ico" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Číslo dokladu / faktury</label>
-                            <input type="text" id="field-invoice-num" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Číslo dokladu / faktury</label>
+                            <input type="text" id="field-invoice-num" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Variabilní Symbol (VS)</label>
-                            <input type="text" id="field-vs" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <input type="text" id="field-vs" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Typ dokladu</label>
-                            <select id="field-type" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                            <select id="field-type" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                                 <option value="Přijatá faktura">Přijatá faktura</option>
                                 <option value="Vydaná faktura">Vydaná faktura</option>
                                 <option value="Účtenka">Zjednodušený doklad / Účtenka</option>
@@ -563,7 +665,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Způsob úhrady</label>
-                            <select id="field-payment-method" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                            <select id="field-payment-method" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                                 <option value="Převodem">Bankovní převod</option>
                                 <option value="Kartou">Platební karta</option>
                                 <option value="Hotově">Hotovost</option>
@@ -573,19 +675,19 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Datum vystavení</label>
-                            <input type="date" id="field-date-issue" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <input type="date" id="field-date-issue" required class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Datum zdanitelného plnění (DUZP)</label>
-                            <input type="date" id="field-date-tax" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <input type="date" id="field-date-tax" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Datum splatnosti</label>
-                            <input type="date" id="field-date-due" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <input type="date" id="field-date-due" required class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Sazba DPH (%)</label>
-                            <select id="field-vat-rate" onchange="calculateScanAmounts('rate')" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                            <select id="field-vat-rate" onchange="calculateScanAmounts('rate')" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                                 <option value="21">21 % (základní)</option>
                                 <option value="12">12 % (snížená)</option>
                                 <option value="0">0 % (osvobozeno)</option>
@@ -593,32 +695,32 @@
                         </div>
 
                         <!-- Finanční rozpad -->
-                        <div class="sm:col-span-2 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-2 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Základ daně (Kč)</label>
-                                <input type="number" step="0.01" id="field-base-amount" oninput="calculateScanAmounts('base')" placeholder="0.00" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Základ daně (Kč)</label>
+                                <input type="number" step="0.01" id="field-base-amount" oninput="calculateScanAmounts('base')" placeholder="0.00" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Výše DPH (Kč)</label>
-                                <input type="number" step="0.01" id="field-vat-amount" oninput="calculateScanAmounts('vat')" placeholder="0.00" class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Výše DPH (Kč)</label>
+                                <input type="number" step="0.01" id="field-vat-amount" oninput="calculateScanAmounts('vat')" placeholder="0.00" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-blue-700 mb-1">Částka celkem s DPH (Kč)</label>
-                                <input type="number" step="0.01" id="field-amount" oninput="calculateScanAmounts('total')" required placeholder="0.00" class="w-full px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-sm font-bold text-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block text-[11px] font-bold text-blue-700 dark:text-blue-400 mb-1">Částka celkem s DPH (Kč)</label>
+                                <input type="number" step="0.01" id="field-amount" oninput="calculateScanAmounts('total')" required placeholder="0.00" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700 rounded-lg text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             </div>
                         </div>
 
                         <div class="sm:col-span-2">
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Číslo bankovního účtu pro úhradu / IBAN</label>
-                            <input type="text" id="field-account" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Číslo účtu pro platbu / IBAN</label>
+                            <input type="text" id="field-account" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                         </div>
                     </div>
 
-                    <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-                        <button type="button" onclick="closeModal('scan-modal')" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+                        <button type="button" onclick="closeModal('scan-modal')" class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50">
                             Zrušit
                         </button>
-                        <button type="submit" class="px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 flex items-center gap-1.5">
+                        <button type="submit" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 flex items-center gap-1.5">
                             <i data-lucide="send" class="w-4 h-4"></i>
                             Uložit & Odeslat účetní
                         </button>
@@ -630,92 +732,93 @@
 
     <!-- Modal 2: Detailed Invoice Review & Edit Modal -->
     <div id="detail-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
-            <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-20">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+            <div class="p-3.5 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-20">
                 <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-blue-600 animate-pulse"></span>
-                    <h3 class="font-bold text-slate-900 text-base" id="detail-modal-title">Detail a kontrola dokladu</h3>
-                    <span id="detail-status-badge" class="ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></span>
+                    <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base" id="detail-modal-title">Detail a kontrola dokladu</h3>
+                    <span id="detail-status-badge" class="ml-2 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
                         Čeká na zpracování
                     </span>
                 </div>
-                <button onclick="closeModal('detail-modal')" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
+                <button onclick="closeModal('detail-modal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <div class="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="p-3.5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
                 <!-- Image Viewer -->
-                <div class="lg:col-span-5 flex flex-col space-y-3">
-                    <div class="flex items-center justify-between bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-                        <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1">
+                <div class="lg:col-span-5 flex flex-col space-y-2.5 sm:space-y-3">
+                    <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
                             <i data-lucide="image" class="w-3.5 h-3.5"></i> Náhled originálu
                         </span>
                         <div class="flex items-center gap-1">
-                            <button type="button" onclick="zoomDetailImg(-0.2)" title="Oddálit" class="p-1 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition">
+                            <button type="button" onclick="zoomDetailImg(-0.2)" title="Oddálit" class="p-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg transition">
                                 <i data-lucide="zoom-out" class="w-4 h-4"></i>
                             </button>
-                            <button type="button" onclick="resetDetailImg()" title="Původní velikost" class="px-1.5 py-0.5 text-[11px] font-semibold text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition" id="detail-zoom-lvl">
+                            <button type="button" onclick="resetDetailImg()" title="Původní velikost" class="px-1.5 py-0.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 rounded-lg transition" id="detail-zoom-lvl">
                                 100%
                             </button>
-                            <button type="button" onclick="zoomDetailImg(0.2)" title="Přiblížit" class="p-1 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition">
+                            <button type="button" onclick="zoomDetailImg(0.2)" title="Přiblížit" class="p-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg transition">
                                 <i data-lucide="zoom-in" class="w-4 h-4"></i>
                             </button>
-                            <button type="button" onclick="rotateDetailImg()" title="Otočit o 90°" class="p-1 text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition">
+                            <button type="button" onclick="rotateDetailImg()" title="Otočit o 90°" class="p-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg transition">
                                 <i data-lucide="rotate-cw" class="w-4 h-4"></i>
                             </button>
-                            <button type="button" onclick="openDetailImgFull()" title="Otevřít originál v novém okně" class="p-1 text-blue-600 hover:bg-white rounded-lg transition">
+                            <button type="button" onclick="openDetailImgFull()" title="Otevřít originál v novém okně" class="p-1 text-blue-600 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition">
                                 <i data-lucide="external-link" class="w-4 h-4"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div class="bg-slate-950 rounded-2xl p-2 min-h-[350px] sm:min-h-[440px] max-h-[500px] overflow-auto flex items-center justify-center border border-slate-800 relative select-none">
+                    <div class="bg-slate-950 rounded-2xl p-2 min-h-[300px] sm:min-h-[440px] max-h-[480px] overflow-auto flex items-center justify-center border border-slate-800 relative select-none">
                         <img id="detail-img-preview" src="" alt="Originální doklad" class="max-w-full object-contain transition-transform duration-200 shadow-md">
                     </div>
-                    <p class="text-[11px] text-slate-400 text-center">Tip: Můžete přibližovat lupou a otáčet pro lepší čitelnost položek.</p>
                 </div>
 
                 <!-- Form Fields -->
-                <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
-                    <form id="detail-edit-form" onsubmit="saveDetailChanges(event)" class="space-y-4">
-                        <!-- Výběr firmy pro účetní (pro klienta se skryje) -->
-                        <div id="detail-client-assignment-box" class="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="lg:col-span-7 flex flex-col justify-between space-y-3.5">
+                    <form id="detail-edit-form" onsubmit="saveDetailChanges(event)" class="space-y-3">
+                        <div id="detail-client-assignment-box" class="bg-blue-50/70 dark:bg-slate-800/60 p-3 rounded-2xl border border-blue-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div class="flex-1">
-                                <label class="block text-[11px] uppercase font-bold text-blue-700 mb-1">Přiřazeno k firmě / klientovi:</label>
-                                <select id="detail-client-select" class="w-full px-2.5 py-1.5 bg-white border border-blue-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+                                <label class="block text-[11px] uppercase font-bold text-blue-700 dark:text-blue-400 mb-1">Přiřazeno k firmě / klientovi:</label>
+                                <select id="detail-client-select" class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-blue-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
                             </div>
-                            <span class="text-xs text-slate-400 font-mono self-end sm:self-center" id="detail-doc-id">ID: -</span>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-400 font-mono block" id="detail-doc-id">ID: -</span>
+                                <span class="text-[11px] text-blue-600 dark:text-blue-400 font-medium block" id="detail-created-at">Nahráno: -</span>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Dodavatel</label>
-                                <input type="text" id="detail-vendor" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Dodavatel</label>
+                                <input type="text" id="detail-vendor" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">IČO Dodavatele</label>
-                                <input type="text" id="detail-ico" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">IČO Dodavatele</label>
+                                <input type="text" id="detail-ico" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Číslo faktury / dokladu</label>
-                                <input type="text" id="detail-invoice-num" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Číslo faktury / dokladu</label>
+                                <input type="text" id="detail-invoice-num" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Variabilní Symbol (VS)</label>
-                                <input type="text" id="detail-vs" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Variabilní Symbol (VS)</label>
+                                <input type="text" id="detail-vs" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Typ dokladu</label>
-                                <select id="detail-type" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Typ dokladu</label>
+                                <select id="detail-type" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                                     <option value="Přijatá faktura">Přijatá faktura</option>
                                     <option value="Vydaná faktura">Vydaná faktura</option>
                                     <option value="Účtenka">Zjednodušený doklad / Účtenka</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Způsob úhrady</label>
-                                <select id="detail-payment-method" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Způsob úhrady</label>
+                                <select id="detail-payment-method" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                                     <option value="Převodem">Bankovní převod</option>
                                     <option value="Kartou">Platební karta</option>
                                     <option value="Hotově">Hotovost</option>
@@ -724,20 +827,20 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Datum vystavení</label>
-                                <input type="date" id="detail-due-issue" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Datum vystavení</label>
+                                <input type="date" id="detail-due-issue" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Datum zdanitelného plnění (DUZP)</label>
-                                <input type="date" id="detail-date-tax" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Datum zdanitelného plnění (DUZP)</label>
+                                <input type="date" id="detail-date-tax" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Datum splatnosti</label>
-                                <input type="date" id="detail-due" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Datum splatnosti</label>
+                                <input type="date" id="detail-due" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Sazba DPH (%)</label>
-                                <select id="detail-vat" onchange="calculateDetailAmounts('rate')" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Sazba DPH (%)</label>
+                                <select id="detail-vat" onchange="calculateDetailAmounts('rate')" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                                     <option value="21">21 % (základní)</option>
                                     <option value="12">12 % (snížená)</option>
                                     <option value="0">0 % (osvobozeno)</option>
@@ -745,61 +848,61 @@
                             </div>
 
                             <!-- Rozpad částek -->
-                            <div class="sm:col-span-2 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            <div class="sm:col-span-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Základ daně (Kč)</label>
-                                    <input type="number" step="0.01" id="detail-base-amount" oninput="calculateDetailAmounts('base')" placeholder="0.00" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">Základ daně (Kč)</label>
+                                    <input type="number" step="0.01" id="detail-base-amount" oninput="calculateDetailAmounts('base')" placeholder="0.00" class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Výše DPH (Kč)</label>
-                                    <input type="number" step="0.01" id="detail-vat-amount" oninput="calculateDetailAmounts('vat')" placeholder="0.00" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">Výše DPH (Kč)</label>
+                                    <input type="number" step="0.01" id="detail-vat-amount" oninput="calculateDetailAmounts('vat')" placeholder="0.00" class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-blue-700 mb-1">Částka celkem s DPH (Kč)</label>
-                                    <input type="number" step="0.01" id="detail-amount" oninput="calculateDetailAmounts('total')" required placeholder="0.00" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <label class="block text-[11px] font-bold text-blue-700 dark:text-blue-400 mb-0.5">Částka celkem s DPH (Kč)</label>
+                                    <input type="number" step="0.01" id="detail-amount" oninput="calculateDetailAmounts('total')" required placeholder="0.00" class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700 rounded-lg text-xs font-bold text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                 </div>
                             </div>
 
                             <div class="sm:col-span-2">
-                                <label class="block font-semibold text-slate-700 mb-1">Číslo účtu pro platbu / IBAN</label>
-                                <input type="text" id="detail-account" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-0.5">Číslo účtu / IBAN</label>
+                                <input type="text" id="detail-account" class="w-full px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                             </div>
                         </div>
 
                         <div>
-                            <label id="detail-note-label" class="block text-xs font-semibold text-slate-700 mb-1">Poznámka pro klienta / účetní</label>
-                            <textarea id="detail-comment-note" rows="2" placeholder="Zadejte poznámku..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                            <label id="detail-note-label" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Poznámka pro klienta / účetní</label>
+                            <textarea id="detail-comment-note" rows="2" placeholder="Zadejte poznámku..." class="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800"></textarea>
                         </div>
 
-                        <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <button type="button" id="btn-download-single-isdoc" onclick="downloadSingleISDOC()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                        <div class="flex items-center justify-between gap-2 flex-wrap pt-1">
+                            <button type="button" id="btn-download-single-isdoc" onclick="downloadSingleISDOC()" class="px-3 py-2 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
                                 <i data-lucide="file-code" class="w-3.5 h-3.5"></i>
-                                Stáhnout ISDOC pro Money S3
+                                Stáhnout ISDOC
                             </button>
-                            <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shadow-sm ml-auto">
-                                <i data-lucide="save" class="w-3.5 h-3.5 text-blue-400"></i>
-                                Uložit změny v dokladu
+                            <button type="submit" class="px-4 py-2 bg-slate-800 dark:bg-blue-600 hover:bg-slate-900 dark:hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shadow-sm ml-auto">
+                                <i data-lucide="save" class="w-3.5 h-3.5 text-blue-400 dark:text-white"></i>
+                                Uložit změny
                             </button>
                         </div>
                     </form>
 
                     <!-- Status Actions -->
-                    <div class="space-y-2 pt-4 border-t border-slate-100">
+                    <div class="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                         <div id="detail-acc-buttons" class="space-y-2">
                             <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-600"></i>
                                 Změnit stav dokladu:
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                <button type="button" onclick="updateInvoiceStatus('pending')" id="btn-status-pending" class="py-2.5 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                                <button type="button" onclick="updateInvoiceStatus('pending')" id="btn-status-pending" class="py-2 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
                                     <i data-lucide="clock" class="w-3.5 h-3.5"></i>
                                     Rozpracováno
                                 </button>
-                                <button type="button" onclick="updateInvoiceStatus('action_needed')" id="btn-status-action_needed" class="py-2.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                                <button type="button" onclick="updateInvoiceStatus('action_needed')" id="btn-status-action_needed" class="py-2 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
                                     <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
                                     K doplnění
                                 </button>
-                                <button type="button" onclick="updateInvoiceStatus('approved')" id="btn-status-approved" class="py-2.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition">
+                                <button type="button" onclick="updateInvoiceStatus('approved')" id="btn-status-approved" class="py-2 px-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition">
                                     <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
                                     Zaúčtovat
                                 </button>
@@ -813,9 +916,9 @@
                             </button>
                         </div>
 
-                        <button type="button" onclick="deleteCurrentInvoice()" class="w-full py-2 px-3 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                        <button type="button" onclick="deleteCurrentInvoice()" class="w-full py-2 px-3 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 border border-rose-200 dark:border-rose-900 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            Smazat tento doklad z databáze
+                            Smazat tento doklad
                         </button>
                     </div>
                 </div>
@@ -825,76 +928,268 @@
 
     <!-- Modal 3: GitHub Pages Guide -->
     <div id="pwa-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 p-6 space-y-6">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-800 p-5 sm:p-6 space-y-4 sm:space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div class="flex items-center gap-2">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center">
-                        <i data-lucide="github" class="w-5 h-5"></i>
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center">
+                        <i data-lucide="smartphone" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-900 text-base">GitHub Pages & Instalační Návod PWA</h3>
-                        <p class="text-xs text-slate-500">Spusťte si tuto aplikaci zdarma jako aplikaci na mobilu</p>
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Mobilní PWA aplikace</h3>
+                        <p class="text-[11px] text-slate-500">Používejte aplikaci přímo na ploše telefonu</p>
                     </div>
                 </div>
-                <button onclick="closeModal('pwa-modal')" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
+                <button onclick="closeModal('pwa-modal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
+            <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+                <p>Aplikaci lze nainstalovat na plochu iPhonu i Androidu bez nutnosti stahovat z App Store:</p>
+                <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <strong class="text-slate-900 dark:text-white block mb-1">📱 iPhone / iOS (Safari)</strong>
+                    Klepněte dole na tlačítko <strong>Sdílet (čtverec se šipkou nahoru)</strong> a zvolte <strong>Přidat na plochu</strong>.
+                </div>
+                <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <strong class="text-slate-900 dark:text-white block mb-1">🤖 Android (Chrome)</strong>
+                    Klepněte vpravo nahoře na <strong>3 tečky</strong> a zvolte <strong>Instalovat aplikaci</strong> nebo <strong>Přidat na plochu</strong>.
+                </div>
+            </div>
             <div class="pt-2 text-right">
-                <button onclick="closeModal('pwa-modal')" class="px-5 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl hover:bg-slate-800">
+                <button onclick="closeModal('pwa-modal')" class="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl hover:bg-slate-800">
                     Rozumím
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal 4: Správa klientů a firem (s párovacími PINy pro Model B) -->
-    <div id="clients-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
-            <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+    <!-- Modal 4: Správa klientů a firem -->
+    <div id="clients-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                         <i data-lucide="building-2" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-900 text-base">Správa klientských firem & PINů</h3>
-                        <p class="text-xs text-slate-500">Předávejte klientům vygenerovaný PIN pro automatické spárování</p>
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Správa klientských firem & PINů</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Předávejte klientům vygenerovaný PIN pro automatické spárování</p>
                     </div>
                 </div>
-                <button onclick="closeModal('clients-modal')" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
+                <button onclick="closeModal('clients-modal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <div class="p-6 space-y-6">
-                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row gap-2">
-                    <input type="text" id="new-client-input" placeholder="Zadejte název nové firmy..." class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                <div class="p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="new-client-input" placeholder="Zadejte název nové firmy..." class="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-white">
                     <button onclick="addNewClientFromInput()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         Založit firmu & vytvořit PIN
                     </button>
                 </div>
 
-                <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                            <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800">
                                 <th class="p-3 pl-4">Název firmy</th>
                                 <th class="p-3 text-center">Párovací PIN pro klienta</th>
                                 <th class="p-3 text-center">Doklady</th>
                                 <th class="p-3 text-right pr-4">Akce</th>
                             </tr>
                         </thead>
-                        <tbody id="clients-list-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                        <tbody id="clients-list-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="p-4 border-t border-slate-100 flex justify-end bg-slate-50/50 rounded-b-3xl">
-                <button onclick="closeModal('clients-modal')" class="px-5 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl hover:bg-slate-800 transition">
+            <div class="p-3.5 border-t border-slate-100 dark:border-slate-800 flex justify-end bg-slate-50/50 dark:bg-slate-900/50 rounded-b-3xl">
+                <button onclick="closeModal('clients-modal')" class="px-4 py-1.5 sm:py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl hover:bg-slate-800 transition">
                     Zavřít
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal 6: Klientská Karta -->
+    <div id="client-info-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                        <i data-lucide="user-check" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base" id="client-detail-title">Klientská karta firmy</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Kontaktní a fakturační údaje klienta</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('client-info-modal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="saveClientDetailChanges(event)" class="p-4 sm:p-6 space-y-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-xs">
+                    <div class="sm:col-span-2 bg-indigo-50/60 dark:bg-slate-800/60 p-2.5 sm:p-3 rounded-xl border border-indigo-100 dark:border-slate-700 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 block">Párovací PIN pro klienta</span>
+                            <span class="font-mono font-extrabold text-sm text-slate-900 dark:text-white" id="modal-client-pin">PEK-742</span>
+                        </div>
+                        <button type="button" onclick="copyModalPin()" class="px-2.5 py-1 text-xs font-semibold bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-slate-600 rounded-lg flex items-center gap-1 shadow-sm">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Zkopírovat PIN
+                        </button>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Název firmy / subjektu</label>
+                        <input type="text" id="modal-client-name" required class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kontaktní osoba</label>
+                        <input type="text" id="modal-client-contact" placeholder="např. Jan Novák" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Telefon</label>
+                        <input type="tel" id="modal-client-phone" placeholder="+420 777 123 456" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">E-mail</label>
+                        <input type="email" id="modal-client-email" placeholder="klient@email.cz" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">IČO</label>
+                        <input type="text" id="modal-client-ico" placeholder="12345678" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">DIČ</label>
+                        <input type="text" id="modal-client-dic" placeholder="CZ12345678" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Číslo bankovního účtu</label>
+                        <input type="text" id="modal-client-bank" placeholder="123456789/0300" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Sídlo / Fakturační adresa</label>
+                        <input type="text" id="modal-client-address" placeholder="Ulice 123, 100 00 Praha" class="w-full px-3 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800">
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Interní poznámka účetní</label>
+                        <textarea id="modal-client-notes" rows="2" placeholder="např. Paušál 3500 Kč, měsíční plátce DPH..." class="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800"></textarea>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeModal('client-info-modal')" class="px-4 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50">
+                        Zrušit
+                    </button>
+                    <button type="submit" class="px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition">
+                        <i data-lucide="save" class="w-3.5 h-3.5"></i> Uložit údaje
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 7: Nastavení uživatelského účtu -->
+    <div id="account-settings-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Nastavení účtu</h3>
+                        <p class="text-[11px] text-slate-500">Úprava názvu firmy a údajů profilu</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('account-settings-modal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="saveAccountSettings(event)" class="p-4 sm:p-6 space-y-3.5 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">E-mailová adresa</label>
+                    <input type="text" id="settings-email" disabled class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 font-medium cursor-not-allowed">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1" id="settings-company-label">Název firmy / kanceláře</label>
+                    <input type="text" id="settings-company" required class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('account-settings-modal')" class="px-4 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50">
+                        Zrušit
+                    </button>
+                    <button type="submit" class="px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md shadow-blue-500/20 transition">
+                        Uložit změny
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 8: Změna hesla -->
+    <div id="change-password-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                        <i data-lucide="key-round" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Změna hesla</h3>
+                        <p class="text-[11px] text-slate-500">Zabezpečení vašeho účtu</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('change-password-modal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleChangePassword(event)" class="p-4 sm:p-6 space-y-3.5 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Stávající (aktuální) heslo</label>
+                    <input type="password" id="current-password" required placeholder="Zadejte současné heslo" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nové heslo</label>
+                    <input type="password" id="new-password" required minlength="6" placeholder="Minimálně 6 znaků" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Potvrzení nového hesla</label>
+                    <input type="password" id="confirm-new-password" required minlength="6" placeholder="Zadejte heslo znovu" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                </div>
+
+                <div class="pt-1">
+                    <button type="button" onclick="sendResetPasswordLink()" class="text-blue-600 dark:text-blue-400 hover:underline text-[11px] font-medium">
+                        Nebo poslat e-mailový odkaz na obnovu hesla
+                    </button>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('change-password-modal')" class="px-4 py-1.5 sm:py-2 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50">
+                        Zrušit
+                    </button>
+                    <button type="submit" class="px-4 py-1.5 sm:py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold shadow-md shadow-amber-500/20 transition">
+                        Aktualizovat heslo
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -902,7 +1197,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCAx_UsY1kCL01fobO6fWkXpbLC93XF1Vo",
@@ -924,6 +1219,7 @@
         let activeClientCompany = 'Moje Firma s.r.o.';
         let activeAccountantCompany = 'Účetní kancelář';
         let selectedInvoiceId = null;
+        let selectedClientIdForModal = null;
         let invoices = [];
         let currentClientFilter = 'all';
         let authMode = 'signin';
@@ -943,6 +1239,84 @@
             showToast("Chyba synchronizace databáze: " + error.message, "warning");
         });
 
+        function formatDateTime(isoString) {
+            if (!isoString) return '-';
+            try {
+                const d = new Date(isoString);
+                if (isNaN(d.getTime())) return isoString;
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                const hours = String(d.getHours()).padStart(2, '0');
+                const mins = String(d.getMinutes()).padStart(2, '0');
+                return `${day}.${month}.${year} ${hours}:${mins}`;
+            } catch {
+                return isoString;
+            }
+        }
+
+        function checkDateMatch(inv, preset, fromDate, toDate) {
+            if (!preset || preset === 'all') return true;
+
+            let d = null;
+            if (inv.createdAt) {
+                d = new Date(inv.createdAt);
+            } else if (inv.dateIssue) {
+                d = new Date(inv.dateIssue);
+            }
+            if (!d || isNaN(d.getTime())) return true;
+
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+            if (preset === 'today') {
+                return dDate.getTime() === startOfToday.getTime();
+            } else if (preset === 'week') {
+                const sevenDaysAgo = new Date(startOfToday.getTime() - (7 * 24 * 60 * 60 * 1000));
+                return dDate >= sevenDaysAgo && dDate <= now;
+            } else if (preset === 'this_month') {
+                return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+            } else if (preset === 'last_month') {
+                const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+                const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+                return d.getFullYear() === lastMonthYear && d.getMonth() === lastMonth;
+            } else if (preset === 'custom') {
+                if (fromDate) {
+                    const f = new Date(fromDate);
+                    f.setHours(0, 0, 0, 0);
+                    if (d < f) return false;
+                }
+                if (toDate) {
+                    const t = new Date(toDate);
+                    t.setHours(23, 59, 59, 999);
+                    if (d > t) return false;
+                }
+                return true;
+            }
+            return true;
+        }
+
+        window.handleClientDatePresetChange = function() {
+            const val = document.getElementById('client-date-preset')?.value;
+            const customBox = document.getElementById('client-custom-dates');
+            if (customBox) {
+                if (val === 'custom') customBox.classList.remove('hidden');
+                else customBox.classList.add('hidden');
+            }
+            renderClientInvoices();
+        };
+
+        window.handleAccDatePresetChange = function() {
+            const val = document.getElementById('acc-date-preset')?.value;
+            const customBox = document.getElementById('acc-custom-dates');
+            if (customBox) {
+                if (val === 'custom') customBox.classList.remove('hidden');
+                else customBox.classList.add('hidden');
+            }
+            renderAccountantInvoices();
+        };
+
         // ================= FIREBASE AUTHENTICATION LOGIKA =================
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
@@ -957,6 +1331,7 @@
                 if (demoSwitcher) demoSwitcher.classList.add('hidden');
 
                 document.getElementById('user-display-email').textContent = user.email || 'Přihlášený uživatel';
+                document.getElementById('menu-user-email').textContent = user.email || 'Přihlášený uživatel';
                 document.getElementById('user-avatar').textContent = (user.email ? user.email[0].toUpperCase() : 'U');
 
                 try {
@@ -981,7 +1356,9 @@
                     console.warn("Profil uživatele nebyl načten:", e);
                 }
 
-                document.getElementById('user-display-role').textContent = currentRole === 'accountant' ? (activeAccountantCompany || 'Účetní kancelář') : `Klient (${activeClientCompany})`;
+                const roleDisplay = currentRole === 'accountant' ? (activeAccountantCompany || 'Účetní kancelář') : `Klient (${activeClientCompany})`;
+                document.getElementById('user-display-role').textContent = roleDisplay;
+                document.getElementById('menu-user-company').textContent = roleDisplay;
 
                 if (currentRole === 'client') {
                     switchRole('client');
@@ -1009,19 +1386,22 @@
             const landTitle = document.getElementById('landing-auth-title');
             const extraFields = document.getElementById('signup-extra-fields');
             const submitLabel = document.getElementById('auth-submit-label');
+            const forgotBox = document.getElementById('forgot-password-box');
 
             if (mode === 'signin') {
-                if (landIn) landIn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm";
-                if (landUp) landUp.className = "flex-1 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
+                if (landIn) landIn.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm";
+                if (landUp) landUp.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
                 if (landTitle) landTitle.textContent = "Přihlášení do systému";
                 if (extraFields) extraFields.classList.add('hidden');
                 if (submitLabel) submitLabel.textContent = "Přihlásit se do systému";
+                if (forgotBox) forgotBox.classList.remove('hidden');
             } else {
-                if (landUp) landUp.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm";
-                if (landIn) landIn.className = "flex-1 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
+                if (landUp) landUp.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-sm";
+                if (landIn) landIn.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
                 if (landTitle) landTitle.textContent = "Vytvoření nového účtu";
                 if (extraFields) extraFields.classList.remove('hidden');
                 if (submitLabel) submitLabel.textContent = "Vytvořit nový účet";
+                if (forgotBox) forgotBox.classList.add('hidden');
             }
         };
 
@@ -1089,7 +1469,6 @@
                     if (role === 'accountant') {
                         finalCompany = document.getElementById('auth-accountant-company')?.value?.trim() || 'Moje Účetní Kancelář';
                     } else {
-                        // Klient: Model B párovací PIN
                         const pinInput = document.getElementById('auth-pairing-code')?.value?.trim().toUpperCase();
                         const clientNameInput = document.getElementById('auth-client-company')?.value?.trim();
 
@@ -1142,6 +1521,26 @@
             }
         };
 
+        window.handleForgotPassword = async function() {
+            let email = document.getElementById('auth-email')?.value?.trim();
+            if (!email) {
+                email = prompt("Zadejte svůj e-mail pro zaslání odkazu pro obnovení hesla:");
+            }
+            if (!email) return;
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert(`Odkaz pro obnovení hesla byl odeslán na adresu ${email}. Zkontrolujte si prosím svou e-mailovou schránku.`);
+                showToast("E-mail pro obnovu hesla byl odeslán!", "success");
+            } catch (err) {
+                let msg = err.message;
+                if (err.code === 'auth/user-not-found') {
+                    msg = "Účet s tímto e-mailem nebyl nalezen.";
+                }
+                alert("Chyba při odesílání: " + msg);
+            }
+        };
+
         window.handleLogout = async function() {
             try {
                 await signOut(auth);
@@ -1151,6 +1550,14 @@
                 currentRole = 'client';
                 activeClientCompany = 'TechVision s.r.o.';
                 
+                if (document.getElementById('auth-email')) document.getElementById('auth-email').value = '';
+                if (document.getElementById('auth-password')) document.getElementById('auth-password').value = '';
+                if (document.getElementById('auth-accountant-company')) document.getElementById('auth-accountant-company').value = '';
+                if (document.getElementById('auth-pairing-code')) document.getElementById('auth-pairing-code').value = '';
+                if (document.getElementById('auth-client-company')) document.getElementById('auth-client-company').value = '';
+
+                closeProfileDropdown();
+
                 const landingPage = document.getElementById('landing-page');
                 const appContainer = document.getElementById('app');
                 if (landingPage) landingPage.classList.remove('hidden');
@@ -1160,6 +1567,161 @@
                 lucide.createIcons();
             } catch (err) {
                 console.error("Chyba při odhlašování:", err);
+            }
+        };
+
+        window.toggleProfileDropdown = function() {
+            const menu = document.getElementById('profile-dropdown-menu');
+            const chevron = document.getElementById('profile-dropdown-chevron');
+            if (menu) {
+                const isHidden = menu.classList.contains('hidden');
+                if (isHidden) {
+                    menu.classList.remove('hidden');
+                    if (chevron) chevron.classList.add('rotate-180');
+                } else {
+                    closeProfileDropdown();
+                }
+            }
+        };
+
+        function closeProfileDropdown() {
+            const menu = document.getElementById('profile-dropdown-menu');
+            const chevron = document.getElementById('profile-dropdown-chevron');
+            if (menu) menu.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('auth-logged-in');
+            if (container && !container.contains(e.target)) {
+                closeProfileDropdown();
+            }
+        });
+
+        window.toggleTheme = function() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeUI(isDark);
+        };
+
+        function updateThemeUI(isDark) {
+            const icon = document.getElementById('theme-icon');
+            const label = document.getElementById('theme-label');
+            const badge = document.getElementById('theme-badge');
+            if (icon && label && badge) {
+                if (isDark) {
+                    label.textContent = "Světlý režim";
+                    badge.textContent = "Aktivní";
+                    badge.className = "text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded";
+                } else {
+                    label.textContent = "Tmavý režim";
+                    badge.textContent = "Vypnuto";
+                    badge.className = "text-[10px] uppercase font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded";
+                }
+            }
+            lucide.createIcons();
+        }
+
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            updateThemeUI(true);
+        } else {
+            document.documentElement.classList.remove('dark');
+            updateThemeUI(false);
+        }
+
+        window.openAccountSettingsModal = function() {
+            closeProfileDropdown();
+            const user = auth.currentUser;
+            document.getElementById('settings-email').value = user ? user.email : 'demo@email.cz';
+            document.getElementById('settings-company').value = currentRole === 'accountant' ? activeAccountantCompany : activeClientCompany;
+            document.getElementById('settings-company-label').textContent = currentRole === 'accountant' ? 'Název účetní kanceláře' : 'Název vaší firmy';
+            openModal('account-settings-modal');
+        };
+
+        window.saveAccountSettings = async function(e) {
+            e.preventDefault();
+            const newName = document.getElementById('settings-company').value.trim();
+            if (!newName) return;
+
+            const user = auth.currentUser;
+            if (user && !window.isDemoMode) {
+                try {
+                    await updateDoc(doc(db, "users", user.uid), { company: newName });
+                    if (currentRole === 'accountant') {
+                        activeAccountantCompany = newName;
+                        document.getElementById('acc-agency-badge').textContent = `Účetní kancelář: ${newName}`;
+                    } else {
+                        activeClientCompany = newName;
+                        document.getElementById('current-client-badge').textContent = `Firma: ${newName}`;
+                    }
+                    document.getElementById('user-display-role').textContent = currentRole === 'accountant' ? newName : `Klient (${newName})`;
+                    document.getElementById('menu-user-company').textContent = newName;
+                    showToast("Nastavení účtu bylo úspěšně uloženo!", "success");
+                    closeModal('account-settings-modal');
+                } catch (err) {
+                    alert("Chyba při ukládání: " + err.message);
+                }
+            } else {
+                showToast("V demo režimu bylo nastavení změněno lokálně.", "info");
+                closeModal('account-settings-modal');
+            }
+        };
+
+        window.openChangePasswordModal = function() {
+            closeProfileDropdown();
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-new-password').value = '';
+            openModal('change-password-modal');
+        };
+
+        window.handleChangePassword = async function(e) {
+            e.preventDefault();
+            const currentPass = document.getElementById('current-password').value;
+            const p1 = document.getElementById('new-password').value;
+            const p2 = document.getElementById('confirm-new-password').value;
+
+            if (p1 !== p2) {
+                alert("Nová hesla se neshodují! Zadejte obě nová hesla stejně.");
+                return;
+            }
+
+            const user = auth.currentUser;
+            if (!user || !user.email) {
+                alert("Pro změnu hesla musíte být přihlášeni.");
+                return;
+            }
+
+            try {
+                const credential = EmailAuthProvider.credential(user.email, currentPass);
+                await reauthenticateWithCredential(user, credential);
+                await updatePassword(user, p1);
+                showToast("Vaše heslo bylo úspěšně změněno!", "success");
+                closeModal('change-password-modal');
+            } catch (err) {
+                if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                    alert("Zadané stávající heslo není správné. Zkontrolujte prosím své současné heslo.");
+                } else if (err.code === 'auth/weak-password') {
+                    alert("Nové heslo musí mít alespoň 6 znaků.");
+                } else {
+                    alert("Chyba při změně hesla: " + err.message);
+                }
+            }
+        };
+
+        window.sendResetPasswordLink = async function() {
+            const user = auth.currentUser;
+            const email = user ? user.email : prompt("Zadejte svůj e-mail pro zaslání odkazu na reset hesla:");
+            if (!email) return;
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showToast(`Odkaz pro změnu hesla byl odeslán na ${email}!`, "success");
+                closeModal('change-password-modal');
+            } catch (err) {
+                alert("Chyba při odesílání e-mailu: " + err.message);
             }
         };
 
@@ -1261,9 +1823,9 @@
 
             if (window.isDemoMode) {
                 displayClients = [
-                    { id: 'd1', name: 'TechVision s.r.o.', pairingCode: 'TEC-821' },
-                    { id: 'd2', name: 'Kavárna Liberec s.r.o.', pairingCode: 'KAV-319' },
-                    { id: 'd3', name: 'Jan Novák - Design', pairingCode: 'NOV-552' }
+                    { id: 'd1', name: 'TechVision s.r.o.', pairingCode: 'TEC-821', ico: '28475921', contactPerson: 'Martin Dvořák', phone: '+420 777 888 999', email: 'dvorak@techvision.cz' },
+                    { id: 'd2', name: 'Kavárna Liberec s.r.o.', pairingCode: 'KAV-319', ico: '09384722', contactPerson: 'Petra Svobodová', phone: '+420 602 111 222', email: 'info@kavarnaliberec.cz' },
+                    { id: 'd3', name: 'Jan Novák - Design', pairingCode: 'NOV-552', ico: '84920194', contactPerson: 'Jan Novák', phone: '+420 724 333 444', email: 'jan@novakdesign.cz' }
                 ];
             } else if (user && currentRole === 'accountant') {
                 displayClients = customClients.filter(c => c.accountantId === user.uid || c.userId === user.uid || !c.accountantId);
@@ -1283,28 +1845,32 @@
                 const pin = client.pairingCode || 'PIN-999';
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition";
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
                 tr.innerHTML = `
-                    <td class="p-3 pl-4 font-semibold text-slate-800">
-                        ${client.name}
+                    <td class="p-3 pl-4 font-semibold text-slate-800 dark:text-slate-100">
+                        <div>${client.name}</div>
+                        <div class="text-[11px] text-slate-400 font-normal">${client.ico ? 'IČO: ' + client.ico : (client.contactPerson ? client.contactPerson : '')}</div>
                     </td>
                     <td class="p-3 text-center">
-                        <button onclick="copyPairingCode('${pin}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-mono font-bold text-xs border border-indigo-200 transition" title="Klikněte pro zkopírování PINu pro klienta">
+                        <button onclick="copyPairingCode('${pin}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 font-mono font-bold text-xs border border-indigo-200 dark:border-indigo-800 transition" title="Klikněte pro zkopírování PINu pro klienta">
                             <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                             <span>${pin}</span>
                         </button>
                     </td>
                     <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                        <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                             ${count} ${count === 1 ? 'doklad' : (count >= 2 && count <= 4 ? 'doklady' : 'dokladů')}
                         </span>
                     </td>
                     <td class="p-3 text-right pr-4 whitespace-nowrap">
                         <div class="flex items-center justify-end gap-1.5">
-                            <button onclick="renameClient('${client.id}', '${encodeURIComponent(client.name)}')" class="px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center gap-1">
+                            <button onclick="openClientDetailModal('${client.id}')" class="px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition flex items-center gap-1" title="Zobrazit a upravit údaje klienta">
+                                <i data-lucide="info" class="w-3.5 h-3.5"></i> Detail
+                            </button>
+                            <button onclick="renameClient('${client.id}', '${encodeURIComponent(client.name)}')" class="px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition flex items-center gap-1">
                                 <i data-lucide="edit-2" class="w-3.5 h-3.5"></i> Přejmenovat
                             </button>
-                            <button onclick="deleteClient('${client.id}', '${encodeURIComponent(client.name)}')" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Smazat firmu">
+                            <button onclick="deleteClient('${client.id}', '${encodeURIComponent(client.name)}')" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition" title="Smazat firmu">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
@@ -1314,6 +1880,79 @@
             });
             lucide.createIcons();
         }
+
+        window.openClientDetailModal = function(clientId) {
+            selectedClientIdForModal = clientId;
+            let client = null;
+
+            if (window.isDemoMode) {
+                const demoList = [
+                    { id: 'd1', name: 'TechVision s.r.o.', pairingCode: 'TEC-821', ico: '28475921', dic: 'CZ28475921', contactPerson: 'Martin Dvořák', phone: '+420 777 888 999', email: 'dvorak@techvision.cz', address: 'Evropská 11, 160 00 Praha 6', bankAccount: '230049281/2010', notes: 'Měsíční paušál 4000 Kč' },
+                    { id: 'd2', name: 'Kavárna Liberec s.r.o.', pairingCode: 'KAV-319', ico: '09384722', dic: 'CZ09384722', contactPerson: 'Petra Svobodová', phone: '+420 602 111 222', email: 'info@kavarnaliberec.cz', address: 'Náměstí Dr. E. Beneše 1, Liberec', bankAccount: '19482019/0300', notes: 'Čtvrtletní plátce DPH' },
+                    { id: 'd3', name: 'Jan Novák - Design', pairingCode: 'NOV-552', ico: '84920194', dic: '', contactPerson: 'Jan Novák', phone: '+420 724 333 444', email: 'jan@novakdesign.cz', address: 'Husova 14, Jablonec n. N.', bankAccount: '670100-22019284/6210', notes: 'Neplátce DPH' }
+                ];
+                client = demoList.find(c => c.id === clientId);
+            } else {
+                client = customClients.find(c => c.id === clientId);
+            }
+
+            if (!client) {
+                showToast("Firma nebyla nalezena.", "warning");
+                return;
+            }
+
+            document.getElementById('client-detail-title').textContent = `Klientská karta: ${client.name}`;
+            document.getElementById('modal-client-pin').textContent = client.pairingCode || 'PIN-999';
+            document.getElementById('modal-client-name').value = client.name || '';
+            document.getElementById('modal-client-contact').value = client.contactPerson || '';
+            document.getElementById('modal-client-phone').value = client.phone || '';
+            document.getElementById('modal-client-email').value = client.email || '';
+            document.getElementById('modal-client-ico').value = client.ico || '';
+            document.getElementById('modal-client-dic').value = client.dic || '';
+            document.getElementById('modal-client-bank').value = client.bankAccount || '';
+            document.getElementById('modal-client-address').value = client.address || '';
+            document.getElementById('modal-client-notes').value = client.notes || '';
+
+            openModal('client-info-modal');
+        };
+
+        window.copyModalPin = function() {
+            const pin = document.getElementById('modal-client-pin').textContent;
+            copyPairingCode(pin);
+        };
+
+        window.saveClientDetailChanges = async function(e) {
+            e.preventDefault();
+            if (!selectedClientIdForModal) return;
+
+            const updatedData = {
+                name: document.getElementById('modal-client-name').value.trim(),
+                contactPerson: document.getElementById('modal-client-contact').value.trim(),
+                phone: document.getElementById('modal-client-phone').value.trim(),
+                email: document.getElementById('modal-client-email').value.trim(),
+                ico: document.getElementById('modal-client-ico').value.trim(),
+                dic: document.getElementById('modal-client-dic').value.trim(),
+                bankAccount: document.getElementById('modal-client-bank').value.trim(),
+                address: document.getElementById('modal-client-address').value.trim(),
+                notes: document.getElementById('modal-client-notes').value.trim()
+            };
+
+            try {
+                if (window.isDemoMode || selectedClientIdForModal.startsWith('d')) {
+                    showToast("V demo režimu byly údaje uloženy.", "success");
+                } else {
+                    const docRef = doc(db, "clients", selectedClientIdForModal);
+                    await updateDoc(docRef, updatedData);
+                    showToast(`Údaje klienta "${updatedData.name}" byly úspěšně uloženy!`, "success");
+                }
+                closeModal('client-info-modal');
+                updateDynamicClients();
+                renderClientsModalTable();
+            } catch (err) {
+                console.error("Chyba při ukládání klienta:", err);
+                alert("Chyba při ukládání klienta: " + err.message);
+            }
+        };
 
         window.copyPairingCode = function(code) {
             navigator.clipboard.writeText(code).then(() => {
@@ -1457,7 +2096,10 @@
                 currentClientFilter = filterStatus;
             }
             const tbody = document.getElementById('client-invoice-table-body');
-            const searchQuery = document.getElementById('client-search').value.toLowerCase();
+            const searchQuery = document.getElementById('client-search')?.value.toLowerCase() || '';
+            const datePreset = document.getElementById('client-date-preset')?.value || 'all';
+            const dateFrom = document.getElementById('client-date-from')?.value || '';
+            const dateTo = document.getElementById('client-date-to')?.value || '';
             tbody.innerHTML = '';
 
             const user = auth.currentUser || currentUser;
@@ -1475,11 +2117,14 @@
             if (currentClientFilter === 'approved') filtered = filtered.filter(inv => inv.status === 'approved');
             if (currentClientFilter === 'action_needed') filtered = filtered.filter(inv => inv.status === 'action_needed' || inv.status === 'rejected');
 
+            filtered = filtered.filter(inv => checkDateMatch(inv, datePreset, dateFrom, dateTo));
+
             if (searchQuery) {
                 filtered = filtered.filter(inv => 
                     (inv.vendor && inv.vendor.toLowerCase().includes(searchQuery)) ||
                     (inv.amount && inv.amount.toString().includes(searchQuery)) ||
-                    (inv.vs && inv.vs.includes(searchQuery))
+                    (inv.vs && inv.vs.includes(searchQuery)) ||
+                    (inv.invoiceNumber && inv.invoiceNumber.toLowerCase().includes(searchQuery))
                 );
             }
 
@@ -1487,7 +2132,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
-                            Zatím nemáte žádné nahrané doklady. Klikněte na tlačítko "Naskenovat doklad" nahoře.
+                            Zatím nemáte žádné nahrané doklady odpovídající výběru.
                         </td>
                     </tr>
                 `;
@@ -1495,38 +2140,39 @@
                 filtered.forEach(inv => {
                     let statusBadge = '';
                     if (inv.status === 'pending') {
-                        statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Čeká na schválení</span>`;
+                        statusBadge = `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">Čeká na schválení</span>`;
                     } else if (inv.status === 'approved') {
-                        statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Zaúčtováno</span>`;
+                        statusBadge = `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">Zaúčtováno</span>`;
                     } else {
-                        statusBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">K doplnění</span>`;
+                        statusBadge = `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">K doplnění</span>`;
                     }
 
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50/80 transition";
+                    tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
                     tr.innerHTML = `
                         <td class="p-3 pl-4">
-                            <div class="font-bold text-slate-900">${inv.vendor || '-'}</div>
+                            <div class="font-bold text-slate-900 dark:text-white">${inv.vendor || '-'}</div>
                             <div class="text-xs text-slate-500 font-mono flex items-center gap-1.5 flex-wrap">
                                 <span>${inv.invoiceNumber ? 'Číslo: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '')}</span>
                             </div>
                         </td>
-                        <td class="p-3 text-xs text-slate-600">
+                        <td class="p-3 text-xs text-slate-600 dark:text-slate-400">
                             <div>Vystaveno: ${inv.dateIssue || '-'}</div>
-                            <div class="text-slate-400">Splatnost: ${inv.dateDue || '-'}</div>
+                            <div class="text-slate-400 dark:text-slate-500">Splatnost: ${inv.dateDue || '-'}</div>
+                            <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div>
                         </td>
-                        <td class="p-3 text-xs text-slate-600">
+                        <td class="p-3 text-xs text-slate-600 dark:text-slate-300">
                             <div class="font-medium">${inv.type || 'Přijatá faktura'}</div>
-                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 font-semibold">${inv.paymentMethod || 'Převodem'}</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-semibold">${inv.paymentMethod || 'Převodem'}</span>
                         </td>
-                        <td class="p-3 font-bold text-slate-900">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</td>
+                        <td class="p-3 font-bold text-slate-900 dark:text-white">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</td>
                         <td class="p-3">${statusBadge}</td>
                         <td class="p-3 text-right pr-4 whitespace-nowrap">
                             <div class="flex items-center justify-end gap-1">
-                                <button onclick="openDetailModal('${inv.id}')" title="Detail dokladu" class="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition">
+                                <button onclick="openDetailModal('${inv.id}')" title="Detail dokladu" class="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 transition">
                                     <i data-lucide="eye" class="w-4 h-4"></i>
                                 </button>
-                                <button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">
+                                <button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
@@ -1542,11 +2188,11 @@
 
         function filterClientInvoices(status) {
             document.querySelectorAll('.client-filter-btn').forEach(btn => {
-                btn.className = "client-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 whitespace-nowrap";
+                btn.className = "client-filter-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 whitespace-nowrap";
             });
             const activeBtn = document.getElementById(`filter-btn-${status}`);
             if (activeBtn) {
-                activeBtn.className = "client-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap";
+                activeBtn.className = "client-filter-btn active px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap";
             }
             renderClientInvoices(status);
         }
@@ -1567,8 +2213,11 @@
 
         function renderAccountantInvoices() {
             const tbody = document.getElementById('accountant-invoice-table-body');
-            const clientFilter = document.getElementById('acc-client-select').value;
-            const statusFilter = document.getElementById('acc-status-select').value;
+            const clientFilter = document.getElementById('acc-client-select')?.value || 'all';
+            const statusFilter = document.getElementById('acc-status-select')?.value || 'all';
+            const datePreset = document.getElementById('acc-date-preset')?.value || 'all';
+            const dateFrom = document.getElementById('acc-date-from')?.value || '';
+            const dateTo = document.getElementById('acc-date-to')?.value || '';
             tbody.innerHTML = '';
 
             const user = auth.currentUser || currentUser;
@@ -1587,11 +2236,13 @@
                 filtered = filtered.filter(i => statusFilter === 'action_needed' ? (i.status === 'action_needed' || i.status === 'rejected') : i.status === statusFilter);
             }
 
+            filtered = filtered.filter(inv => checkDateMatch(inv, datePreset, dateFrom, dateTo));
+
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="p-8 text-center text-slate-400 text-xs">
-                            Váš klientský inbox je prázdný. Založte firmu přes "+ Nová firma" a předejte klientovi PIN pro nahrávání dokladů.
+                            Žádné doklady neodpovídají vybraným filtrům.
                         </td>
                     </tr>
                 `;
@@ -1599,31 +2250,32 @@
                 filtered.forEach(inv => {
                     let statusBadge = '';
                     if (inv.status === 'pending') {
-                        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Nová k vyřízení</span>`;
+                        statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">Nová k vyřízení</span>`;
                     } else if (inv.status === 'approved') {
-                        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Zaúčtováno</span>`;
+                        statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">Zaúčtováno</span>`;
                     } else {
-                        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Vraceno k doplnění</span>`;
+                        statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">K doplnění</span>`;
                     }
 
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50/80 transition";
+                    tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
                     tr.innerHTML = `
                         <td class="p-3 pl-4">
-                            <div class="font-bold text-slate-900 text-xs">${inv.clientName || 'Klient'}</div>
+                            <div class="font-bold text-slate-900 dark:text-white text-xs">${inv.clientName || 'Klient'}</div>
                             <span class="text-[10px] text-slate-400">ID: ${inv.id}</span>
                         </td>
                         <td class="p-3">
-                            <div class="font-semibold text-slate-800 text-xs">${inv.vendor || '-'}</div>
+                            <div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">${inv.vendor || '-'}</div>
                             <div class="text-[11px] text-slate-400">IČO: ${inv.ico || '-'}</div>
                         </td>
                         <td class="p-3 text-xs">
-                            <div class="text-slate-800 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div>
+                            <div class="text-slate-800 dark:text-slate-200 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div>
                             <div class="text-slate-500 text-[11px]">DUZP: ${inv.dateTax || inv.dateIssue || '-'}</div>
                             <div class="text-slate-400 text-[11px]">Splatnost: ${inv.dateDue || '-'}</div>
+                            <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div>
                         </td>
                         <td class="p-3">
-                            <div class="font-bold text-slate-900 text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div>
+                            <div class="font-bold text-slate-900 dark:text-white text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div>
                             <div class="text-[10px] text-slate-500">
                                 Základ: ${inv.baseAmount ? Number(inv.baseAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}
                             </div>
@@ -1634,11 +2286,11 @@
                         <td class="p-3">${statusBadge}</td>
                         <td class="p-3 text-right pr-4 whitespace-nowrap">
                             <div class="flex items-center justify-end gap-1.5">
-                                <button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold rounded-lg text-xs transition flex items-center gap-1">
+                                <button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 hover:bg-blue-100 font-semibold rounded-lg text-xs transition flex items-center gap-1">
                                     <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                                     Detail
                                 </button>
-                                <button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">
+                                <button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
@@ -1685,33 +2337,20 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = async function() {
-                    // Zachování vysokého rozlišení pro perfektní čitelnost textu faktury (až 1800 px)
                     const canvas = document.createElement('canvas');
-                    const MAX_DIM = 1800;
+                    const MAX_WIDTH = 1000;
                     let width = img.width;
                     let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_DIM) {
-                            height = Math.round((height * MAX_DIM) / width);
-                            width = MAX_DIM;
-                        }
-                    } else {
-                        if (height > MAX_DIM) {
-                            width = Math.round((width * MAX_DIM) / height);
-                            height = MAX_DIM;
-                        }
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
                     }
-
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Komprese 0.78 vytváří ostrý obraz s velikostí ~250-400 KB (bezpečně pod 1MB limitem Firestore)
-                    const base64Image = canvas.toDataURL('image/jpeg', 0.78);
+                    const base64Image = canvas.toDataURL('image/jpeg', 0.8);
                     document.getElementById('scan-preview-img').src = base64Image;
 
                     await processWithOpenAI(base64Image);
@@ -1795,8 +2434,12 @@
             let safeImgUrl = '';
             const previewEl = document.getElementById('scan-preview-img');
             if (previewEl && previewEl.src && previewEl.src.startsWith('data:image')) {
-                // Použijeme rovnou plné ostré rozlišení (1800 px) připravené v handleFileSelect
-                safeImgUrl = previewEl.src;
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 300;
+                canvas.height = 400;
+                ctx.drawImage(previewEl, 0, 0, 300, 400);
+                safeImgUrl = canvas.toDataURL('image/jpeg', 0.5);
             }
 
             const user = auth.currentUser || currentUser;
@@ -1944,22 +2587,7 @@
             const img = document.getElementById('detail-img-preview');
             if (img && img.src && !img.src.includes('placehold.co')) {
                 const w = window.open("");
-                w.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Originální náhled dokladu - Plné rozlišení</title>
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <style>
-                            body { margin: 0; background: #0b0f19; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; box-sizing: border-box; }
-                            img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: zoom-in; }
-                        </style>
-                    </head>
-                    <body>
-                        <img src="${img.src}" onclick="this.style.maxWidth = this.style.maxWidth === 'none' ? '100%' : 'none'; this.style.cursor = this.style.maxWidth === 'none' ? 'zoom-out' : 'zoom-in';" title="Klikněte pro 100% přiblížení v plné velikosti">
-                    </body>
-                    </html>
-                `);
+                w.document.write(`<title>Originální náhled dokladu</title><body style="margin:0;background:#090d16;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="${img.src}" style="max-height:98vh;max-width:98vw;object-fit:contain;border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,0.8);"></body>`);
             }
         };
 
@@ -1971,6 +2599,7 @@
 
             document.getElementById('detail-modal-title').textContent = `Detail a editace dokladu`;
             document.getElementById('detail-doc-id').textContent = `ID: ${inv.id}`;
+            document.getElementById('detail-created-at').textContent = inv.createdAt ? `Nahráno: ${formatDateTime(inv.createdAt)}` : '';
 
             resetDetailImg();
             document.getElementById('detail-img-preview').src = inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu';
@@ -2011,20 +2640,19 @@
             });
 
             if (inv.status === 'pending') {
-                badge.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800";
-                badge.textContent = "Rozpracováno / Nové";
+                badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800";
+                badge.textContent = "Rozpracováno";
                 if (btnPending) btnPending.classList.add('ring-2', 'ring-offset-1', 'ring-amber-500', 'font-bold');
             } else if (inv.status === 'approved') {
-                badge.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800";
+                badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800";
                 badge.textContent = "Zaúčtováno";
                 if (btnApproved) btnApproved.classList.add('ring-2', 'ring-offset-1', 'ring-emerald-700', 'font-bold');
             } else {
-                badge.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800";
+                badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800";
                 badge.textContent = "K doplnění";
                 if (btnAction) btnAction.classList.add('ring-2', 'ring-offset-1', 'ring-rose-500', 'font-bold');
             }
 
-            // Přizpůsobení tlačítek a polí podle role (Klient vs Účetní)
             const accButtons = document.getElementById('detail-acc-buttons');
             const clientButtons = document.getElementById('detail-client-buttons');
             const noteLabel = document.getElementById('detail-note-label');
@@ -2034,13 +2662,13 @@
             if (currentRole === 'client') {
                 if (accButtons) accButtons.classList.add('hidden');
                 if (clientButtons) clientButtons.classList.remove('hidden');
-                if (noteLabel) noteLabel.textContent = 'Poznámka / doplňující zpráva pro účetní';
+                if (noteLabel) noteLabel.textContent = 'Poznámka / zpráva pro účetní';
                 if (clientAssignmentBox) clientAssignmentBox.classList.add('hidden');
                 if (isdocBtn) isdocBtn.classList.add('hidden');
             } else {
                 if (accButtons) accButtons.classList.remove('hidden');
                 if (clientButtons) clientButtons.classList.add('hidden');
-                if (noteLabel) noteLabel.textContent = 'Poznámka pro klienta (v případě vrácení k doplnění)';
+                if (noteLabel) noteLabel.textContent = 'Poznámka pro klienta';
                 if (clientAssignmentBox) clientAssignmentBox.classList.remove('hidden');
                 if (isdocBtn) isdocBtn.classList.remove('hidden');
             }
@@ -2074,7 +2702,7 @@
             try {
                 const docRef = doc(db, "invoices", selectedInvoiceId);
                 await updateDoc(docRef, updated);
-                showToast("Údaje dokladu byly úspěšně uloženy a opraveny!", "success");
+                showToast("Údaje dokladu byly úspěšně uloženy!", "success");
             } catch (err) {
                 console.error("Chyba při ukládání změn dokladu:", err);
                 showToast("Chyba při ukládání změn: " + err.message, "warning");
@@ -2142,7 +2770,7 @@
                     toastType = "warning";
                 }
 
-                showToast(`Stav dokladu byl změněn na: ${statusText}`, toastType);
+                showToast(`Stav dokladu: ${statusText}`, toastType);
             } catch (err) {
                 console.error("Chyba při aktualizaci stavu:", err);
                 showToast("Chyba při ukládání stavu: " + err.message, "warning");
@@ -2346,29 +2974,6 @@
                     }, idx * 250);
                 });
                 showToast(`Vygenerováno a staženo ${list.length} ISDOC souborů pro Money S3 / Pohodu!`, "success");
-            } else if (format === 'csv') {
-                const headers = ["Firma/Klient", "CisloFaktury", "VS", "Dodavatel", "ICO", "Typ", "ZpusobUhrady", "DatumVystaveni", "DUZP", "DatumSplatnosti", "ZakladDaně", "SazbaDPH", "VyseDPH", "CelkemCZK", "Ucet"];
-                const rows = list.map(i => [
-                    `"${(i.clientName || '').replace(/"/g, '""')}"`,
-                    `"${(i.invoiceNumber || '').replace(/"/g, '""')}"`,
-                    `"${(i.vs || '').replace(/"/g, '""')}"`,
-                    `"${(i.vendor || '').replace(/"/g, '""')}"`,
-                    `"${(i.ico || '').replace(/"/g, '""')}"`,
-                    `"${(i.type || '').replace(/"/g, '""')}"`,
-                    `"${(i.paymentMethod || 'Převodem').replace(/"/g, '""')}"`,
-                    `"${i.dateIssue || ''}"`,
-                    `"${i.dateTax || ''}"`,
-                    `"${i.dateDue || ''}"`,
-                    (i.baseAmount || 0),
-                    (i.vatRate || 21),
-                    (i.vatAmount || 0),
-                    (i.amount || 0),
-                    `"${(i.accountNumber || '').replace(/"/g, '""')}"`
-                ].join(";"));
-
-                const csvContent = "\uFEFF" + headers.join(";") + "\n" + rows.join("\n");
-                triggerDownload(csvContent, `faktury_export_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8');
-                showToast(`Exportováno ${list.length} dokladů do CSV!`, "success");
             }
         }
 
@@ -2429,6 +3034,17 @@
         window.deleteClient = deleteClient;
         window.addNewClientFromInput = addNewClientFromInput;
         window.renderClientsModalTable = renderClientsModalTable;
+        window.openClientDetailModal = openClientDetailModal;
+        window.saveClientDetailChanges = saveClientDetailChanges;
+        window.copyModalPin = copyModalPin;
+        window.toggleProfileDropdown = toggleProfileDropdown;
+        window.openAccountSettingsModal = openAccountSettingsModal;
+        window.saveAccountSettings = saveAccountSettings;
+        window.openChangePasswordModal = openChangePasswordModal;
+        window.handleChangePassword = handleChangePassword;
+        window.sendResetPasswordLink = sendResetPasswordLink;
+        window.handleForgotPassword = handleForgotPassword;
+        window.toggleTheme = toggleTheme;
         window.copyPairingCode = copyPairingCode;
         window.filterClientInvoices = filterClientInvoices;
         window.renderClientInvoices = renderClientInvoices;
