@@ -1544,6 +1544,14 @@ function escapeXml(unsafe) {
     });
 }
 
+// Nová funkce pro generování striktně validního formátu UUID
+function generateValidUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 function generateISDOCXml(inv) {
     const docId = inv.invoiceNumber || inv.vs || inv.id || 'INV-001';
     const issueDate = inv.dateIssue || new Date().toISOString().split('T')[0];
@@ -1559,6 +1567,9 @@ function generateISDOCXml(inv) {
     const vs = inv.vs || docId.replace(/\D/g, '') || '0';
     const bankAccount = inv.accountNumber || '';
     const paymentMethod = inv.paymentMethod || 'Převodem';
+    
+    // Vygenerujeme validní ISDOC UUID
+    const validUuid = generateValidUUID();
 
     let paymentCode = paymentMethod === 'Hotově' ? '10' : paymentMethod === 'Kartou' ? '48' : paymentMethod === 'Zápočtem' ? '97' : '31';
 
@@ -1566,7 +1577,7 @@ function generateISDOCXml(inv) {
 <Invoice xmlns="http://isdoc.cz/namespace/2013" version="6.0.1">
   <DocumentType>1</DocumentType>
   <ID>${escapeXml(docId)}</ID>
-  <UUID>${escapeXml(inv.id || '00000000-0000-0000-0000-000000000000')}</UUID>
+  <UUID>${validUuid}</UUID>
   <IssuingSystem>InvoiceAI Flow</IssuingSystem>
   <IssueDate>${escapeXml(issueDate)}</IssueDate>
   <TaxPointDate>${escapeXml(taxDate)}</TaxPointDate>
@@ -1583,7 +1594,6 @@ function generateISDOCXml(inv) {
   <InvoiceLines><InvoiceLine><ID>1</ID><InvoicedQuantity unitCode="C62">1</InvoicedQuantity><LineExtensionAmount>${baseAmount}</LineExtensionAmount><LineExtensionAmountTaxInclusive>${amount}</LineExtensionAmountTaxInclusive><LineExtensionTaxAmount>${vatAmount}</LineExtensionTaxAmount><UnitPrice>${baseAmount}</UnitPrice><UnitPriceTaxInclusive>${amount}</UnitPriceTaxInclusive><ClassifiedTaxCategory><Percent>${vatRate}</Percent><VATCalculationMethod>0</VATCalculationMethod></ClassifiedTaxCategory><Item><Description>${escapeXml(vendorName + ' - ' + (inv.type || 'Faktura'))}</Description></Item></InvoiceLine></InvoiceLines>
 </Invoice>`;
 }
-
 function triggerDownload(content, filename, mimeType) {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
