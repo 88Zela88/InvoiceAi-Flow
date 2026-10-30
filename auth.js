@@ -1,8 +1,7 @@
 import { auth, db } from './firebase.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+import { doc, setDoc, updateDoc, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { showToast, closeModal, openModal } from './ui.js';
-import { addNewClient } from './app.js'; // Získání ref
 
 export let currentUser = null;
 export let currentUserData = null;
@@ -104,7 +103,14 @@ export async function handleAuthSubmit(e) {
             });
 
             if (role === 'accountant') {
-                await addNewClient(finalCompany);
+                const newPin = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); }).substring(0, 6).toUpperCase();
+                await addDoc(collection(db, "clients"), {
+                    name: finalCompany,
+                    pairingCode: newPin,
+                    accountantId: cred.user.uid,
+                    userId: cred.user.uid,
+                    createdAt: new Date().toISOString()
+                });
             }
             showToast("Registrace proběhla úspěšně!", "success");
         } else {
@@ -222,12 +228,4 @@ export async function sendResetPasswordLink() {
     } catch (err) {
         alert("Chyba: " + err.message);
     }
-}
-
-export function setCurrentUserValues(user, userData, role, cCompany, aCompany) {
-    currentUser = user;
-    currentUserData = userData;
-    currentRole = role;
-    activeClientCompany = cCompany;
-    activeAccountantCompany = aCompany;
 }
