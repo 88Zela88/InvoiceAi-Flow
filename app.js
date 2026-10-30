@@ -628,8 +628,15 @@ window.exportInvoices = function(format) {
     }
 };
 
-window.addEventListener('DOMContentLoaded', () => {
+function initApp() {
     if (window.lucide) window.lucide.createIcons();
-    renderClientInvoices();
-    renderAccountantInvoices();
+    if (typeof window.renderClientInvoices === 'function') window.renderClientInvoices();
+    if (typeof window.renderAccountantInvoices === 'function') window.renderAccountantInvoices();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 });
