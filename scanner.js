@@ -1,8 +1,8 @@
-import { db, storage } from './firebase.js';
+import { db, storage, auth } from './firebase.js';
 import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
 import { showToast, closeModal, openModal } from './ui.js';
-import { auth, currentUserData, activeClientCompany, currentRole } from './auth.js';
+import { currentUserData, activeClientCompany, currentRole } from './auth.js';
 
 export let scannedPages = [];
 export let activeScanPageIdx = 0;

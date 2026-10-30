@@ -65,7 +65,7 @@ onAuthStateChanged(auth, async (user) => {
     if (typeof window.renderAccountantInvoices === 'function') window.renderAccountantInvoices();
 });
 
-window.setAuthMode = function(mode) {
+export function setAuthMode(mode) {
     authMode = mode;
     const landIn = document.getElementById('landing-tab-signin');
     const landUp = document.getElementById('landing-tab-signup');
@@ -89,9 +89,9 @@ window.setAuthMode = function(mode) {
         if (submitLabel) submitLabel.textContent = "Vytvořit nový účet";
         if (forgotBox) forgotBox.classList.add('hidden');
     }
-};
+}
 
-window.updateRoleTypeUI = function(role) {
+export function updateRoleTypeUI(role) {
     const accBox = document.getElementById('accountant-company-box');
     const cliBox = document.getElementById('client-pairing-box');
     const labelAcc = document.getElementById('label-role-accountant');
@@ -108,9 +108,9 @@ window.updateRoleTypeUI = function(role) {
         if (labelCli) { labelCli.classList.add('border-emerald-500', 'bg-emerald-500/10'); labelCli.classList.remove('border-slate-800'); }
         if (labelAcc) { labelAcc.classList.remove('border-emerald-500', 'bg-emerald-500/10'); labelAcc.classList.add('border-slate-800'); }
     }
-};
+}
 
-window.handleAuthSubmit = async function(e) {
+export async function handleAuthSubmit(e) {
     e.preventDefault();
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
@@ -175,9 +175,9 @@ window.handleAuthSubmit = async function(e) {
         console.error(err);
         alert("Chyba ověření: " + err.message);
     }
-};
+}
 
-window.handleForgotPassword = async function() {
+export async function handleForgotPassword() {
     let email = document.getElementById('auth-email')?.value?.trim();
     if (!email) email = prompt("Zadejte svůj e-mail pro reset hesla:");
     if (!email) return;
@@ -187,9 +187,9 @@ window.handleForgotPassword = async function() {
         alert(`Odkaz odeslán na ${email}.`);
         showToast("E-mail odeslán!", "success");
     } catch (err) { alert("Chyba: " + err.message); }
-};
+}
 
-window.handleLogout = async function() {
+export async function handleLogout() {
     try {
         await signOut(auth);
         window.isDemoMode = false;
@@ -204,17 +204,17 @@ window.handleLogout = async function() {
         document.getElementById('app')?.classList.add('hidden');
         showToast("Byl jste úspěšně odhlášen.", "info");
     } catch (err) { console.error(err); }
-};
+}
 
-window.openAccountSettingsModal = function() {
+export function openAccountSettingsModal() {
     if (typeof window.closeProfileDropdown === 'function') window.closeProfileDropdown();
     document.getElementById('settings-email').value = auth.currentUser ? auth.currentUser.email : 'demo@email.cz';
     document.getElementById('settings-company').value = currentRole === 'accountant' ? activeAccountantCompany : activeClientCompany;
     document.getElementById('settings-company-label').textContent = currentRole === 'accountant' ? 'Název účetní kanceláře' : 'Název vaší firmy';
     openModal('account-settings-modal');
-};
+}
 
-window.saveAccountSettings = async function(e) {
+export async function saveAccountSettings(e) {
     e.preventDefault();
     const newName = document.getElementById('settings-company').value.trim();
     if (!newName) return;
@@ -223,7 +223,7 @@ window.saveAccountSettings = async function(e) {
         try {
             await updateDoc(doc(db, "users", auth.currentUser.uid), { company: newName });
             if (currentRole === 'accountant') {
-                activeAccountantCompany = newName; // This updates local value but we rely on snapshot/reload normally. Here it's optimistic.
+                activeAccountantCompany = newName;
                 document.getElementById('acc-agency-badge').textContent = `Účetní kancelář: ${newName}`;
             } else {
                 activeClientCompany = newName;
@@ -235,15 +235,15 @@ window.saveAccountSettings = async function(e) {
             closeModal('account-settings-modal');
         } catch (err) { alert("Chyba při ukládání: " + err.message); }
     }
-};
+}
 
-window.openChangePasswordModal = function() {
+export function openChangePasswordModal() {
     if (typeof window.closeProfileDropdown === 'function') window.closeProfileDropdown();
     ['current-password', 'new-password', 'confirm-new-password'].forEach(id => document.getElementById(id).value = '');
     openModal('change-password-modal');
-};
+}
 
-window.handleChangePassword = async function(e) {
+export async function handleChangePassword(e) {
     e.preventDefault();
     const currentPass = document.getElementById('current-password').value;
     const p1 = document.getElementById('new-password').value;
@@ -259,9 +259,9 @@ window.handleChangePassword = async function(e) {
         showToast("Heslo úspěšně změněno!", "success");
         closeModal('change-password-modal');
     } catch (err) { alert("Chyba: " + err.message); }
-};
+}
 
-window.sendResetPasswordLink = async function() {
+export async function sendResetPasswordLink() {
     const email = auth.currentUser ? auth.currentUser.email : prompt("Zadejte e-mail:");
     if (!email) return;
 
@@ -270,4 +270,4 @@ window.sendResetPasswordLink = async function() {
         showToast(`Odkaz odeslán na ${email}!`, "success");
         closeModal('change-password-modal');
     } catch (err) { alert("Chyba: " + err.message); }
-};
+}
