@@ -865,13 +865,13 @@ function switchRole(role) {
     if (role === 'client') {
         if (clientView) clientView.classList.remove('hidden');
         if (accountantView) accountantView.classList.add('hidden');
-        if (btnClient) btnClient.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-blue-600 text-white";
+        if (btnClient) btnClient.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-emerald-600 text-white";
         if (btnAcc) btnAcc.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white";
         renderClientInvoices();
     } else {
         if (clientView) clientView.classList.add('hidden');
         if (accountantView) accountantView.classList.remove('hidden');
-        if (btnAcc) btnAcc.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-blue-600 text-white";
+        if (btnAcc) btnAcc.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition bg-emerald-600 text-white";
         if (btnClient) btnClient.className = "px-2.5 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white";
         renderAccountantInvoices();
     }
@@ -928,7 +928,7 @@ window.filterClientInvoices = function(status) {
         btn.className = "client-filter-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 whitespace-nowrap";
     });
     const activeBtn = document.getElementById(`filter-btn-${status}`);
-    if (activeBtn) activeBtn.className = "client-filter-btn active px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white whitespace-nowrap";
+    if (activeBtn) activeBtn.className = "client-filter-btn active px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white whitespace-nowrap";
     renderClientInvoices(status);
 };
 
@@ -1065,7 +1065,7 @@ window.updateScanPagesUI = function() {
                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
         </div>
-        <label class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg cursor-pointer transition flex items-center gap-1 shadow-sm">
+        <label class="px-3 py-1.5 bg-emerald-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg cursor-pointer transition flex items-center gap-1 shadow-sm">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i> Další strana
             <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)">
         </label>
@@ -1651,6 +1651,59 @@ window.showToast = function(message, type = 'info') {
     setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
     setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-2'); setTimeout(() => toast.remove(), 300); }, 3500);
 }
+
+
+window.switchRole = switchRole;
+window.triggerScan = triggerScan;
+window.handleFileSelect = handleFileSelect;
+window.switchScanPage = switchScanPage;
+window.updateScanPagesUI = updateScanPagesUI;
+window.processWithOpenAI = processWithOpenAI;
+window.saveExtractedInvoice = saveExtractedInvoice;
+window.openDetailModal = openDetailModal;
+window.updateInvoiceStatus = updateInvoiceStatus;
+window.deleteInvoice = deleteInvoice;
+window.deleteCurrentInvoice = deleteCurrentInvoice;
+window.saveDetailChanges = saveDetailChanges;
+window.clientSubmitInvoice = clientSubmitInvoice;
+window.renameClient = renameClient;
+window.deleteClient = deleteClient;
+window.addNewClientFromInput = addNewClientFromInput;
+window.addNewClientPrompt = addNewClientPrompt;
+window.renderClientsModalTable = renderClientsModalTable;
+window.openClientDetailModal = openClientDetailModal;
+window.saveClientDetailChanges = saveClientDetailChanges;
+window.copyModalPin = copyModalPin;
+window.copyPairingCode = copyPairingCode;
+window.toggleProfileDropdown = toggleProfileDropdown;
+window.openAccountSettingsModal = openAccountSettingsModal;
+window.saveAccountSettings = saveAccountSettings;
+window.openChangePasswordModal = openChangePasswordModal;
+window.handleChangePassword = handleChangePassword;
+window.sendResetPasswordLink = sendResetPasswordLink;
+window.handleForgotPassword = handleForgotPassword;
+window.toggleTheme = toggleTheme;
+window.handleAuthSubmit = handleAuthSubmit;
+window.handleLogout = handleLogout;
+window.setAuthMode = setAuthMode;
+window.updateRoleTypeUI = updateRoleTypeUI;
+window.continueAsDemo = continueAsDemo;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.showToast = showToast;
+window.zoomDetailImg = zoomDetailImg;
+window.resetDetailImg = resetDetailImg;
+window.rotateDetailImg = rotateDetailImg;
+window.openDetailImgFull = openDetailImgFull;
+window.switchDetailPage = switchDetailPage;
+window.renderClientInvoices = renderClientInvoices;
+window.renderAccountantInvoices = renderAccountantInvoices;
+window.calculateScanAmounts = calculateScanAmounts;
+window.calculateDetailAmounts = calculateDetailAmounts;
+window.handleClientDatePresetChange = handleClientDatePresetChange;
+window.handleAccDatePresetChange = handleAccDatePresetChange;
+window.downloadSingleISDOC = downloadSingleISDOC;
+window.exportInvoices = exportInvoices;
 
 window.addEventListener('DOMContentLoaded', () => {
     if (window.lucide) window.lucide.createIcons();
