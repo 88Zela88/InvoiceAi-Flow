@@ -1,7 +1,6 @@
-// FINÁLNÍ app.js - Hlavní centrála aplikace (propojení všech modulů)
-import { db, auth, storage } from './firebase.js';
+import { db, auth } from './firebase.js';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, addDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
-import { currentUser, currentRole, activeClientCompany, activeAccountantCompany, authMode, setAuthMode, updateRoleTypeUI, handleAuthSubmit, handleForgotPassword, handleLogout, openAccountSettingsModal, saveAccountSettings, openChangePasswordModal, handleChangePassword, sendResetPasswordLink } from './auth.js';
+import { currentUser, currentRole, activeClientCompany } from './auth.js';
 import { showToast, closeModal, openModal, formatDateTime } from './ui.js';
 import { triggerScan, handleFileSelect, switchScanPage, updateScanPagesUI, processWithOpenAI, saveExtractedInvoice } from './scanner.js';
 import { generateISDOCXml, triggerDownload } from './isdoc.js';
@@ -13,18 +12,9 @@ let detailZoom = 1;
 let detailRotation = 0;
 let selectedInvoiceId = null;
 let selectedClientIdForModal = null;
+window.isDemoMode = false;
 
-// ================= EXPORT FUNKCÍ PRO HTML (TLAČÍTKA A FORMULÁŘE) =================
-window.setAuthMode = setAuthMode;
-window.updateRoleTypeUI = updateRoleTypeUI;
-window.handleAuthSubmit = handleAuthSubmit;
-window.handleForgotPassword = handleForgotPassword;
-window.handleLogout = handleLogout;
-window.openAccountSettingsModal = openAccountSettingsModal;
-window.saveAccountSettings = saveAccountSettings;
-window.openChangePasswordModal = openChangePasswordModal;
-window.handleChangePassword = handleChangePassword;
-window.sendResetPasswordLink = sendResetPasswordLink;
+// EXPORT DO WINDOW (Pro HTML)
 window.triggerScan = triggerScan;
 window.handleFileSelect = handleFileSelect;
 window.switchScanPage = switchScanPage;
@@ -36,28 +26,106 @@ window.closeModal = closeModal;
 window.showToast = showToast;
 window.formatDateTime = formatDateTime;
 
+// ================= LANDING PAGE & TÉMATA =================
+window.continueAsDemo = function() {
+    window.isDemoMode = true;
+    document.getElementById('landing-page')?.classList.add('hidden');
+    document.getElementById('app')?.classList.remove('hidden');
+    document.getElementById('demo-switcher-container')?.classList.remove('hidden');
+
+    const badge = document.getElementById('current-client-badge');
+    if(badge) badge.textContent = `Firma: TechVision s.r.o.`;
+    
+    document.getElementById('user-display-email').textContent = 'Demo Návštěvník';
+    document.getElementById('user-display-role').textContent = 'Zkušební Demo';
+
+    showToast("Vstoupili jste do zkušebního demo režimu.", "info");
+    if(window.lucide) window.lucide.createIcons();
+    
+    window.updateDynamicClients();
+    window.renderClientsModalTable();
+    window.renderClientInvoices();
+    window.renderAccountantInvoices();
+};
+
+window.toggleProfileDropdown = function() {
+    const menu = document.getElementById('profile-dropdown-menu');
+    const chevron = document.getElementById('profile-dropdown-chevron');
+    if (menu) {
+        if(menu.classList.contains('hidden')) {
+            menu.classList.remove('hidden');
+            if (chevron) chevron.classList.add('rotate-180');
+        } else {
+            window.closeProfileDropdown();
+        }
+    }
+};
+
+window.closeProfileDropdown = function() {
+    const menu = document.getElementById('profile-dropdown-menu');
+    const chevron = document.getElementById('profile-dropdown-chevron');
+    if (menu) menu.classList.add('hidden');
+    if (chevron) chevron.classList.remove('rotate-180');
+};
+
+document.addEventListener('click', (e) => {
+    const container = document.getElementById('auth-logged-in');
+    if (container && !container.contains(e.target)) window.closeProfileDropdown();
+});
+
+window.toggleTheme = function() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    updateThemeUI(isDark);
+};
+
+function updateThemeUI(isDark) {
+    const label = document.getElementById('theme-label');
+    const badge = document.getElementById('theme-badge');
+    if (label && badge) {
+        if (isDark) {
+            label.textContent = "Světlý režim";
+            badge.textContent = "Aktivní";
+            badge.className = "text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded";
+        } else {
+            label.textContent = "Tmavý režim";
+            badge.textContent = "Vypnuto";
+            badge.className = "text-[10px] uppercase font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded";
+        }
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+
+if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+    updateThemeUI(true);
+} else {
+    document.documentElement.classList.remove('dark');
+    updateThemeUI(false);
+}
+
 // ================= FIREBASE SYNCHRONIZACE =================
 const invoicesQuery = query(collection(db, "invoices"), orderBy("createdAt", "desc"));
 onSnapshot(invoicesQuery, (snapshot) => {
     invoices = [];
     snapshot.forEach((docSnap) => invoices.push({ id: docSnap.id, ...docSnap.data() }));
-    updateDynamicClients();
-    renderClientInvoices();
-    renderAccountantInvoices();
+    window.updateDynamicClients();
+    window.renderClientInvoices();
+    window.renderAccountantInvoices();
 }, (error) => showToast("Chyba synchronizace databáze: " + error.message, "warning"));
 
 const clientsQuery = query(collection(db, "clients"), orderBy("name", "asc"));
 onSnapshot(clientsQuery, (snapshot) => {
     customClients = [];
     snapshot.forEach((docSnap) => customClients.push({ id: docSnap.id, ...docSnap.data() }));
-    updateDynamicClients();
+    window.updateDynamicClients();
     if(document.getElementById('clients-modal') && !document.getElementById('clients-modal').classList.contains('hidden')) {
-        renderClientsModalTable();
+        window.renderClientsModalTable();
     }
 }, (err) => console.warn(err));
 
 
-// ================= LISTOVÁNÍ A FILTRACE (KLIENT & ÚČETNÍ) =================
+// ================= LISTOVÁNÍ A FILTRACE =================
 function checkDateMatch(inv, preset, fromDate, toDate) {
     if (!preset || preset === 'all') return true;
     let d = inv.createdAt ? new Date(inv.createdAt) : (inv.dateIssue ? new Date(inv.dateIssue) : null);
@@ -86,14 +154,14 @@ window.handleClientDatePresetChange = function() {
     const val = document.getElementById('client-date-preset')?.value;
     const customBox = document.getElementById('client-custom-dates');
     if (customBox) val === 'custom' ? customBox.classList.remove('hidden') : customBox.classList.add('hidden');
-    renderClientInvoices();
+    window.renderClientInvoices();
 };
 
 window.handleAccDatePresetChange = function() {
     const val = document.getElementById('acc-date-preset')?.value;
     const customBox = document.getElementById('acc-custom-dates');
     if (customBox) val === 'custom' ? customBox.classList.remove('hidden') : customBox.classList.add('hidden');
-    renderAccountantInvoices();
+    window.renderAccountantInvoices();
 };
 
 window.switchRole = function(role) {
@@ -102,11 +170,11 @@ window.switchRole = function(role) {
     if (role === 'client') {
         if(cView) cView.classList.remove('hidden');
         if(aView) aView.classList.add('hidden');
-        renderClientInvoices();
+        window.renderClientInvoices();
     } else {
         if(cView) cView.classList.add('hidden');
         if(aView) aView.classList.remove('hidden');
-        renderAccountantInvoices();
+        window.renderAccountantInvoices();
     }
 };
 
@@ -152,7 +220,7 @@ window.renderClientInvoices = function(filterStatus = null) {
     setTxt('stat-client-pending', filtered.filter(i => i.status === 'pending').length);
     setTxt('stat-client-approved', filtered.filter(i => i.status === 'approved').length);
     setTxt('stat-client-rejected', filtered.filter(i => i.status === 'action_needed' || i.status === 'rejected').length);
-}
+};
 
 window.filterClientInvoices = function(status) {
     document.querySelectorAll('.client-filter-btn').forEach(btn => {
@@ -205,9 +273,9 @@ window.renderAccountantInvoices = function() {
     setTxt('acc-stat-approved', filtered.filter(i => i.status === 'approved').length);
     setTxt('acc-stat-volume', `${totalVolume.toLocaleString('cs-CZ')} Kč`);
     setTxt('acc-stat-total-count', `Celkem ${filtered.length} dokladů`);
-}
+};
 
-function updateDynamicClients() {
+window.updateDynamicClients = function() {
     const set = new Set();
     if(window.isDemoMode) { 
         set.add('Demo firma s.r.o.'); 
@@ -229,7 +297,7 @@ function updateDynamicClients() {
         arr.forEach(n => accSelect.add(new Option(n, n)));
         if (arr.includes(val)) accSelect.value = val;
     }
-}
+};
 
 
 // ================= OTEVÍRÁNÍ A PRÁCE S DETAILEM DOKLADU =================
@@ -239,11 +307,9 @@ window.openDetailModal = function(id) {
     const inv = invoices.find(i => i.id === id);
     if (!inv) return;
 
-    // Set Header Info
     const modalTitle = document.getElementById('detail-modal-title');
     if (modalTitle) modalTitle.innerHTML = `${inv.vendor || 'Neznámý dodavatel'} <span class="text-slate-500 font-normal text-sm ml-2">(${inv.invoiceNumber || inv.vs || inv.id})</span>`;
 
-    // Reset Viewer
     window.currentInvoicePages = inv.imgUrls && inv.imgUrls.length > 0 ? inv.imgUrls : [inv.imgUrl || 'https://placehold.co/600x800/f1f5f9/334155?text=Bez+nahledu'];
     window.activeDetailPageIdx = 0;
     const imgPreview = document.getElementById('detail-img-preview');
@@ -252,7 +318,6 @@ window.openDetailModal = function(id) {
     if (window.updateDetailPagesUI) window.updateDetailPagesUI();
     if (window.resetDetailImg) window.resetDetailImg();
 
-    // Populate Client Select in form
     const clientSelect = document.getElementById('detail-client-select');
     if (clientSelect) {
         clientSelect.innerHTML = '';
@@ -261,7 +326,6 @@ window.openDetailModal = function(id) {
         clientSelect.value = inv.clientName || allClients[0] || '';
     }
 
-    // Populate Input Fields
     const safeSetVal = (elId, val) => { const el = document.getElementById(elId); if (el) el.value = val; };
     safeSetVal('detail-vendor', inv.vendor || '');
     safeSetVal('detail-ico', inv.ico || '');
@@ -280,7 +344,6 @@ window.openDetailModal = function(id) {
     safeSetVal('detail-account', inv.accountNumber || '');
     safeSetVal('detail-comment-note', inv.note || '');
 
-    // Layout by role
     const accButtons = document.getElementById('detail-acc-buttons');
     const clientButtons = document.getElementById('detail-client-buttons');
     const clientAssignmentBox = document.getElementById('detail-client-assignment-box');
@@ -333,7 +396,6 @@ window.saveDetailChanges = async function(e) {
         await updateDoc(doc(db, "invoices", selectedInvoiceId), updated);
         showToast("Údaje dokladu byly úspěšně uloženy jako koncept!", "success");
     } catch (err) {
-        console.error("Chyba při ukládání změn dokladu:", err);
         showToast("Chyba při ukládání změn: " + err.message, "warning");
     }
 };
@@ -347,14 +409,12 @@ window.clientSubmitInvoice = async function() {
         closeModal('detail-modal');
         showToast("Doklad byl odeslán účetní ke kontrole!", "success");
     } catch (err) {
-        console.error("Chyba při odesílání účetní:", err);
         showToast("Chyba při odesílání: " + err.message, "warning");
     }
 };
 
 window.updateInvoiceStatus = async function(newStatus) {
     if (!selectedInvoiceId) return;
-    // Nejprve se uloží data a poté se změní stav
     window.saveDetailChanges();
 
     try {
@@ -505,7 +565,16 @@ window.renderClientsModalTable = function() {
 
 window.openClientDetailModal = function(clientId) {
     selectedClientIdForModal = clientId;
-    const client = window.isDemoMode ? [{ id: 'd1', name: 'TechVision s.r.o.', pairingCode: 'TEC-821', ico: '28475921' }].find(c=>c.id===clientId) : customClients.find(c => c.id === clientId);
+    let client = null;
+    if (window.isDemoMode) {
+        const demoList = [
+            { id: 'd1', name: 'TechVision s.r.o.', pairingCode: 'TEC-821', ico: '28475921', dic: 'CZ28475921', contactPerson: 'Martin Dvořák', phone: '+420 777 888 999', email: 'dvorak@techvision.cz', address: 'Evropská 11, 160 00 Praha 6', bankAccount: '230049281/2010', notes: 'Měsíční paušál 4000 Kč' },
+            { id: 'd2', name: 'Kavárna Liberec s.r.o.', pairingCode: 'KAV-319', ico: '09384722', dic: 'CZ09384722', contactPerson: 'Petra Svobodová', phone: '+420 602 111 222', email: 'info@kavarnaliberec.cz', address: 'Náměstí Dr. E. Beneše 1, Liberec', bankAccount: '19482019/0300', notes: 'Čtvrtletní plátce DPH' }
+        ];
+        client = demoList.find(c => c.id === clientId);
+    } else {
+        client = customClients.find(c => c.id === clientId);
+    }
     if (!client) return showToast("Firma nebyla nalezena.", "warning");
 
     const t = document.getElementById('client-detail-title'); if(t) t.textContent = `Klientská karta: ${client.name}`;
@@ -541,7 +610,7 @@ window.saveClientDetailChanges = async function(e) {
         notes: getVal('modal-client-notes')
     };
     try {
-        if (window.isDemoMode) {
+        if (window.isDemoMode || selectedClientIdForModal.startsWith('d')) {
             showToast("V demo režimu uloženo.", "success");
         } else {
             await updateDoc(doc(db, "clients", selectedClientIdForModal), updatedData);
@@ -549,6 +618,39 @@ window.saveClientDetailChanges = async function(e) {
         }
         closeModal('client-info-modal');
     } catch (err) { alert("Chyba při ukládání: " + err.message); }
+};
+
+window.renameClient = async function(clientId, encodedOldName) {
+    const oldName = decodeURIComponent(encodedOldName);
+    const newName = prompt(`Přejmenovat firmu "${oldName}" na:`, oldName);
+    if (!newName || !newName.trim() || newName.trim() === oldName) return;
+    const cleanNew = newName.trim();
+    const user = auth.currentUser || currentUser;
+    try {
+        if (clientId && !clientId.startsWith('d')) await updateDoc(doc(db, "clients", clientId), { name: cleanNew });
+        const affectedInvoices = invoices.filter(inv => inv.clientName === oldName && (inv.accountantId === user?.uid || window.isDemoMode));
+        for (const inv of affectedInvoices) {
+            await updateDoc(doc(db, "invoices", inv.id), { clientName: cleanNew });
+        }
+        showToast(`Firma byla přejmenována na "${cleanNew}"`, "success");
+    } catch (err) {
+        showToast("Chyba při přejmenování firmy: " + err.message, "warning");
+    }
+};
+
+window.deleteClient = async function(clientId, encodedName) {
+    const name = decodeURIComponent(encodedName);
+    const user = auth.currentUser || currentUser;
+    const docCount = invoices.filter(i => i.clientName === name && (i.accountantId === user?.uid || window.isDemoMode)).length;
+    let confirmMsg = `Opravdu chcete smazat firmu "${name}" ze seznamu?`;
+    if (docCount > 0) confirmMsg = `POZOR: Firma "${name}" má v systému ${docCount} dokladů! Pokračovat ve smazání firmy?`;
+    if (!confirm(confirmMsg)) return;
+    try {
+        if (clientId && !clientId.startsWith('d')) await deleteDoc(doc(db, "clients", clientId));
+        showToast(`Firma "${name}" smazána.`, "info");
+    } catch (err) {
+        alert("Chyba při mazání firmy z databáze: " + err.message);
+    }
 };
 
 window.addNewClientFromInput = async function() {
@@ -565,17 +667,11 @@ window.addNewClientFromInput = async function() {
     } catch (err) { alert("CHYBA: " + err.message); }
 };
 
-window.deleteClient = async function(clientId, encodedName) {
-    const name = decodeURIComponent(encodedName);
-    const user = auth.currentUser || currentUser;
-    const docCount = invoices.filter(i => i.clientName === name && (i.accountantId === user?.uid || window.isDemoMode)).length;
-    let confirmMsg = `Opravdu chcete smazat firmu "${name}" ze seznamu?`;
-    if (docCount > 0) confirmMsg = `POZOR: Firma "${name}" má v systému ${docCount} dokladů! Smazat firmu?`;
-    if (!confirm(confirmMsg)) return;
-    try {
-        if (clientId && !clientId.startsWith('d')) await deleteDoc(doc(db, "clients", clientId));
-        showToast(`Firma "${name}" smazána.`, "info");
-    } catch (err) { alert("Chyba: " + err.message); }
+window.addNewClientPrompt = async function() {
+    const newName = prompt("Zadejte název nové firmy nebo jméno klienta:");
+    if (!newName || !newName.trim()) return;
+    const input = document.getElementById('new-client-input');
+    if (input) { input.value = newName; window.addNewClientFromInput(); }
 };
 
 // ================= EXPORT ISDOC PRO MONEY S3 =================
@@ -628,6 +724,7 @@ window.exportInvoices = function(format) {
     }
 };
 
+// ================= INICIALIZACE APLIKACE =================
 function initApp() {
     if (window.lucide) window.lucide.createIcons();
     if (typeof window.renderClientInvoices === 'function') window.renderClientInvoices();
