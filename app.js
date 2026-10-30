@@ -1,4 +1,4 @@
-// Aktualizovaná verze app.js - Firebase Storage, Vícestránkový Scan, Fullscreen Křížek
+// Aktualizovaná verze app.js - Expertní AI Prompt pro české faktury
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, query, orderBy, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
@@ -222,13 +222,13 @@ window.updateRoleTypeUI = function(role) {
     if (role === 'accountant') {
         if (accBox) accBox.classList.remove('hidden');
         if (cliBox) cliBox.classList.add('hidden');
-        if (labelAcc) { labelAcc.classList.add('border-blue-500', 'bg-blue-50/40'); labelAcc.classList.remove('border-slate-200'); }
-        if (labelCli) { labelCli.classList.remove('border-blue-500', 'bg-blue-50/40'); labelCli.classList.add('border-slate-200'); }
+        if (labelAcc) { labelAcc.classList.add('border-emerald-500', 'bg-emerald-500/10/40'); labelAcc.classList.remove('border-slate-800'); }
+        if (labelCli) { labelCli.classList.remove('border-emerald-500', 'bg-emerald-500/10/40'); labelCli.classList.add('border-slate-800'); }
     } else {
         if (accBox) accBox.classList.add('hidden');
         if (cliBox) cliBox.classList.remove('hidden');
-        if (labelCli) { labelCli.classList.add('border-blue-500', 'bg-blue-50/40'); labelCli.classList.remove('border-slate-200'); }
-        if (labelAcc) { labelAcc.classList.remove('border-blue-500', 'bg-blue-50/40'); labelAcc.classList.add('border-slate-200'); }
+        if (labelCli) { labelCli.classList.add('border-emerald-500', 'bg-emerald-500/10/40'); labelCli.classList.remove('border-slate-800'); }
+        if (labelAcc) { labelAcc.classList.remove('border-emerald-500', 'bg-emerald-500/10/40'); labelAcc.classList.add('border-slate-800'); }
     }
 };
 
@@ -310,6 +310,7 @@ window.handleAuthSubmit = async function(e) {
             if (role === 'accountant') {
                 await addNewClient(finalCompany);
             }
+
             showToast("Registrace proběhla úspěšně!", "success");
         } else {
             await signInWithEmailAndPassword(auth, email, password);
@@ -659,7 +660,7 @@ function renderClientsModalTable() {
             </td>
             <td class="p-3 text-right pr-4 whitespace-nowrap">
                 <div class="flex items-center justify-end gap-1.5">
-                    <button onclick="openClientDetailModal('${client.id}')" class="px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition flex items-center gap-1">
+                    <button onclick="openClientDetailModal('${client.id}')" class="px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-800 rounded-lg transition flex items-center gap-1">
                         <i data-lucide="info" class="w-3.5 h-3.5"></i> Detail
                     </button>
                     <button onclick="renameClient('${client.id}', '${encodeURIComponent(client.name)}')" class="px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition flex items-center gap-1">
@@ -909,7 +910,7 @@ function renderClientInvoices(filterStatus = null) {
                               : `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">K doplnění</span>`;
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
-            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-slate-900 dark:text-white">${inv.vendor || '-'}</div><div class="text-xs text-slate-500 font-mono"><span>${inv.invoiceNumber ? 'Číslo: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '')}</span></div></td><td class="p-3 text-xs text-slate-600 dark:text-slate-400"><div>Vystaveno: ${inv.dateIssue || '-'}</div><div class="text-slate-400 dark:text-slate-500">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3 text-xs text-slate-600 dark:text-slate-300"><div class="font-medium">${inv.type || 'Přijatá faktura'}</div><span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-semibold">${inv.paymentMethod || 'Převodem'}</span></td><td class="p-3 font-bold text-slate-900 dark:text-white">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</td><td class="p-3">${statusBadge}</td><td class="p-3 text-right pr-4"><div class="flex items-center justify-end gap-1"><button onclick="openDetailModal('${inv.id}')" title="Detail dokladu" class="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 transition"><i data-lucide="eye" class="w-4 h-4"></i></button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
+            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-slate-900 dark:text-white">${inv.vendor || '-'}</div><div class="text-xs text-slate-500 font-mono"><span>${inv.invoiceNumber ? 'Číslo: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '')}</span></div></td><td class="p-3 text-xs text-slate-600 dark:text-slate-400"><div>Vystaveno: ${inv.dateIssue || '-'}</div><div class="text-slate-400 dark:text-slate-500">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3 text-xs text-slate-600 dark:text-slate-300"><div class="font-medium">${inv.type || 'Přijatá faktura'}</div><span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-semibold">${inv.paymentMethod || 'Převodem'}</span></td><td class="p-3 font-bold text-slate-900 dark:text-white">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</td><td class="p-3">${statusBadge}</td><td class="p-3 text-right pr-4"><div class="flex items-center justify-end gap-1"><button onclick="openDetailModal('${inv.id}')" title="Detail dokladu" class="p-1.5 rounded-lg text-slate-500 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-slate-800 transition"><i data-lucide="eye" class="w-4 h-4"></i></button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -958,7 +959,7 @@ function renderAccountantInvoices() {
                               : `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">Vraceno k doplnění</span>`;
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
-            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-slate-900 dark:text-white text-xs">${inv.clientName || 'Klient'}</div><span class="text-[10px] text-slate-400">ID: ${inv.id}</span></td><td class="p-3"><div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">${inv.vendor || '-'}</div><div class="text-[11px] text-slate-400">IČO: ${inv.ico || '-'}</div></td><td class="p-3 text-xs"><div class="text-slate-800 dark:text-slate-200 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div><div class="text-slate-500 text-[11px]">DUZP: ${inv.dateTax || inv.dateIssue || '-'}</div><div class="text-slate-400 text-[11px]">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3"><div class="font-bold text-slate-900 dark:text-white text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div><div class="text-[10px] text-slate-500">Základ: ${inv.baseAmount ? Number(inv.baseAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div><div class="text-[10px] text-slate-400">DPH (${inv.vatRate || 21}%): ${inv.vatAmount ? Number(inv.vatAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div></td><td class="p-3">${statusBadge}</td><td class="p-3 text-right pr-4 whitespace-nowrap"><div class="flex items-center justify-end gap-1.5"><button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 hover:bg-blue-100 font-semibold rounded-lg text-xs transition flex items-center gap-1"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Detail</button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
+            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-slate-900 dark:text-white text-xs">${inv.clientName || 'Klient'}</div><span class="text-[10px] text-slate-400">ID: ${inv.id}</span></td><td class="p-3"><div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">${inv.vendor || '-'}</div><div class="text-[11px] text-slate-400">IČO: ${inv.ico || '-'}</div></td><td class="p-3 text-xs"><div class="text-slate-800 dark:text-slate-200 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div><div class="text-slate-500 text-[11px]">DUZP: ${inv.dateTax || inv.dateIssue || '-'}</div><div class="text-slate-400 text-[11px]">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3"><div class="font-bold text-slate-900 dark:text-white text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div><div class="text-[10px] text-slate-500">Základ: ${inv.baseAmount ? Number(inv.baseAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div><div class="text-[10px] text-slate-400">DPH (${inv.vatRate || 21}%): ${inv.vatAmount ? Number(inv.vatAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div></td><td class="p-3">${statusBadge}</td><td class="p-3 text-right pr-4 whitespace-nowrap"><div class="flex items-center justify-end gap-1.5"><button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-slate-800 text-emerald-500 dark:text-emerald-400 hover:bg-slate-700 font-semibold rounded-lg text-xs transition flex items-center gap-1"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Detail</button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -1065,7 +1066,7 @@ window.updateScanPagesUI = function() {
                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
         </div>
-        <label class="px-3 py-1.5 bg-emerald-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg cursor-pointer transition flex items-center gap-1 shadow-sm">
+        <label class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg cursor-pointer transition flex items-center gap-1 shadow-sm">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i> Další strana
             <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)">
         </label>
@@ -1103,10 +1104,21 @@ window.processWithOpenAI = async function() {
     if (loadingText) loadingText.textContent = "AI analyzuje strukturu dokladu...";
 
     try {
+        const systemPrompt = `Jsi profesionální účetní expert pro extrakci dat z českých a slovenských faktur.
+Tvojí úlohou je přesně analyzovat vícestránkový dokument a vrátit data striktně ve formátu JSON.
+Při hledání údajů postupuj podle těchto pravidel:
+- 'invoiceNumber': Číslo faktury se může jmenovat: "Faktura č.", "Číslo dokladu", "č.fakt.", "Daňový doklad č.".
+- 'vs': Variabilní symbol hledej jako "V.S.", "Var. symbol", "Variabilní symbol". Pokud prokazatelně chybí, vlož sem pouze číslice ze samotného čísla faktury.
+- 'ico': IČO hledej jako "IČ", "IČO", "Identifikační číslo" (odstraň mezery, vrať jen čísla).
+- 'dateIssue', 'dateTax', 'dateDue': Všechna data vrať striktně ve formátu YYYY-MM-DD. Pokud DUZP (dateTax) chybí, použij datum vystavení (dateIssue).
+- 'baseAmount', 'vatAmount', 'amount': Všechny částky vracej jako čisté číslo s desetinnou tečkou (žádné mezery a žádné "Kč" nebo "EUR", např. 1500.50). Celkovou částku hledej jako "Celkem k úhradě", "K platbě".
+- 'paymentMethod': Vyber přesně jednu hodnotu: 'Převodem', 'Kartou', 'Hotově', 'Zápočtem', 'Dobírka'.
+- 'account': Číslo bankovního účtu včetně kódu banky (např. 123456789/0100) nebo IBAN.`;
+
         const contentArray = [
             {
                 type: "text",
-                text: "Vytáhni data z této vícestránkové faktury přesně do JSON s klíči: 'vendor' (Název dodavatele), 'ico' (IČO dodavatele), 'invoiceNumber' (Číslo faktury / dokladu), 'vs' (Variabilní symbol, pokud chybí použij číslo faktury), 'dateIssue' (Datum vystavení ve formátu YYYY-MM-DD), 'dateTax' (Datum zdanitelného plnění / DUZP YYYY-MM-DD), 'dateDue' (Datum splatnosti YYYY-MM-DD), 'baseAmount' (Základ daně bez DPH jako číslo s tečkou bez Kč), 'vatRate' (Sazba DPH: číslo 21, 12 nebo 0), 'vatAmount' (Výše DPH v Kč jako číslo s tečkou), 'amount' (Celková částka k úhradě s DPH jako číslo s tečkou), 'paymentMethod' (Způsob úhrady: 'Převodem', 'Kartou', 'Hotově', 'Zápočtem' nebo 'Dobírka'), 'account' (Číslo bankovního účtu / IBAN)."
+                text: "Vytáhni data z této faktury do JSON."
             }
         ];
 
@@ -1123,7 +1135,10 @@ window.processWithOpenAI = async function() {
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 response_format: { type: "json_object" },
-                messages: [{ role: "user", content: contentArray }]
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: contentArray }
+                ]
             })
         });
 
@@ -1312,11 +1327,11 @@ window.updateDetailPagesUI = function() {
             container.appendChild(controls);
         }
         controls.innerHTML = `
-            <button type="button" onclick="switchDetailPage(-1)" class="p-1 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed" ${window.activeDetailPageIdx === 0 ? 'disabled' : ''}>
+            <button type="button" onclick="switchDetailPage(-1)" class="p-1 hover:text-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed" ${window.activeDetailPageIdx === 0 ? 'disabled' : ''}>
                 <i data-lucide="chevron-left" class="w-5 h-5"></i>
             </button>
             <span class="text-xs font-bold w-16 text-center">Str ${window.activeDetailPageIdx + 1} / ${window.currentInvoicePages.length}</span>
-            <button type="button" onclick="switchDetailPage(1)" class="p-1 hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed" ${window.activeDetailPageIdx === window.currentInvoicePages.length - 1 ? 'disabled' : ''}>
+            <button type="button" onclick="switchDetailPage(1)" class="p-1 hover:text-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed" ${window.activeDetailPageIdx === window.currentInvoicePages.length - 1 ? 'disabled' : ''}>
                 <i data-lucide="chevron-right" class="w-5 h-5"></i>
             </button>
         `;
@@ -1339,8 +1354,8 @@ window.openDetailImgFull = function() {
                 <style>
                     body { margin: 0; padding: 0; background: #0b0f19; display: flex; flex-direction: column; align-items: center; min-height: 100vh; font-family: sans-serif; }
                     .header { position: sticky; top: 0; width: 100%; background: rgba(15, 23, 42, 0.95); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 50; border-bottom: 1px solid #1e293b; backdrop-filter: blur(8px); }
-                    .close-btn { background: #ef4444; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-                    .close-btn:active { background: #dc2626; transform: scale(0.96); }
+                    .close-btn { background: #10b981; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+                    .close-btn:active { background: #059669; transform: scale(0.96); }
                     .img-container { padding: 16px; width: 100%; display: flex; justify-content: center; box-sizing: border-box; overflow: auto; }
                     img { max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: zoom-in; transition: transform 0.2s; }
                 </style>
@@ -1412,16 +1427,16 @@ window.openDetailModal = function(id) {
     });
 
     if (inv.status === 'pending') {
-        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800";
+        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20";
         badge.textContent = "Rozpracováno";
         if (btnPending) btnPending.classList.add('ring-2', 'ring-offset-1', 'ring-amber-500', 'font-bold');
     } else if (inv.status === 'approved') {
-        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800";
-        badge.textContent = "Zaúčtováno";
-        if (btnApproved) btnApproved.classList.add('ring-2', 'ring-offset-1', 'ring-emerald-700', 'font-bold');
+        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5";
+        badge.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Zaúčtováno`;
+        if (btnApproved) btnApproved.classList.add('ring-2', 'ring-offset-1', 'ring-emerald-500', 'font-bold');
     } else {
-        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800";
-        badge.textContent = "K doplnění";
+        badge.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center gap-1.5";
+        badge.innerHTML = `<i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> K doplnění`;
         if (btnAction) btnAction.classList.add('ring-2', 'ring-offset-1', 'ring-rose-500', 'font-bold');
     }
 
@@ -1544,7 +1559,6 @@ function escapeXml(unsafe) {
     });
 }
 
-// Nová funkce pro generování striktně validního formátu UUID
 function generateValidUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -1568,7 +1582,6 @@ function generateISDOCXml(inv) {
     const bankAccount = inv.accountNumber || '';
     const paymentMethod = inv.paymentMethod || 'Převodem';
     
-    // Vygenerujeme validní ISDOC UUID
     const validUuid = generateValidUUID();
 
     let paymentCode = paymentMethod === 'Hotově' ? '10' : paymentMethod === 'Kartou' ? '48' : paymentMethod === 'Zápočtem' ? '97' : '31';
@@ -1594,6 +1607,7 @@ function generateISDOCXml(inv) {
   <InvoiceLines><InvoiceLine><ID>1</ID><InvoicedQuantity unitCode="C62">1</InvoicedQuantity><LineExtensionAmount>${baseAmount}</LineExtensionAmount><LineExtensionAmountTaxInclusive>${amount}</LineExtensionAmountTaxInclusive><LineExtensionTaxAmount>${vatAmount}</LineExtensionTaxAmount><UnitPrice>${baseAmount}</UnitPrice><UnitPriceTaxInclusive>${amount}</UnitPriceTaxInclusive><ClassifiedTaxCategory><Percent>${vatRate}</Percent><VATCalculationMethod>0</VATCalculationMethod></ClassifiedTaxCategory><Item><Description>${escapeXml(vendorName + ' - ' + (inv.type || 'Faktura'))}</Description></Item></InvoiceLine></InvoiceLines>
 </Invoice>`;
 }
+
 function triggerDownload(content, filename, mimeType) {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -1634,79 +1648,3 @@ window.exportInvoices = function(format) {
         showToast(`Vygenerováno a staženo ${list.length} ISDOC souborů!`, "success");
     }
 }
-
-window.openModal = function(id) { document.getElementById(id).classList.remove('hidden'); }
-window.closeModal = function(id) { document.getElementById(id).classList.add('hidden'); }
-
-window.showToast = function(message, type = 'info') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    const bgBg = type === 'success' ? 'bg-emerald-600 border-emerald-500' : type === 'warning' ? 'bg-amber-600 border-amber-500' : 'bg-slate-900 border-slate-700';
-    const icon = type === 'success' ? 'check-circle' : type === 'warning' ? 'alert-triangle' : 'info';
-
-    toast.className = `p-3.5 rounded-xl border shadow-xl flex items-center gap-2.5 text-xs font-medium transform transition duration-300 translate-y-2 opacity-0 text-white pointer-events-auto ${bgBg}`;
-    toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
-    container.appendChild(toast);
-    if (window.lucide) window.lucide.createIcons();
-    setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
-    setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-2'); setTimeout(() => toast.remove(), 300); }, 3500);
-}
-
-
-window.switchRole = switchRole;
-window.triggerScan = triggerScan;
-window.handleFileSelect = handleFileSelect;
-window.switchScanPage = switchScanPage;
-window.updateScanPagesUI = updateScanPagesUI;
-window.processWithOpenAI = processWithOpenAI;
-window.saveExtractedInvoice = saveExtractedInvoice;
-window.openDetailModal = openDetailModal;
-window.updateInvoiceStatus = updateInvoiceStatus;
-window.deleteInvoice = deleteInvoice;
-window.deleteCurrentInvoice = deleteCurrentInvoice;
-window.saveDetailChanges = saveDetailChanges;
-window.clientSubmitInvoice = clientSubmitInvoice;
-window.renameClient = renameClient;
-window.deleteClient = deleteClient;
-window.addNewClientFromInput = addNewClientFromInput;
-window.addNewClientPrompt = addNewClientPrompt;
-window.renderClientsModalTable = renderClientsModalTable;
-window.openClientDetailModal = openClientDetailModal;
-window.saveClientDetailChanges = saveClientDetailChanges;
-window.copyModalPin = copyModalPin;
-window.copyPairingCode = copyPairingCode;
-window.toggleProfileDropdown = toggleProfileDropdown;
-window.openAccountSettingsModal = openAccountSettingsModal;
-window.saveAccountSettings = saveAccountSettings;
-window.openChangePasswordModal = openChangePasswordModal;
-window.handleChangePassword = handleChangePassword;
-window.sendResetPasswordLink = sendResetPasswordLink;
-window.handleForgotPassword = handleForgotPassword;
-window.toggleTheme = toggleTheme;
-window.handleAuthSubmit = handleAuthSubmit;
-window.handleLogout = handleLogout;
-window.setAuthMode = setAuthMode;
-window.updateRoleTypeUI = updateRoleTypeUI;
-window.continueAsDemo = continueAsDemo;
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.showToast = showToast;
-window.zoomDetailImg = zoomDetailImg;
-window.resetDetailImg = resetDetailImg;
-window.rotateDetailImg = rotateDetailImg;
-window.openDetailImgFull = openDetailImgFull;
-window.switchDetailPage = switchDetailPage;
-window.renderClientInvoices = renderClientInvoices;
-window.renderAccountantInvoices = renderAccountantInvoices;
-window.calculateScanAmounts = calculateScanAmounts;
-window.calculateDetailAmounts = calculateDetailAmounts;
-window.handleClientDatePresetChange = handleClientDatePresetChange;
-window.handleAccDatePresetChange = handleAccDatePresetChange;
-window.downloadSingleISDOC = downloadSingleISDOC;
-window.exportInvoices = exportInvoices;
-
-window.addEventListener('DOMContentLoaded', () => {
-    if (window.lucide) window.lucide.createIcons();
-    renderClientInvoices();
-    renderAccountantInvoices();
-});
