@@ -32,17 +32,22 @@ import {
 } from './ui.js';
 import {
     triggerScan,
+    startRescanForInvoice,
     handleFileSelect,
     switchScanPage,
     updateScanPagesUI,
     processWithOpenAI,
     saveExtractedInvoice,
-    calculateScanAmounts
+    calculateScanAmounts,
+    renderAiOverlayElements,
+    focusAiField,
+    toggleScanAiOverlay
 } from './scanner.js';
 import { generateISDOCXml, triggerDownload } from './isdoc.js';
 
 let invoices = [];
 let currentClientFilter = 'all';
+let detailAiOverlayVisible = true;
 let customClients = [];
 let detailZoom = 1;
 let detailRotation = 0;
@@ -502,8 +507,72 @@ export function openDetailModal(id) {
         if (clientAssignmentBox) clientAssignmentBox.classList.remove('hidden');
     }
 
+    // Vykreslení AI Overlay vrstvy nad náhledem dokladu i v legendě
+    renderAiOverlayElements(
+        'detail-ai-overlay',
+        'detail-ai-legend',
+        inv,
+        inv.aiOverlay,
+        'detail'
+    );
+    updateDetailAiOverlayToggleUI();
+
     if (window.lucide) window.lucide.createIcons();
     openModal('detail-modal');
+}
+
+function updateDetailAiOverlayToggleUI() {
+    const overlayEl = document.getElementById('detail-ai-overlay');
+    const btnEl = document.getElementById('btn-toggle-detail-ai-overlay');
+    if (overlayEl) {
+        if (detailAiOverlayVisible) {
+            overlayEl.classList.remove('hidden');
+        } else {
+            overlayEl.classList.add('hidden');
+        }
+    }
+    if (btnEl) {
+        btnEl.className = detailAiOverlayVisible
+            ? "px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition flex items-center gap-1 shadow-sm"
+            : "px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 hover:bg-slate-300 dark:hover:bg-slate-700 transition flex items-center gap-1";
+        btnEl.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i><span>AI Vrstva: ${detailAiOverlayVisible ? 'ZAP' : 'VYP'}</span>`;
+        if (window.lucide) window.lucide.createIcons();
+    }
+}
+
+export function toggleDetailAiOverlay() {
+    detailAiOverlayVisible = !detailAiOverlayVisible;
+    updateDetailAiOverlayToggleUI();
+}
+
+export function rescanCurrentDocument() {
+    if (!selectedInvoiceId) {
+        showToast("Nejprve vyberte doklad, který chcete znovu naskenovat.", "warning");
+        return;
+    }
+    const inv = invoices.find(i => i.id === selectedInvoiceId);
+    if (!inv) {
+        showToast("Doklad nebyl v seznamu nalezen.", "warning");
+        return;
+    }
+    startRescanForInvoice(inv);
+}
+
+export function handleRescanCompleted(invoiceId, updatedData) {
+    const idx = invoices.findIndex(i => i.id === invoiceId);
+    if (idx !== -1) {
+        invoices[idx] = { ...invoices[idx], ...updatedData };
+    }
+    updateDynamicClients();
+    renderClientInvoices();
+    renderAccountantInvoices();
+}
+
+export function handleDemoInvoiceAdded(newInv) {
+    invoices.unshift(newInv);
+    updateDynamicClients();
+    renderClientInvoices();
+    renderAccountantInvoices();
 }
 
 function getDetailModalFormValues() {
@@ -684,23 +753,23 @@ export function calculateDetailAmounts(source = 'total') {
 
 export function zoomDetailImg(delta) {
     detailZoom = Math.max(0.5, Math.min(3.5, Math.round((detailZoom + delta) * 10) / 10));
-    const img = document.getElementById('detail-img-preview');
-    if (img) img.style.transform = `scale(${detailZoom}) rotate(${detailRotation}deg)`;
+    const target = document.getElementById('detail-zoom-wrapper') || document.getElementById('detail-img-preview');
+    if (target) target.style.transform = `scale(${detailZoom}) rotate(${detailRotation}deg)`;
     const lvl = document.getElementById('detail-zoom-lvl');
     if (lvl) lvl.textContent = `${Math.round(detailZoom * 100)}%`;
 }
 
 export function rotateDetailImg() {
     detailRotation = (detailRotation + 90) % 360;
-    const img = document.getElementById('detail-img-preview');
-    if (img) img.style.transform = `scale(${detailZoom}) rotate(${detailRotation}deg)`;
+    const target = document.getElementById('detail-zoom-wrapper') || document.getElementById('detail-img-preview');
+    if (target) target.style.transform = `scale(${detailZoom}) rotate(${detailRotation}deg)`;
 }
 
 export function resetDetailImg() {
     detailZoom = 1;
     detailRotation = 0;
-    const img = document.getElementById('detail-img-preview');
-    if (img) img.style.transform = `scale(${detailZoom}) rotate(${detailRotation}deg)`;
+    const target = document.getElementById('detail-zoom-wrapper') || document.getElementById('detail-img-preview');
+    if (target) target.style.transform = `scale(${detailZoom}) rotate(${detailRotation}deg)`;
     const lvl = document.getElementById('detail-zoom-lvl');
     if (lvl) lvl.textContent = `100%`;
 }
@@ -1110,12 +1179,19 @@ Object.assign(window, {
 
     // Skener & OpenAI
     triggerScan,
+    startRescanForInvoice,
+    rescanCurrentDocument,
+    handleRescanCompleted,
+    handleDemoInvoiceAdded,
     handleFileSelect,
     switchScanPage,
     updateScanPagesUI,
     processWithOpenAI,
     saveExtractedInvoice,
     calculateScanAmounts,
+    focusAiField,
+    toggleScanAiOverlay,
+    toggleDetailAiOverlay,
 
     // Přehledy, filtry & detail dokladu
     switchRole,

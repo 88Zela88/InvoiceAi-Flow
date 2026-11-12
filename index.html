@@ -598,8 +598,11 @@
                         <i data-lucide="sparkles" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">AI Skenování & Vytěžení faktury</h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Automatická detekce polí a kontrola údajů</p>
+                        <div class="flex items-center gap-2">
+                            <h3 id="scan-modal-title" class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">AI Skenování & Vytěžení faktury</h3>
+                            <span id="scan-rescan-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">Přepis dokladu</span>
+                        </div>
+                        <p id="scan-modal-subtitle" class="text-[11px] text-slate-500 dark:text-slate-400">Automatická detekce polí a kontrola údajů</p>
                     </div>
                 </div>
                 <button onclick="closeModal('scan-modal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -608,9 +611,12 @@
             </div>
 
             <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                <div class="relative bg-slate-900 rounded-2xl overflow-hidden min-h-[190px] sm:min-h-[220px] flex flex-col items-center justify-center border border-slate-800">
-                    <div id="scan-line-anim" class="scan-line hidden"></div>
-                    <img id="scan-preview-img" src="" alt="Skenovaný doklad" class="max-h-60 sm:max-h-64 object-contain hidden transition opacity-90">
+                <div class="relative bg-slate-900 rounded-2xl overflow-hidden min-h-[190px] sm:min-h-[240px] flex flex-col items-center justify-center border border-slate-800">
+                    <div id="scan-line-anim" class="scan-line hidden z-20"></div>
+                    <div id="scan-img-wrapper" class="relative inline-block max-w-full my-2">
+                        <img id="scan-preview-img" src="" alt="Skenovaný doklad" class="max-h-64 sm:max-h-72 object-contain hidden transition opacity-95 rounded-lg">
+                        <div id="scan-ai-overlay" class="absolute inset-0 pointer-events-none hidden z-10"></div>
+                    </div>
                     <div id="scan-dropzone" class="text-center p-6 sm:p-8">
                         <div class="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-2.5 rounded-full bg-slate-800 text-emerald-400 flex items-center justify-center border border-slate-700">
                             <i data-lucide="upload-cloud" class="w-7 h-7 sm:w-8 sm:h-8"></i>
@@ -622,12 +628,15 @@
                             <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)">
                         </label>
                     </div>
-                    <div id="scan-loading" class="hidden absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center text-white p-4">
+                    <div id="scan-loading" class="hidden absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center text-white p-4 z-30">
                         <div class="w-9 h-9 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-2.5"></div>
                         <p class="font-bold text-xs sm:text-sm">AI analyzuje strukturu dokladu...</p>
                         <p class="text-[11px] text-slate-400 mt-0.5">Vytěžování IČO, DPH, DUZP a platebních údajů</p>
                     </div>
                 </div>
+
+                <!-- Interaktivní přehled AI detekovaných polí po naskenování -->
+                <div id="scan-ai-highlights-bar" class="hidden flex-wrap items-center gap-1.5 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-emerald-500/30 text-[11px]"></div>
 
                 <form id="extracted-form" onsubmit="saveExtractedInvoice(event)" class="space-y-3.5 sm:space-y-4">
                     <div class="flex items-center justify-between">
@@ -737,7 +746,7 @@
                         </button>
                         <button type="submit" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs font-semibold hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-500/20 flex items-center gap-1.5">
                             <i data-lucide="send" class="w-4 h-4"></i>
-                            Uložit & Odeslat účetní
+                            <span id="scan-submit-label">Uložit & Odeslat účetní</span>
                         </button>
                     </div>
                 </form>
@@ -770,10 +779,16 @@
                 
                 <!-- Left Column: Document Preview -->
                 <div class="flex flex-col space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                            Náhled dokumentu
-                        </span>
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                Náhled dokumentu
+                            </span>
+                            <button type="button" id="btn-toggle-detail-ai-overlay" onclick="toggleDetailAiOverlay()" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition flex items-center gap-1 shadow-sm" title="Zobrazit/skrýt vizuální body, kde AI přečetlo údaje">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                <span>AI Vrstva: ZAP</span>
+                            </button>
+                        </div>
                         <div id="detail-pages-controls-container" class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2 py-1">
                             <button type="button" onclick="zoomDetailImg(0.2)" title="Přiblížit" class="p-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition">
                                 <i data-lucide="zoom-in" class="w-4 h-4"></i>
@@ -800,9 +815,15 @@
                         </div>
                     </div>
 
-                    <div class="bg-slate-950 rounded-2xl min-h-[400px] sm:min-h-[600px] max-h-[750px] overflow-auto flex items-center justify-center border border-slate-800 relative select-none p-2 shadow-inner">
-                        <img id="detail-img-preview" src="" alt="Originální doklad" class="max-w-full object-contain transition-transform duration-200 shadow-2xl cursor-zoom-in" onclick="openDetailImgFull()">
+                    <div class="bg-slate-950 rounded-2xl min-h-[400px] sm:min-h-[560px] max-h-[720px] overflow-auto flex items-center justify-center border border-slate-800 relative select-none p-3 shadow-inner">
+                        <div id="detail-zoom-wrapper" class="relative inline-block transition-transform duration-200">
+                            <img id="detail-img-preview" src="" alt="Originální doklad" class="max-w-full max-h-[680px] object-contain shadow-2xl cursor-zoom-in rounded" onclick="openDetailImgFull()">
+                            <div id="detail-ai-overlay" class="absolute inset-0 pointer-events-none z-10"></div>
+                        </div>
                     </div>
+
+                    <!-- Interaktivní legenda vytěžených údajů AI -->
+                    <div id="detail-ai-legend" class="flex flex-wrap items-center gap-1.5 p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-[11px]"></div>
                 </div>
 
                 <!-- Right Column: AI Data Fields -->
@@ -956,6 +977,9 @@
                             <button type="button" onclick="closeModal('detail-modal')" class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1.5">
                                 Zavřít
                             </button>
+                            <button type="button" onclick="rescanCurrentDocument()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-indigo-500/10 hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white dark:hover:text-white border border-indigo-500/30 hover:border-indigo-600 shadow-sm transition flex items-center justify-center gap-1.5">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Znovu naskenovat
+                            </button>
                             <button type="button" onclick="updateInvoiceStatus('action_needed')" class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-rose-500/10 hover:bg-rose-600 text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-500/40 hover:border-rose-600 shadow-sm transition flex items-center justify-center gap-1.5">
                                 <i data-lucide="alert-triangle" class="w-4 h-4"></i> Vráceno k doplnění
                             </button>
@@ -967,14 +991,17 @@
                             </button>
                         </div>
                         
-                        <div id="detail-client-buttons" class="hidden mt-auto pt-6 flex-col sm:flex-row items-center justify-end gap-3">
-                            <button type="button" onclick="closeModal('detail-modal')" class="w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <div id="detail-client-buttons" class="hidden mt-auto pt-6 flex-col sm:flex-row flex-wrap items-center justify-end gap-2.5">
+                            <button type="button" onclick="closeModal('detail-modal')" class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                                 Zavřít
                             </button>
-                            <button type="submit" class="w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-white transition flex items-center justify-center gap-2">
+                            <button type="button" onclick="rescanCurrentDocument()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-indigo-500/10 hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white dark:hover:text-white border border-indigo-500/30 hover:border-indigo-600 shadow-sm transition flex items-center justify-center gap-1.5">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Znovu naskenovat
+                            </button>
+                            <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-white transition flex items-center justify-center gap-2">
                                 Uložit změny
                             </button>
-                            <button type="button" onclick="clientSubmitInvoice()" class="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2">
+                            <button type="button" onclick="clientSubmitInvoice()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2">
                                 Odeslat účetní <i data-lucide="send" class="w-4 h-4"></i>
                             </button>
                         </div>

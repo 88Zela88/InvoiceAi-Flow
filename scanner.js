@@ -1,11 +1,241 @@
 import { db, storage, auth } from './firebase.js';
-import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { collection, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
 import { showToast, closeModal, openModal } from './ui.js';
 import { currentUser, currentUserData, activeClientCompany, currentRole } from './auth.js';
 
 export let scannedPages = [];
 export let activeScanPageIdx = 0;
+export let rescanningInvoiceId = null;
+export let lastExtractedAiOverlay = null;
+export let scanOverlayVisible = true;
+
+const DEFAULT_AI_COORDS = {
+    vendor: { x: 24, y: 15 },
+    ico: { x: 26, y: 26 },
+    invoiceNumber: { x: 74, y: 14 },
+    dateIssue: { x: 72, y: 34 },
+    amount: { x: 74, y: 78 },
+    account: { x: 28, y: 80 }
+};
+
+function clampCoord(val, fallback) {
+    const n = Number(val);
+    if (isNaN(n) || n < 4 || n > 94) return fallback;
+    return Math.round(n);
+}
+
+export function normalizeAiOverlayCoords(rawBoxes) {
+    const boxes = rawBoxes && typeof rawBoxes === 'object' ? rawBoxes : {};
+    return {
+        vendor: {
+            x: clampCoord(boxes.vendor?.x, DEFAULT_AI_COORDS.vendor.x),
+            y: clampCoord(boxes.vendor?.y, DEFAULT_AI_COORDS.vendor.y)
+        },
+        ico: {
+            x: clampCoord(boxes.ico?.x, DEFAULT_AI_COORDS.ico.x),
+            y: clampCoord(boxes.ico?.y, DEFAULT_AI_COORDS.ico.y)
+        },
+        invoiceNumber: {
+            x: clampCoord(boxes.invoiceNumber?.x, DEFAULT_AI_COORDS.invoiceNumber.x),
+            y: clampCoord(boxes.invoiceNumber?.y, DEFAULT_AI_COORDS.invoiceNumber.y)
+        },
+        dateIssue: {
+            x: clampCoord(boxes.dateIssue?.x, DEFAULT_AI_COORDS.dateIssue.x),
+            y: clampCoord(boxes.dateIssue?.y, DEFAULT_AI_COORDS.dateIssue.y)
+        },
+        amount: {
+            x: clampCoord(boxes.amount?.x, DEFAULT_AI_COORDS.amount.x),
+            y: clampCoord(boxes.amount?.y, DEFAULT_AI_COORDS.amount.y)
+        },
+        account: {
+            x: clampCoord(boxes.account?.x, DEFAULT_AI_COORDS.account.x),
+            y: clampCoord(boxes.account?.y, DEFAULT_AI_COORDS.account.y)
+        }
+    };
+}
+
+export function focusAiField(inputId, pinKey) {
+    const el = document.getElementById(inputId);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+        el.classList.add('ring-2', 'ring-emerald-500');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-emerald-500'), 1600);
+    }
+    if (pinKey) {
+        document.querySelectorAll(`[data-ai-pin="${pinKey}"]`).forEach(pin => {
+            pin.classList.add('scale-110', 'ring-2', 'ring-white');
+            setTimeout(() => pin.classList.remove('scale-110', 'ring-2', 'ring-white'), 1600);
+        });
+    }
+}
+
+export function renderAiOverlayElements(overlayContainerId, barContainerId, dataObj, coordsObj, mode = 'scan') {
+    const overlayEl = document.getElementById(overlayContainerId);
+    const barEl = document.getElementById(barContainerId);
+    const coords = normalizeAiOverlayCoords(coordsObj);
+
+    const fieldMap = mode === 'scan'
+        ? {
+            vendor: 'field-vendor',
+            ico: 'field-ico',
+            invoiceNumber: 'field-invoice-num',
+            dateIssue: 'field-date-issue',
+            amount: 'field-amount',
+            account: 'field-account'
+        }
+        : {
+            vendor: 'detail-vendor',
+            ico: 'detail-ico',
+            invoiceNumber: 'detail-invoice-num',
+            dateIssue: 'detail-due-issue',
+            amount: 'detail-amount',
+            account: 'detail-account'
+        };
+
+    const items = [
+        {
+            key: 'vendor',
+            label: 'Dodavatel',
+            shortDesc: 'Zde AI našlo Dodavatele',
+            value: dataObj.vendor || '',
+            colorBg: 'bg-emerald-600/95 border-emerald-300',
+            chipClass: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25',
+            dotClass: 'bg-emerald-400',
+            pos: coords.vendor,
+            targetInput: fieldMap.vendor
+        },
+        {
+            key: 'ico',
+            label: 'IČO',
+            shortDesc: 'Zde AI našlo IČO',
+            value: dataObj.ico || '',
+            colorBg: 'bg-sky-600/95 border-sky-300',
+            chipClass: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30 hover:bg-sky-500/25',
+            dotClass: 'bg-sky-400',
+            pos: coords.ico,
+            targetInput: fieldMap.ico
+        },
+        {
+            key: 'invoiceNumber',
+            label: 'Doklad / VS',
+            shortDesc: 'Zde AI našlo Číslo dokladu',
+            value: dataObj.invoiceNumber || dataObj.vs || '',
+            colorBg: 'bg-indigo-600/95 border-indigo-300',
+            chipClass: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/25',
+            dotClass: 'bg-indigo-400',
+            pos: coords.invoiceNumber,
+            targetInput: fieldMap.invoiceNumber
+        },
+        {
+            key: 'dateIssue',
+            label: 'Datum / DUZP',
+            shortDesc: 'Zde AI našlo Datum',
+            value: dataObj.dateIssue || dataObj.dateTax || '',
+            colorBg: 'bg-amber-600/95 border-amber-300',
+            chipClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/25',
+            dotClass: 'bg-amber-400',
+            pos: coords.dateIssue,
+            targetInput: fieldMap.dateIssue
+        },
+        {
+            key: 'amount',
+            label: 'Celkem',
+            shortDesc: 'Zde AI našlo Celkovou částku',
+            value: dataObj.amount ? `${Number(dataObj.amount).toLocaleString('cs-CZ')} Kč` : '',
+            colorBg: 'bg-rose-600/95 border-rose-300',
+            chipClass: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 hover:bg-rose-500/25',
+            dotClass: 'bg-rose-400',
+            pos: coords.amount,
+            targetInput: fieldMap.amount
+        },
+        {
+            key: 'account',
+            label: 'Účet',
+            shortDesc: 'Zde AI našlo Bankovní účet',
+            value: dataObj.accountNumber || dataObj.account || '',
+            colorBg: 'bg-violet-600/95 border-violet-300',
+            chipClass: 'bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30 hover:bg-violet-500/25',
+            dotClass: 'bg-violet-400',
+            pos: coords.account,
+            targetInput: fieldMap.account
+        }
+    ].filter(item => String(item.value).trim() !== '');
+
+    if (overlayEl) {
+        overlayEl.innerHTML = '';
+        items.forEach(item => {
+            const safeVal = String(item.value).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const pin = document.createElement('button');
+            pin.type = 'button';
+            pin.setAttribute('data-ai-pin', item.key);
+            pin.title = `${item.shortDesc}: ${item.value} (kliknutím upravíte pole)`;
+            pin.style.left = `${item.pos.x}%`;
+            pin.style.top = `${item.pos.y}%`;
+            pin.className = `pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 px-2 py-0.5 rounded-full border text-[10px] font-bold text-white shadow-lg backdrop-blur-sm flex items-center gap-1 transition transform hover:scale-110 cursor-pointer ${item.colorBg}`;
+            pin.onclick = (ev) => {
+                ev.stopPropagation();
+                focusAiField(item.targetInput, item.key);
+            };
+            pin.innerHTML = `
+                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
+                <span class="opacity-90">${item.label}:</span>
+                <span class="truncate max-w-[110px]">${safeVal}</span>
+            `;
+            overlayEl.appendChild(pin);
+        });
+    }
+
+    if (barEl) {
+        if (items.length === 0) {
+            barEl.classList.add('hidden');
+            barEl.classList.remove('flex');
+            barEl.innerHTML = '';
+        } else {
+            barEl.classList.remove('hidden');
+            barEl.classList.add('flex');
+            const chipsHtml = items.map(item => {
+                const safeVal = String(item.value).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return `
+                    <button type="button" onclick="focusAiField('${item.targetInput}', '${item.key}')" title="${item.shortDesc}" class="px-2 py-1 rounded-lg border text-[11px] font-semibold transition flex items-center gap-1.5 cursor-pointer ${item.chipClass}">
+                        <span class="w-2 h-2 rounded-full ${item.dotClass} shrink-0"></span>
+                        <span class="opacity-75">${item.shortDesc}:</span>
+                        <strong class="truncate max-w-[140px]">${safeVal}</strong>
+                    </button>
+                `;
+            }).join('');
+
+            const toggleBtnHtml = mode === 'scan'
+                ? `<button type="button" onclick="toggleScanAiOverlay()" class="ml-auto px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold hover:opacity-90 transition flex items-center gap-1">
+                       <i data-lucide="eye" class="w-3 h-3"></i> Body na fotce
+                   </button>`
+                : '';
+
+            barEl.innerHTML = `
+                <div class="w-full flex items-center justify-between mb-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <i data-lucide="sparkles" class="w-3 h-3"></i> Vizuální kontrola AI vytěžení (kliknutím na štítek zvýrazníte pole)
+                    </span>
+                    ${toggleBtnHtml}
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5 w-full">${chipsHtml}</div>
+            `;
+            if (window.lucide) window.lucide.createIcons();
+        }
+    }
+}
+
+export function toggleScanAiOverlay() {
+    const overlayEl = document.getElementById('scan-ai-overlay');
+    if (!overlayEl) return;
+    scanOverlayVisible = !scanOverlayVisible;
+    if (scanOverlayVisible) {
+        overlayEl.classList.remove('hidden');
+    } else {
+        overlayEl.classList.add('hidden');
+    }
+}
 
 export function calculateScanAmounts(source = 'total') {
     const baseInput = document.getElementById('field-base-amount');
@@ -34,16 +264,59 @@ export function calculateScanAmounts(source = 'total') {
     }
 }
 
+function resetScanModalFields() {
+    const ids = [
+        'field-vendor',
+        'field-ico',
+        'field-invoice-num',
+        'field-vs',
+        'field-date-issue',
+        'field-date-tax',
+        'field-date-due',
+        'field-base-amount',
+        'field-vat-amount',
+        'field-amount',
+        'field-account'
+    ];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const vatRate = document.getElementById('field-vat-rate');
+    if (vatRate) vatRate.value = '21';
+}
+
 export function triggerScan() {
+    rescanningInvoiceId = null;
+    window.rescanningInvoiceId = null;
+    lastExtractedAiOverlay = null;
     scannedPages = [];
     activeScanPageIdx = 0;
     window.scannedPages = scannedPages;
     window.activeScanPageIdx = activeScanPageIdx;
 
+    resetScanModalFields();
+
+    const titleEl = document.getElementById('scan-modal-title');
+    const subEl = document.getElementById('scan-modal-subtitle');
+    const badgeEl = document.getElementById('scan-rescan-badge');
+    const submitLabelEl = document.getElementById('scan-submit-label');
+    if (titleEl) titleEl.textContent = 'AI Skenování & Vytěžení faktury';
+    if (subEl) subEl.textContent = 'Automatická detekce polí a kontrola údajů';
+    if (badgeEl) badgeEl.classList.add('hidden');
+    if (submitLabelEl) submitLabelEl.textContent = 'Uložit & Odeslat účetní';
+
     const previewImg = document.getElementById('scan-preview-img');
     if (previewImg) {
         previewImg.src = '';
         previewImg.classList.add('hidden');
+    }
+    document.getElementById('scan-ai-overlay')?.classList.add('hidden');
+    const highlightsBar = document.getElementById('scan-ai-highlights-bar');
+    if (highlightsBar) {
+        highlightsBar.classList.add('hidden');
+        highlightsBar.classList.remove('flex');
+        highlightsBar.innerHTML = '';
     }
     document.getElementById('scan-dropzone')?.classList.remove('hidden');
     document.getElementById('scan-loading')?.classList.add('hidden');
@@ -54,6 +327,73 @@ export function triggerScan() {
 
     if (typeof window.updateDynamicClients === 'function') window.updateDynamicClients();
     openModal('scan-modal');
+}
+
+export function startRescanForInvoice(inv) {
+    if (!inv || !inv.id) {
+        showToast("Doklad pro přefocení nebyl nalezen.", "warning");
+        return;
+    }
+
+    rescanningInvoiceId = inv.id;
+    window.rescanningInvoiceId = inv.id;
+    lastExtractedAiOverlay = inv.aiOverlay || null;
+    scannedPages = [];
+    activeScanPageIdx = 0;
+    window.scannedPages = scannedPages;
+    window.activeScanPageIdx = activeScanPageIdx;
+
+    if (typeof window.updateDynamicClients === 'function') window.updateDynamicClients();
+
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val !== undefined && val !== null ? val : ''; };
+    setVal('field-client-name', inv.clientName || activeClientCompany || '');
+    setVal('field-vendor', inv.vendor || '');
+    setVal('field-ico', inv.ico || '');
+    setVal('field-invoice-num', inv.invoiceNumber || '');
+    setVal('field-vs', inv.vs || '');
+    setVal('field-type', inv.type || 'Přijatá faktura');
+    setVal('field-payment-method', inv.paymentMethod || 'Převodem');
+    setVal('field-date-issue', inv.dateIssue || '');
+    setVal('field-date-tax', inv.dateTax || inv.dateIssue || '');
+    setVal('field-date-due', inv.dateDue || '');
+    setVal('field-base-amount', inv.baseAmount || '');
+    setVal('field-vat-rate', inv.vatRate || '21');
+    setVal('field-vat-amount', inv.vatAmount || '');
+    setVal('field-amount', inv.amount || '');
+    setVal('field-account', inv.accountNumber || '');
+
+    const titleEl = document.getElementById('scan-modal-title');
+    const subEl = document.getElementById('scan-modal-subtitle');
+    const badgeEl = document.getElementById('scan-rescan-badge');
+    const submitLabelEl = document.getElementById('scan-submit-label');
+    if (titleEl) titleEl.textContent = 'Znovu naskenovat doklad';
+    if (subEl) subEl.textContent = `Přepisujete existující doklad: ${inv.vendor || inv.invoiceNumber || inv.id}`;
+    if (badgeEl) badgeEl.classList.remove('hidden');
+    if (submitLabelEl) submitLabelEl.textContent = 'Přepsat doklad novým skenem';
+
+    const previewImg = document.getElementById('scan-preview-img');
+    if (previewImg) {
+        previewImg.src = '';
+        previewImg.classList.add('hidden');
+    }
+    document.getElementById('scan-ai-overlay')?.classList.add('hidden');
+    const highlightsBar = document.getElementById('scan-ai-highlights-bar');
+    if (highlightsBar) {
+        highlightsBar.classList.add('hidden');
+        highlightsBar.classList.remove('flex');
+        highlightsBar.innerHTML = '';
+    }
+    document.getElementById('scan-dropzone')?.classList.remove('hidden');
+    document.getElementById('scan-loading')?.classList.add('hidden');
+    document.getElementById('scan-line-anim')?.classList.add('hidden');
+
+    const pageControls = document.getElementById('scan-pages-controls');
+    if (pageControls) pageControls.remove();
+
+    closeModal('detail-modal');
+    openModal('scan-modal');
+    if (window.lucide) window.lucide.createIcons();
+    showToast("Vyberte nebo vyfoťte nový snímek pro přepsání dokladu.", "info");
 }
 
 export function handleFileSelect(event) {
@@ -108,16 +448,17 @@ export function handleFileSelect(event) {
         img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+    event.target.value = '';
 }
 
 export function updateScanPagesUI() {
     let pageControls = document.getElementById('scan-pages-controls');
-    const previewImg = document.getElementById('scan-preview-img');
-    if (!pageControls && previewImg && previewImg.parentElement) {
+    const previewWrapper = document.getElementById('scan-img-wrapper') || document.getElementById('scan-preview-img');
+    if (!pageControls && previewWrapper && previewWrapper.parentElement) {
         pageControls = document.createElement('div');
         pageControls.id = 'scan-pages-controls';
-        pageControls.className = 'w-full flex items-center justify-between bg-slate-800 p-2 border-t border-slate-700';
-        previewImg.parentElement.appendChild(pageControls);
+        pageControls.className = 'w-full flex items-center justify-between bg-slate-800 p-2 border-t border-slate-700 z-20';
+        previewWrapper.parentElement.appendChild(pageControls);
     }
     if (!pageControls) return;
 
@@ -166,7 +507,7 @@ export async function processWithOpenAI() {
     const loadingText = scanLoading ? scanLoading.querySelector('p.font-bold') : null;
     if (scanLoading) scanLoading.classList.remove('hidden');
     document.getElementById('scan-line-anim')?.classList.remove('hidden');
-    if (loadingText) loadingText.textContent = "AI analyzuje strukturu dokladu...";
+    if (loadingText) loadingText.textContent = "AI analyzuje strukturu dokladu a pozice údajů...";
 
     try {
         const systemPrompt = `Jsi profesionální účetní expert pro extrakci dat z českých a slovenských faktur.
@@ -179,9 +520,16 @@ Při hledání údajů postupuj podle těchto pravidel:
 - 'dateIssue', 'dateTax', 'dateDue': Všechna data vrať striktně ve formátu YYYY-MM-DD. Pokud DUZP (dateTax) chybí, použij datum vystavení (dateIssue).
 - 'baseAmount', 'vatRate', 'vatAmount', 'amount': Všechny částky vracej jako čisté číslo s desetinnou tečkou (žádné mezery a žádné "Kč" nebo "EUR", např. 1500.50). Celkovou částku hledej jako "Celkem k úhradě", "K platbě". 'vatRate' jako číslo 21, 12 nebo 0.
 - 'paymentMethod': Vyber přesně jednu hodnotu: 'Převodem', 'Kartou', 'Hotově', 'Zápočtem', 'Dobírka'.
-- 'account': Číslo bankovního účtu včetně kódu banky (např. 123456789/0100) nebo IBAN.`;
+- 'account': Číslo bankovního účtu včetně kódu banky (např. 123456789/0100) nebo IBAN.
+- 'boundingBoxes': Objekt s přibližnými souřadnicemi středu nalezeného textu v procentech (x: 5 až 95 zleva doprava, y: 5 až 95 shora dolů) na první stránce dokumentu pro klíče:
+  "vendor": {"x": číslo, "y": číslo},
+  "ico": {"x": číslo, "y": číslo},
+  "invoiceNumber": {"x": číslo, "y": číslo},
+  "dateIssue": {"x": číslo, "y": číslo},
+  "amount": {"x": číslo, "y": číslo},
+  "account": {"x": číslo, "y": číslo}.`;
 
-        const contentArray = [{ type: "text", text: "Vytáhni data z této faktury do JSON." }];
+        const contentArray = [{ type: "text", text: "Vytáhni data a přibližné procentuální souřadnice (boundingBoxes) z této faktury do JSON." }];
         scannedPages.forEach(pageB64 => {
             contentArray.push({ type: "image_url", image_url: { url: pageB64 } });
         });
@@ -222,7 +570,28 @@ Při hledání údajů postupuj podle těchto pravidel:
             setVal('field-account', parsed.account);
 
             calculateScanAmounts('total');
-            showToast("Faktura úspěšně přečtena!", "success");
+
+            lastExtractedAiOverlay = normalizeAiOverlayCoords(parsed.boundingBoxes);
+            scanOverlayVisible = true;
+            const scanOverlayEl = document.getElementById('scan-ai-overlay');
+            if (scanOverlayEl) scanOverlayEl.classList.remove('hidden');
+
+            renderAiOverlayElements(
+                'scan-ai-overlay',
+                'scan-ai-highlights-bar',
+                {
+                    vendor: parsed.vendor,
+                    ico: parsed.ico,
+                    invoiceNumber: parsed.invoiceNumber || parsed.vs,
+                    dateIssue: parsed.dateIssue,
+                    amount: parsed.amount,
+                    accountNumber: parsed.account
+                },
+                lastExtractedAiOverlay,
+                'scan'
+            );
+
+            showToast("Faktura úspěšně přečtena včetně pozic údajů!", "success");
         } else {
             alert("AI nemohla fakturu přečíst. Zkuste to znovu.");
         }
@@ -259,7 +628,7 @@ export async function saveExtractedInvoice(e) {
         } else {
             for (let i = 0; i < scannedPages.length; i++) {
                 const base64Data = scannedPages[i];
-                const fileName = `invoices/${user.uid}/${Date.now()}_page_${i + 1}.jpg`;
+                const fileName = `invoices/${user ? user.uid : 'anon'}/${Date.now()}_page_${i + 1}.jpg`;
                 const storageRef = ref(storage, fileName);
                 await uploadString(storageRef, base64Data, 'data_url');
                 uploadedUrls.push(await getDownloadURL(storageRef));
@@ -267,34 +636,70 @@ export async function saveExtractedInvoice(e) {
         }
 
         const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
-        const newInvoice = {
+        const extractedFields = {
             clientName: chosenClient,
-            userId: user ? user.uid : 'demo-user',
-            userEmail: user ? user.email : 'demo@demo.cz',
-            accountantId: (currentRole === 'accountant' && user) ? user.uid : (currentUserData?.accountantId || 'demo'),
-            isDemo: window.isDemoMode,
             vendor: getVal('field-vendor') || 'Neznámý dodavatel',
             ico: getVal('field-ico'),
             invoiceNumber: getVal('field-invoice-num'),
-            vs: getVal('field-vs'),
+            vs: getVal('field-vs') || getVal('field-invoice-num'),
             type: getVal('field-type') || 'Přijatá faktura',
             paymentMethod: getVal('field-payment-method') || 'Převodem',
             dateIssue: getVal('field-date-issue'),
-            dateTax: getVal('field-date-tax'),
+            dateTax: getVal('field-date-tax') || getVal('field-date-issue'),
             dateDue: getVal('field-date-due'),
             baseAmount: parseFloat(getVal('field-base-amount')) || 0,
             vatRate: getVal('field-vat-rate') || '21',
             vatAmount: parseFloat(getVal('field-vat-amount')) || 0,
             amount: parseFloat(getVal('field-amount')) || 0,
             accountNumber: getVal('field-account'),
-            status: 'pending',
-            note: '',
             imgUrl: uploadedUrls[0] || '',
             imgUrls: uploadedUrls,
+            aiOverlay: lastExtractedAiOverlay || DEFAULT_AI_COORDS
+        };
+
+        // Pokud probíhá RESCAN existujícího dokladu -> provedeme updateDoc místo addDoc
+        const targetRescanId = rescanningInvoiceId || window.rescanningInvoiceId;
+        if (targetRescanId) {
+            const updatePayload = {
+                ...extractedFields,
+                updatedAt: new Date().toISOString()
+            };
+
+            if (!window.isDemoMode) {
+                await updateDoc(doc(db, "invoices", targetRescanId), updatePayload);
+            }
+
+            if (typeof window.handleRescanCompleted === 'function') {
+                window.handleRescanCompleted(targetRescanId, updatePayload);
+            }
+
+            rescanningInvoiceId = null;
+            window.rescanningInvoiceId = null;
+            scannedPages = [];
+            window.scannedPages = [];
+            closeModal('scan-modal');
+            showToast("Doklad byl úspěšně přepsán novým skenem!", "success");
+            return;
+        }
+
+        // Standardní vytvoření nového dokladu
+        const newInvoice = {
+            ...extractedFields,
+            userId: user ? user.uid : 'demo-user',
+            userEmail: user ? user.email : 'demo@demo.cz',
+            accountantId: (currentRole === 'accountant' && user) ? user.uid : (currentUserData?.accountantId || 'demo'),
+            isDemo: window.isDemoMode,
+            status: 'pending',
+            note: '',
             createdAt: new Date().toISOString()
         };
 
-        await addDoc(collection(db, "invoices"), newInvoice);
+        if (!window.isDemoMode) {
+            await addDoc(collection(db, "invoices"), newInvoice);
+        } else if (typeof window.handleDemoInvoiceAdded === 'function') {
+            window.handleDemoInvoiceAdded({ id: 'INV-' + Math.floor(1000 + Math.random() * 9000), ...newInvoice });
+        }
+
         closeModal('scan-modal');
         showToast(`Doklad uložen! Naskenováno stran: ${uploadedUrls.length}`, "success");
         scannedPages = [];
@@ -310,9 +715,12 @@ export async function saveExtractedInvoice(e) {
 
 // Navázání na window pro přímé volání z HTML
 window.triggerScan = triggerScan;
+window.startRescanForInvoice = startRescanForInvoice;
 window.handleFileSelect = handleFileSelect;
 window.switchScanPage = switchScanPage;
 window.updateScanPagesUI = updateScanPagesUI;
 window.processWithOpenAI = processWithOpenAI;
 window.saveExtractedInvoice = saveExtractedInvoice;
 window.calculateScanAmounts = calculateScanAmounts;
+window.focusAiField = focusAiField;
+window.toggleScanAiOverlay = toggleScanAiOverlay;
