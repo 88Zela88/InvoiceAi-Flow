@@ -489,6 +489,82 @@ export function switchScanPage(dir) {
     updateScanPagesUI();
 }
 
+async function fetchAresSubjectJson(paddedIco) {
+    const aresUrl = `https://ares.gov.cz/ekonomicke-subjekty-v-informacnim-systemu/rest/ekonomicke-subjekty/${encodeURIComponent(paddedIco)}`;
+
+    // 1. Pokus o přímé volání ARES API (Simple GET bez custom hlaviček, aby nevznikl CORS preflight OPTIONS blok)
+    try {
+        const directRes = await fetch(aresUrl);
+        if (directRes.status === 404 || directRes.status === 400) {
+            return { notFound: true };
+        }
+        if (directRes.ok) {
+            const json = await directRes.json();
+            if (json && json.kod && !json.obchodniJmeno) return { notFound: true };
+            return { data: json };
+        }
+    } catch (_) {
+        // Přímé volání z prohlížeče zablokováno politikou CORS -> pokračujeme přes CORS proxy fallbacky
+    }
+
+    // 2. Fallback přes AllOrigins JSON wrapper (funguje spolehlivě z GitHub Pages i pro 404 odpovědi)
+    try {
+        const aoRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(aresUrl)}`);
+        if (aoRes.ok) {
+            const wrapper = await aoRes.json();
+            const httpCode = wrapper?.status?.http_code;
+            if (httpCode === 404 || httpCode === 400) {
+                return { notFound: true };
+            }
+            if (wrapper && wrapper.contents) {
+                const parsed = typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper.contents;
+                if (parsed && (parsed.kod === 'NENALEZENO' || (!parsed.obchodniJmeno && parsed.kod))) {
+                    return { notFound: true };
+                }
+                if (parsed && parsed.obchodniJmeno) {
+                    return { data: parsed };
+                }
+            }
+        }
+    } catch (_) {
+        // Pokračujeme na další záložní proxy
+    }
+
+    // 3. Fallback přes corsproxy.io
+    try {
+        const cpRes = await fetch(`https://corsproxy.io/?${encodeURIComponent(aresUrl)}`);
+        if (cpRes.status === 404 || cpRes.status === 400) {
+            return { notFound: true };
+        }
+        if (cpRes.ok) {
+            const parsed = await cpRes.json();
+            if (parsed && (parsed.kod === 'NENALEZENO' || (!parsed.obchodniJmeno && parsed.kod))) {
+                return { notFound: true };
+            }
+            if (parsed && parsed.obchodniJmeno) {
+                return { data: parsed };
+            }
+        }
+    } catch (_) {
+        // Pokračujeme na další záložní proxy
+    }
+
+    // 4. Fallback přes CodeTabs proxy
+    const ctRes = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(aresUrl)}`);
+    if (ctRes.status === 404 || ctRes.status === 400) {
+        return { notFound: true };
+    }
+    if (ctRes.ok) {
+        const parsed = await ctRes.json();
+        if (parsed && (parsed.kod === 'NENALEZENO' || (!parsed.obchodniJmeno && parsed.kod))) {
+            return { notFound: true };
+        }
+        return { data: parsed };
+    }
+
+    throw new Error('ARES nedostupný');
+}
+
 export async function fetchAresData(ico, prefix = 'detail-') {
     const normPrefix = prefix.endsWith('-') ? prefix : `${prefix}-`;
     const cleanIco = String(ico || '').replace(/\D+/g, '').trim();
@@ -510,20 +586,14 @@ export async function fetchAresData(ico, prefix = 'detail-') {
     }
 
     try {
-        const response = await fetch(
-            `https://ares.gov.cz/ekonomicke-subjekty-v-informacnim-systemu/rest/ekonomicke-subjekty/${encodeURIComponent(paddedIco)}`,
-            {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            }
-        );
+        const result = await fetchAresSubjectJson(paddedIco);
 
-        if (!response.ok) {
+        if (!result || result.notFound || !result.data) {
             showToast("IČO nenalezeno", "warning");
             return null;
         }
 
-        const data = await response.json();
+        const data = result.data;
         const obchodniJmeno = data.obchodniJmeno || '';
         const dic = data.dic || '';
         const adresa = data.sidlo?.textovaAdresa || '';
