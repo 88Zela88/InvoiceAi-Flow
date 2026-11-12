@@ -93,6 +93,51 @@ export function continueAsDemo() {
 }
 
 // ================= LISTOVÁNÍ A FILTRACE =================
+function toDateNumber(val) {
+    if (!val) return null;
+    if (val instanceof Date) {
+        if (isNaN(val.getTime())) return null;
+        return val.getFullYear() * 10000 + (val.getMonth() + 1) * 100 + val.getDate();
+    }
+    if (typeof val === 'object' && typeof val.toDate === 'function') {
+        const d = val.toDate();
+        return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    }
+    const str = String(val).trim();
+    if (!str) return null;
+
+    if (str.includes('T')) {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+            return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+        }
+    }
+
+    // Formát YYYY-MM-DD (z <input type="date">)
+    const ymdMatch = str.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (ymdMatch) {
+        const y = parseInt(ymdMatch[1], 10);
+        const m = parseInt(ymdMatch[2], 10);
+        const d = parseInt(ymdMatch[3], 10);
+        return y * 10000 + m * 100 + d;
+    }
+
+    // Český formát DD.MM.YYYY, DD. MM. YYYY, DD/MM/YYYY
+    const dmyMatch = str.match(/^(\d{1,2})[./-\s]+\s*(\d{1,2})[./-\s]+\s*(\d{4})/);
+    if (dmyMatch) {
+        const d = parseInt(dmyMatch[1], 10);
+        const m = parseInt(dmyMatch[2], 10);
+        const y = parseInt(dmyMatch[3], 10);
+        return y * 10000 + m * 100 + d;
+    }
+
+    const parsed = new Date(str);
+    if (!isNaN(parsed.getTime())) {
+        return parsed.getFullYear() * 10000 + (parsed.getMonth() + 1) * 100 + parsed.getDate();
+    }
+    return null;
+}
+
 function checkDateMatch(inv, preset, fromDate, toDate) {
     if (!preset || preset === 'all') return true;
     let d = inv.createdAt ? new Date(inv.createdAt) : (inv.dateIssue ? new Date(inv.dateIssue) : null);
@@ -110,17 +155,15 @@ function checkDateMatch(inv, preset, fromDate, toDate) {
         return d.getFullYear() === ly && d.getMonth() === lm;
     }
     if (preset === 'custom') {
-        if (fromDate) {
-            const f = new Date(fromDate);
-            f.setHours(0, 0, 0, 0);
-            if (d < f) return false;
-        }
-        if (toDate) {
-            const t = new Date(toDate);
-            t.setHours(23, 59, 59, 999);
-            if (d > t) return false;
-        }
-        return true;
+        const fromNum = toDateNumber(fromDate);
+        const toNum = toDateNumber(toDate);
+        const candidateNums = [inv.createdAt, inv.dateIssue, inv.dateTax].map(toDateNumber).filter(Boolean);
+        if (candidateNums.length === 0) return true;
+        return candidateNums.some(num => {
+            if (fromNum !== null && num < fromNum) return false;
+            if (toNum !== null && num > toNum) return false;
+            return true;
+        });
     }
     return true;
 }
@@ -965,37 +1008,58 @@ export function exportInvoices(format = 'isdoc') {
 export function executeIsdocExport(e) {
     if (e) e.preventDefault();
 
-    const clientFilter = document.getElementById('export-isdoc-client')?.value || 'all';
+    const rawClientFilter = document.getElementById('export-isdoc-client')?.value || 'all';
+    const clientFilter = rawClientFilter.trim();
     const dateFrom = document.getElementById('export-isdoc-date-from')?.value || '';
     const dateTo = document.getElementById('export-isdoc-date-to')?.value || '';
 
-    if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
+    const fromNum = toDateNumber(dateFrom);
+    const toNum = toDateNumber(dateTo);
+
+    if (fromNum !== null && toNum !== null && fromNum > toNum) {
         return showToast("Datum 'Od' nemůže být pozdější než datum 'Do'.", "warning");
     }
 
     const user = auth.currentUser || currentUser;
-    let list = window.isDemoMode
-        ? invoices.filter(i => i.status === 'approved')
-        : invoices.filter(i => i.status === 'approved' && (i.accountantId === user?.uid || i.userId === user?.uid));
+    const knownClients = getAllClientNames().map(c => c.trim().toLowerCase());
 
-    if (clientFilter !== 'all') {
-        list = list.filter(i => i.clientName === clientFilter);
+    // 1. Vždy vybereme pouze zaúčtované doklady (status === 'approved') patřící účetní / jejím klientům
+    let list = invoices.filter(inv => {
+        if (inv.status !== 'approved') return false;
+        if (window.isDemoMode || !user) return true;
+        const invClient = (inv.clientName || '').trim().toLowerCase();
+        return (
+            inv.accountantId === user.uid ||
+            inv.userId === user.uid ||
+            !inv.accountantId ||
+            (invClient && knownClients.includes(invClient))
+        );
+    });
+
+    // 2. Filtrování podle firmy (pokud není vybráno 'all' / Všechny firmy)
+    if (
+        clientFilter &&
+        clientFilter !== 'all' &&
+        clientFilter.toLowerCase() !== 'všechny firmy' &&
+        clientFilter.toLowerCase() !== 'všichni klienti'
+    ) {
+        const targetClient = clientFilter.toLowerCase();
+        list = list.filter(inv => (inv.clientName || '').trim().toLowerCase() === targetClient);
     }
 
-    if (dateFrom || dateTo) {
-        const fromTime = dateFrom ? new Date(dateFrom).setHours(0, 0, 0, 0) : null;
-        const toTime = dateTo ? new Date(dateTo).setHours(23, 59, 59, 999) : null;
-
+    // 3. Filtrování podle časového intervalu (bez problémů s časovými zónami a půlnocí)
+    if (fromNum !== null || toNum !== null) {
         list = list.filter(inv => {
-            const candidateDates = [inv.dateIssue, inv.dateTax].filter(Boolean);
-            if (candidateDates.length === 0) return false;
+            // Primárně porovnáváme dateIssue a dateTax, případně createdAt
+            const candidateNums = [inv.dateIssue, inv.dateTax, inv.createdAt]
+                .map(toDateNumber)
+                .filter(Boolean);
 
-            return candidateDates.some(rawDate => {
-                const d = new Date(rawDate);
-                if (isNaN(d.getTime())) return false;
-                const t = d.setHours(12, 0, 0, 0);
-                if (fromTime !== null && t < fromTime) return false;
-                if (toTime !== null && t > toTime) return false;
+            if (candidateNums.length === 0) return true;
+
+            return candidateNums.some(num => {
+                if (fromNum !== null && num < fromNum) return false;
+                if (toNum !== null && num > toNum) return false;
                 return true;
             });
         });

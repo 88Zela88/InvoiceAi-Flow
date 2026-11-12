@@ -1,11 +1,16 @@
 export function openModal(id) {
     const m = document.getElementById(id);
-    if (m) m.classList.remove('hidden');
+    if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    }
 }
 
 export function closeModal(id) {
     const m = document.getElementById(id);
-    if (m) m.classList.add('hidden');
+    if (m) {
+        m.classList.add('hidden');
+    }
 }
 
 export function showToast(message, type = 'info') {

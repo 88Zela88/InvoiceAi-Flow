@@ -85,7 +85,7 @@
 </head>
 <body class="h-full bg-slate-50 text-slate-800 dark:text-slate-100 dark:bg-slate-950 antialiased flex flex-col font-sans select-none transition-colors duration-200">
 
-    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
+    <div id="toast-container" style="z-index: 10000;" class="fixed top-4 right-4 z-[110] flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
 
     <!-- ================= LANDING PAGE ================= -->
     <div id="landing-page" class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white flex flex-col">
@@ -1253,9 +1253,10 @@
     </div>
 
     <!-- Modal 9: Pokročilý Export ISDOC -->
-    <div id="export-isdoc-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col">
-            <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
+    <div id="export-isdoc-modal" style="z-index: 9999;" class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-2 sm:p-4 transition-opacity">
+        <div class="fixed inset-0" onclick="closeModal('export-isdoc-modal')"></div>
+        <div class="relative z-10 bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col text-slate-800 dark:text-slate-200">
+            <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-20">
                 <div class="flex items-center gap-2.5">
                     <div class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                         <i data-lucide="file-code" class="w-5 h-5"></i>
@@ -1265,7 +1266,7 @@
                         <p class="text-[11px] text-slate-500 dark:text-slate-400">Hromadný export zaúčtovaných faktur (Money S3, Pohoda)</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeModal('export-isdoc-modal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <button type="button" onclick="closeModal('export-isdoc-modal')" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
