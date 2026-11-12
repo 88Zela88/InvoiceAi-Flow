@@ -364,6 +364,16 @@ export function updateDynamicClients() {
             accSelect.value = currentAccSelected;
         }
     }
+
+    const exportClientSelect = document.getElementById('export-isdoc-client');
+    if (exportClientSelect) {
+        const currentExportSelected = exportClientSelect.value;
+        exportClientSelect.innerHTML = '<option value="all">Všechny firmy</option>';
+        allClients.forEach(name => exportClientSelect.add(new Option(name, name)));
+        if (currentExportSelected && (currentExportSelected === 'all' || allClients.includes(currentExportSelected))) {
+            exportClientSelect.value = currentExportSelected;
+        }
+    }
 }
 
 // ================= OTEVÍRÁNÍ A PRÁCE S DETAILEM DOKLADU =================
@@ -937,27 +947,77 @@ export function downloadSingleISDOC(id) {
     showToast(`ISDOC soubor "${filename}" byl úspěšně stažen!`, "success");
 }
 
-export function exportInvoices(format) {
-    const clientFilter = document.getElementById('acc-client-select')?.value || 'all';
+export function openExportIsdocModal() {
+    updateDynamicClients();
+    const accClientVal = document.getElementById('acc-client-select')?.value || 'all';
+    const exportClientSelect = document.getElementById('export-isdoc-client');
+    if (exportClientSelect) {
+        exportClientSelect.value = accClientVal;
+    }
+    if (window.lucide) window.lucide.createIcons();
+    openModal('export-isdoc-modal');
+}
+
+export function exportInvoices(format = 'isdoc') {
+    openExportIsdocModal();
+}
+
+export function executeIsdocExport(e) {
+    if (e) e.preventDefault();
+
+    const clientFilter = document.getElementById('export-isdoc-client')?.value || 'all';
+    const dateFrom = document.getElementById('export-isdoc-date-from')?.value || '';
+    const dateTo = document.getElementById('export-isdoc-date-to')?.value || '';
+
+    if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
+        return showToast("Datum 'Od' nemůže být pozdější než datum 'Do'.", "warning");
+    }
+
     const user = auth.currentUser || currentUser;
     let list = window.isDemoMode
         ? invoices.filter(i => i.status === 'approved')
         : invoices.filter(i => i.status === 'approved' && (i.accountantId === user?.uid || i.userId === user?.uid));
-    if (clientFilter !== 'all') list = list.filter(i => i.clientName === clientFilter);
-    if (list.length === 0) return showToast("Žádné zaúčtované faktury k exportu.", "warning");
 
-    if (format === 'isdoc') {
-        list.forEach((inv, idx) => {
-            setTimeout(() => {
-                triggerDownload(
-                    generateISDOCXml(inv),
-                    `ISDOC_${inv.clientName ? inv.clientName.replace(/[^a-zA-Z0-9]/g, '_') : 'firma'}_${inv.invoiceNumber || inv.vs || inv.id}.isdoc`,
-                    'application/xml;charset=utf-8'
-                );
-            }, idx * 250);
-        });
-        showToast(`Vygenerováno a staženo ${list.length} ISDOC souborů!`, "success");
+    if (clientFilter !== 'all') {
+        list = list.filter(i => i.clientName === clientFilter);
     }
+
+    if (dateFrom || dateTo) {
+        const fromTime = dateFrom ? new Date(dateFrom).setHours(0, 0, 0, 0) : null;
+        const toTime = dateTo ? new Date(dateTo).setHours(23, 59, 59, 999) : null;
+
+        list = list.filter(inv => {
+            const candidateDates = [inv.dateIssue, inv.dateTax].filter(Boolean);
+            if (candidateDates.length === 0) return false;
+
+            return candidateDates.some(rawDate => {
+                const d = new Date(rawDate);
+                if (isNaN(d.getTime())) return false;
+                const t = d.setHours(12, 0, 0, 0);
+                if (fromTime !== null && t < fromTime) return false;
+                if (toTime !== null && t > toTime) return false;
+                return true;
+            });
+        });
+    }
+
+    if (list.length === 0) {
+        return showToast("Pro zadané parametry nebyly nalezeny žádné zaúčtované faktury k exportu.", "warning");
+    }
+
+    closeModal('export-isdoc-modal');
+
+    list.forEach((inv, idx) => {
+        setTimeout(() => {
+            triggerDownload(
+                generateISDOCXml(inv),
+                `ISDOC_${inv.clientName ? inv.clientName.replace(/[^a-zA-Z0-9]/g, '_') : 'firma'}_${inv.invoiceNumber || inv.vs || inv.id}.isdoc`,
+                'application/xml;charset=utf-8'
+            );
+        }, idx * 250);
+    });
+
+    showToast(`Vygenerováno a staženo ${list.length} ISDOC souborů!`, "success");
 }
 
 // ================= EXPORT VŠECH HANDLERŮ NA WINDOW (PRO HTML) =================
@@ -1028,7 +1088,9 @@ Object.assign(window, {
 
     // Export ISDOC
     downloadSingleISDOC,
-    exportInvoices
+    openExportIsdocModal,
+    exportInvoices,
+    executeIsdocExport
 });
 
 // ================= FIREBASE SYNCHRONIZACE & START =================

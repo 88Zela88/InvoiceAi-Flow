@@ -953,17 +953,17 @@
 
                         <!-- Bottom Actions -->
                         <div class="mt-auto pt-6 flex flex-col sm:flex-row flex-wrap items-center justify-end gap-2.5" id="detail-acc-buttons">
-                            <button type="button" onclick="closeModal('detail-modal')" class="w-full sm:w-auto px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                                Zrušit
+                            <button type="button" onclick="closeModal('detail-modal')" class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1.5">
+                                Zavřít
                             </button>
-                            <button type="submit" class="w-full sm:w-auto px-4 py-3 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 transition flex items-center justify-center gap-2">
-                                <i data-lucide="save" class="w-4 h-4"></i> Uložit koncept
+                            <button type="button" onclick="updateInvoiceStatus('action_needed')" class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-rose-500/10 hover:bg-rose-600 text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-500/40 hover:border-rose-600 shadow-sm transition flex items-center justify-center gap-1.5">
+                                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Vráceno k doplnění
                             </button>
-                            <button type="button" onclick="updateInvoiceStatus('action_needed')" class="w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-bold bg-rose-500/10 hover:bg-rose-600 text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-500/40 hover:border-rose-600 shadow-sm hover:shadow-lg hover:shadow-rose-500/20 transition flex items-center justify-center gap-2">
-                                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Vrátit k doplnění
+                            <button type="button" onclick="updateInvoiceStatus('pending')" class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-500/10 hover:bg-amber-500 text-amber-600 dark:text-amber-400 hover:text-white dark:hover:text-white border border-amber-500/40 hover:border-amber-500 shadow-sm transition flex items-center justify-center gap-1.5">
+                                <i data-lucide="clock" class="w-4 h-4"></i> Rozpracováno
                             </button>
-                            <button type="button" onclick="updateInvoiceStatus('approved')" class="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2">
-                                Schválit & Exportovat <i data-lucide="external-link" class="w-4 h-4"></i>
+                            <button type="button" onclick="updateInvoiceStatus('approved')" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-1.5">
+                                <i data-lucide="check-circle-2" class="w-4 h-4"></i> Zaúčtováno
                             </button>
                         </div>
                         
@@ -1246,6 +1246,65 @@
                     </button>
                     <button type="submit" class="px-4 py-1.5 sm:py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold shadow-md shadow-amber-500/20 transition">
                         Aktualizovat heslo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 9: Pokročilý Export ISDOC -->
+    <div id="export-isdoc-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col">
+            <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                        <i data-lucide="file-code" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Export dokladů do ISDOC</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Hromadný export zaúčtovaných faktur (Money S3, Pohoda)</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('export-isdoc-modal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="executeIsdocExport(event)" class="p-4 sm:p-6 space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Výběr firmy / klienta</label>
+                    <select id="export-isdoc-client" class="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                        <option value="all">Všechny firmy</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300">Časový interval (dle data vystavení / DUZP)</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <span class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">Datum od</span>
+                            <input type="date" id="export-isdoc-date-from" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white custom-date-input">
+                        </div>
+                        <div>
+                            <span class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">Datum do</span>
+                            <input type="date" id="export-isdoc-date-to" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white custom-date-input">
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500">Pokud necháte datum prázdné, vyexportují se všechny schválené doklady bez omezení data.</p>
+                </div>
+
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[11px] flex items-center gap-2">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0 text-emerald-500"></i>
+                    <span>Do exportu budou zahrnuty pouze doklady ve stavu <strong>Zaúčtováno</strong>.</span>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeModal('export-isdoc-modal')" class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        Zrušit
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-xl font-bold shadow-md shadow-indigo-500/20 flex items-center gap-1.5 transition">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Vygenerovat a stáhnout</span>
                     </button>
                 </div>
             </form>
