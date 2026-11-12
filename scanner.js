@@ -489,6 +489,126 @@ export function switchScanPage(dir) {
     updateScanPagesUI();
 }
 
+export async function fetchAresData(ico, prefix = 'detail-') {
+    const normPrefix = prefix.endsWith('-') ? prefix : `${prefix}-`;
+    const cleanIco = String(ico || '').replace(/\D+/g, '').trim();
+
+    if (!cleanIco || cleanIco.length < 7 || cleanIco.length > 8) {
+        showToast("Zadejte platné IČO (7–8 číslic) pro ověření v rejstříku ARES.", "warning");
+        return null;
+    }
+
+    const paddedIco = cleanIco.padStart(8, '0');
+    const btnEl = document.getElementById(`btn-ares-${normPrefix}`);
+    const originalBtnHtml = btnEl ? btnEl.innerHTML : '';
+
+    if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.classList.add('opacity-80', 'cursor-wait');
+        btnEl.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i><span>ARES...</span>`;
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    try {
+        const response = await fetch(
+            `https://ares.gov.cz/ekonomicke-subjekty-v-informacnim-systemu/rest/ekonomicke-subjekty/${encodeURIComponent(paddedIco)}`,
+            {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            }
+        );
+
+        if (!response.ok) {
+            showToast("IČO nenalezeno", "warning");
+            return null;
+        }
+
+        const data = await response.json();
+        const obchodniJmeno = data.obchodniJmeno || '';
+        const dic = data.dic || '';
+        const adresa = data.sidlo?.textovaAdresa || '';
+
+        if (!obchodniJmeno) {
+            showToast("IČO nenalezeno", "warning");
+            return null;
+        }
+
+        const vendorEl = document.getElementById(`${normPrefix}vendor`);
+        const dicEl = document.getElementById(`${normPrefix}dic`);
+        const icoEl = document.getElementById(`${normPrefix}ico`);
+
+        if (vendorEl) {
+            vendorEl.value = obchodniJmeno;
+            vendorEl.classList.add('ring-2', 'ring-emerald-500');
+            setTimeout(() => vendorEl.classList.remove('ring-2', 'ring-emerald-500'), 1400);
+        }
+        if (dicEl && dic) {
+            dicEl.value = dic;
+            dicEl.classList.add('ring-2', 'ring-emerald-500');
+            setTimeout(() => dicEl.classList.remove('ring-2', 'ring-emerald-500'), 1400);
+        }
+        if (icoEl) {
+            icoEl.value = data.ico || paddedIco;
+        }
+
+        showToast(`Firma nalezena: ${obchodniJmeno}${dic ? ' (' + dic + ')' : ''}`, "success");
+        return { obchodniJmeno, dic, adresa, ico: data.ico || paddedIco };
+    } catch (err) {
+        console.warn("Chyba při komunikaci s ARES API:", err);
+        showToast("Nepodařilo se spojit s rejstříkem ARES.", "warning");
+        return null;
+    } finally {
+        if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.classList.remove('opacity-80', 'cursor-wait');
+            btnEl.innerHTML = originalBtnHtml;
+            if (window.lucide) window.lucide.createIcons();
+        }
+    }
+}
+
+export async function verifyAresFromInput(prefix = 'detail-') {
+    const normPrefix = prefix.endsWith('-') ? prefix : `${prefix}-`;
+    const icoInput = document.getElementById(`${normPrefix}ico`);
+    const icoVal = icoInput ? icoInput.value : '';
+    const res = await fetchAresData(icoVal, normPrefix);
+
+    if (res && normPrefix === 'field-') {
+        const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
+        renderAiOverlayElements(
+            'scan-ai-overlay',
+            'scan-ai-highlights-bar',
+            {
+                vendor: getVal('field-vendor'),
+                ico: getVal('field-ico'),
+                invoiceNumber: getVal('field-invoice-num') || getVal('field-vs'),
+                dateIssue: getVal('field-date-issue'),
+                amount: getVal('field-amount'),
+                accountNumber: getVal('field-account')
+            },
+            lastExtractedAiOverlay,
+            'scan'
+        );
+    } else if (res && normPrefix === 'detail-') {
+        const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
+        renderAiOverlayElements(
+            'detail-ai-overlay',
+            'detail-ai-legend',
+            {
+                vendor: getVal('detail-vendor'),
+                ico: getVal('detail-ico'),
+                invoiceNumber: getVal('detail-invoice-num') || getVal('detail-vs'),
+                dateIssue: getVal('detail-due-issue'),
+                amount: getVal('detail-amount'),
+                accountNumber: getVal('detail-account')
+            },
+            null,
+            'detail'
+        );
+    }
+    return res;
+}
+
 export async function processWithOpenAI() {
     if (!scannedPages || scannedPages.length === 0) return;
 
@@ -557,6 +677,7 @@ Při hledání údajů postupuj podle těchto pravidel:
 
             setVal('field-vendor', parsed.vendor);
             setVal('field-ico', parsed.ico);
+            setVal('field-dic', parsed.dic || '');
             setVal('field-invoice-num', parsed.invoiceNumber || parsed.vs);
             setVal('field-vs', parsed.vs || parsed.invoiceNumber);
             setVal('field-date-issue', parsed.dateIssue);
@@ -571,6 +692,14 @@ Při hledání údajů postupuj podle těchto pravidel:
 
             calculateScanAmounts('total');
 
+            // Automatické ověření a doplnění přesného názvu firmy + DIČ z rejstříku ARES podle vyčteného IČO
+            if (parsed.ico && String(parsed.ico).replace(/\D+/g, '').length >= 7) {
+                await fetchAresData(parsed.ico, 'field-');
+            }
+
+            const finalVendor = document.getElementById('field-vendor')?.value || parsed.vendor;
+            const finalIco = document.getElementById('field-ico')?.value || parsed.ico;
+
             lastExtractedAiOverlay = normalizeAiOverlayCoords(parsed.boundingBoxes);
             scanOverlayVisible = true;
             const scanOverlayEl = document.getElementById('scan-ai-overlay');
@@ -580,8 +709,8 @@ Při hledání údajů postupuj podle těchto pravidel:
                 'scan-ai-overlay',
                 'scan-ai-highlights-bar',
                 {
-                    vendor: parsed.vendor,
-                    ico: parsed.ico,
+                    vendor: finalVendor,
+                    ico: finalIco,
                     invoiceNumber: parsed.invoiceNumber || parsed.vs,
                     dateIssue: parsed.dateIssue,
                     amount: parsed.amount,
@@ -640,6 +769,7 @@ export async function saveExtractedInvoice(e) {
             clientName: chosenClient,
             vendor: getVal('field-vendor') || 'Neznámý dodavatel',
             ico: getVal('field-ico'),
+            dic: getVal('field-dic'),
             invoiceNumber: getVal('field-invoice-num'),
             vs: getVal('field-vs') || getVal('field-invoice-num'),
             type: getVal('field-type') || 'Přijatá faktura',
@@ -724,3 +854,5 @@ window.saveExtractedInvoice = saveExtractedInvoice;
 window.calculateScanAmounts = calculateScanAmounts;
 window.focusAiField = focusAiField;
 window.toggleScanAiOverlay = toggleScanAiOverlay;
+window.fetchAresData = fetchAresData;
+window.verifyAresFromInput = verifyAresFromInput;

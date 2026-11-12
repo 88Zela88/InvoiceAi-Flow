@@ -41,7 +41,9 @@ import {
     calculateScanAmounts,
     renderAiOverlayElements,
     focusAiField,
-    toggleScanAiOverlay
+    toggleScanAiOverlay,
+    fetchAresData,
+    verifyAresFromInput
 } from './scanner.js';
 import { generateISDOCXml, triggerDownload } from './isdoc.js';
 
@@ -1192,6 +1194,8 @@ Object.assign(window, {
     focusAiField,
     toggleScanAiOverlay,
     toggleDetailAiOverlay,
+    fetchAresData,
+    verifyAresFromInput,
 
     // Přehledy, filtry & detail dokladu
     switchRole,
