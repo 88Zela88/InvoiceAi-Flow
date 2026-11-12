@@ -1248,7 +1248,14 @@
         </div>
     </div>
 
+    <!-- Okamžitá inicializace ikon a kontrola protokolu pro ES6 moduly -->
+    <script>
+        if (window.lucide) window.lucide.createIcons();
+        if (window.location.protocol === 'file:') {
+            console.warn('Pozor: ES6 moduly (<script type="module">) vyžadují spuštění přes HTTP server (např. Live Server nebo GitHub Pages), nikoliv přímé otevření přes file://.');
+        }
+    </script>
     <!-- Firebase SDK a aplikační logika -->
-    <script type="module" src="app.js"></script>
+    <script type="module" src="./app.js"></script>
 </body>
 </html>

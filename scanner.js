@@ -2,24 +2,57 @@ import { db, storage, auth } from './firebase.js';
 import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
 import { showToast, closeModal, openModal } from './ui.js';
-import { currentUserData, activeClientCompany, currentRole } from './auth.js';
+import { currentUser, currentUserData, activeClientCompany, currentRole } from './auth.js';
 
 export let scannedPages = [];
 export let activeScanPageIdx = 0;
 
+export function calculateScanAmounts(source = 'total') {
+    const baseInput = document.getElementById('field-base-amount');
+    const vatInput = document.getElementById('field-vat-amount');
+    const totalInput = document.getElementById('field-amount');
+    const rateSelect = document.getElementById('field-vat-rate');
+    if (!baseInput || !vatInput || !totalInput || !rateSelect) return;
+
+    const rate = parseFloat(rateSelect.value) || 0;
+    if (source === 'base') {
+        const base = parseFloat(baseInput.value) || 0;
+        const vat = Math.round(base * (rate / 100) * 100) / 100;
+        vatInput.value = vat.toFixed(2);
+        totalInput.value = (base + vat).toFixed(2);
+    } else if (source === 'vat') {
+        const base = parseFloat(baseInput.value) || 0;
+        const vat = parseFloat(vatInput.value) || 0;
+        totalInput.value = (base + vat).toFixed(2);
+    } else {
+        const total = parseFloat(totalInput.value) || 0;
+        if (total > 0) {
+            const base = rate === 0 ? total : Math.round((total / (1 + (rate / 100))) * 100) / 100;
+            baseInput.value = base.toFixed(2);
+            vatInput.value = (total - base).toFixed(2);
+        }
+    }
+}
+
 export function triggerScan() {
     scannedPages = [];
     activeScanPageIdx = 0;
-    
-    document.getElementById('scan-preview-img').src = '';
-    document.getElementById('scan-dropzone').classList.remove('hidden');
-    document.getElementById('scan-preview-img').classList.add('hidden');
-    document.getElementById('scan-loading').classList.add('hidden');
-    document.getElementById('scan-line-anim').classList.add('hidden');
-    
+    window.scannedPages = scannedPages;
+    window.activeScanPageIdx = activeScanPageIdx;
+
+    const previewImg = document.getElementById('scan-preview-img');
+    if (previewImg) {
+        previewImg.src = '';
+        previewImg.classList.add('hidden');
+    }
+    document.getElementById('scan-dropzone')?.classList.remove('hidden');
+    document.getElementById('scan-loading')?.classList.add('hidden');
+    document.getElementById('scan-line-anim')?.classList.add('hidden');
+
     const pageControls = document.getElementById('scan-pages-controls');
     if (pageControls) pageControls.remove();
-    
+
+    if (typeof window.updateDynamicClients === 'function') window.updateDynamicClients();
     openModal('scan-modal');
 }
 
@@ -27,10 +60,10 @@ export function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    document.getElementById('scan-dropzone').classList.add('hidden');
-    document.getElementById('scan-preview-img').classList.remove('hidden');
-    document.getElementById('scan-loading').classList.remove('hidden');
-    document.getElementById('scan-line-anim').classList.remove('hidden');
+    document.getElementById('scan-dropzone')?.classList.add('hidden');
+    document.getElementById('scan-preview-img')?.classList.remove('hidden');
+    document.getElementById('scan-loading')?.classList.remove('hidden');
+    document.getElementById('scan-line-anim')?.classList.remove('hidden');
 
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -61,11 +94,14 @@ export function handleFileSelect(event) {
             ctx.drawImage(img, 0, 0, width, height);
 
             const base64Image = canvas.toDataURL('image/jpeg', 0.78);
-            
+
             scannedPages.push(base64Image);
             activeScanPageIdx = scannedPages.length - 1;
-            
-            document.getElementById('scan-preview-img').src = scannedPages[activeScanPageIdx];
+            window.scannedPages = scannedPages;
+            window.activeScanPageIdx = activeScanPageIdx;
+
+            const previewImg = document.getElementById('scan-preview-img');
+            if (previewImg) previewImg.src = scannedPages[activeScanPageIdx];
             updateScanPagesUI();
             await processWithOpenAI();
         };
@@ -76,13 +112,15 @@ export function handleFileSelect(event) {
 
 export function updateScanPagesUI() {
     let pageControls = document.getElementById('scan-pages-controls');
-    if (!pageControls) {
+    const previewImg = document.getElementById('scan-preview-img');
+    if (!pageControls && previewImg && previewImg.parentElement) {
         pageControls = document.createElement('div');
         pageControls.id = 'scan-pages-controls';
         pageControls.className = 'w-full flex items-center justify-between bg-slate-800 p-2 border-t border-slate-700';
-        document.getElementById('scan-preview-img').parentElement.appendChild(pageControls);
+        previewImg.parentElement.appendChild(pageControls);
     }
-    
+    if (!pageControls) return;
+
     pageControls.innerHTML = `
         <div class="flex items-center gap-2">
             <button type="button" onclick="switchScanPage(-1)" class="p-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50" ${activeScanPageIdx === 0 ? 'disabled' : ''}>
@@ -98,13 +136,15 @@ export function updateScanPagesUI() {
             <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)">
         </label>
     `;
-    if(window.lucide) window.lucide.createIcons();
+    if (window.lucide) window.lucide.createIcons();
 }
 
 export function switchScanPage(dir) {
     if (dir === -1 && activeScanPageIdx > 0) activeScanPageIdx--;
     if (dir === 1 && activeScanPageIdx < scannedPages.length - 1) activeScanPageIdx++;
-    document.getElementById('scan-preview-img').src = scannedPages[activeScanPageIdx];
+    window.activeScanPageIdx = activeScanPageIdx;
+    const previewImg = document.getElementById('scan-preview-img');
+    if (previewImg) previewImg.src = scannedPages[activeScanPageIdx];
     updateScanPagesUI();
 }
 
@@ -113,9 +153,9 @@ export async function processWithOpenAI() {
 
     let apiKey = localStorage.getItem('openai_key');
     if (!apiKey) {
-        apiKey = prompt("Vložte váš OpenAI API klíč:");
+        apiKey = prompt("Pro reálné skenování vložte váš OpenAI API klíč (začíná na sk-...):");
         if (!apiKey) {
-            alert("Zrušeno.");
+            alert("Skenování zrušeno. Bez klíče nelze data z faktury přečíst.");
             closeModal('scan-modal');
             return;
         }
@@ -125,31 +165,40 @@ export async function processWithOpenAI() {
     const scanLoading = document.getElementById('scan-loading');
     const loadingText = scanLoading ? scanLoading.querySelector('p.font-bold') : null;
     if (scanLoading) scanLoading.classList.remove('hidden');
-    document.getElementById('scan-line-anim').classList.remove('hidden');
+    document.getElementById('scan-line-anim')?.classList.remove('hidden');
     if (loadingText) loadingText.textContent = "AI analyzuje strukturu dokladu...";
 
     try {
         const systemPrompt = `Jsi profesionální účetní expert pro extrakci dat z českých a slovenských faktur.
 Tvojí úlohou je přesně analyzovat vícestránkový dokument a vrátit data striktně ve formátu JSON.
 Při hledání údajů postupuj podle těchto pravidel:
+- 'vendor': Název dodavatele.
 - 'invoiceNumber': Číslo faktury se může jmenovat: "Faktura č.", "Číslo dokladu", "č.fakt.", "Daňový doklad č.".
 - 'vs': Variabilní symbol hledej jako "V.S.", "Var. symbol", "Variabilní symbol". Pokud prokazatelně chybí, vlož sem pouze číslice ze samotného čísla faktury.
 - 'ico': IČO hledej jako "IČ", "IČO", "Identifikační číslo" (odstraň mezery, vrať jen čísla).
 - 'dateIssue', 'dateTax', 'dateDue': Všechna data vrať striktně ve formátu YYYY-MM-DD. Pokud DUZP (dateTax) chybí, použij datum vystavení (dateIssue).
-- 'baseAmount', 'vatAmount', 'amount': Všechny částky vracej jako čisté číslo s desetinnou tečkou (žádné mezery a žádné "Kč" nebo "EUR", např. 1500.50). Celkovou částku hledej jako "Celkem k úhradě", "K platbě".
+- 'baseAmount', 'vatRate', 'vatAmount', 'amount': Všechny částky vracej jako čisté číslo s desetinnou tečkou (žádné mezery a žádné "Kč" nebo "EUR", např. 1500.50). Celkovou částku hledej jako "Celkem k úhradě", "K platbě". 'vatRate' jako číslo 21, 12 nebo 0.
 - 'paymentMethod': Vyber přesně jednu hodnotu: 'Převodem', 'Kartou', 'Hotově', 'Zápočtem', 'Dobírka'.
 - 'account': Číslo bankovního účtu včetně kódu banky (např. 123456789/0100) nebo IBAN.`;
 
         const contentArray = [{ type: "text", text: "Vytáhni data z této faktury do JSON." }];
-        scannedPages.forEach(pageB64 => { contentArray.push({ type: "image_url", image_url: { url: pageB64 } }); });
+        scannedPages.forEach(pageB64 => {
+            contentArray.push({ type: "image_url", image_url: { url: pageB64 } });
+        });
 
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`
+            },
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 response_format: { type: "json_object" },
-                messages: [{ role: "system", content: systemPrompt }, { role: "user", content: contentArray }]
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: contentArray }
+                ]
             })
         });
 
@@ -157,7 +206,7 @@ Při hledání údajů postupuj podle těchto pravidel:
         if (data.choices && data.choices[0]) {
             const parsed = JSON.parse(data.choices[0].message.content);
             const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-            
+
             setVal('field-vendor', parsed.vendor);
             setVal('field-ico', parsed.ico);
             setVal('field-invoice-num', parsed.invoiceNumber || parsed.vs);
@@ -172,26 +221,31 @@ Při hledání údajů postupuj podle těchto pravidel:
             setVal('field-payment-method', parsed.paymentMethod || "Převodem");
             setVal('field-account', parsed.account);
 
-            if(window.calculateScanAmounts) window.calculateScanAmounts();
+            calculateScanAmounts('total');
             showToast("Faktura úspěšně přečtena!", "success");
         } else {
-            alert("AI nemohla fakturu přečíst.");
+            alert("AI nemohla fakturu přečíst. Zkuste to znovu.");
         }
     } catch (err) {
-        alert("Chyba při komunikaci s AI.");
+        alert("Chyba při komunikaci s AI. Pokud chyba přetrvává, zkontrolujte svůj API klíč.");
         localStorage.removeItem('openai_key');
     } finally {
         if (scanLoading) scanLoading.classList.add('hidden');
-        document.getElementById('scan-line-anim').classList.add('hidden');
+        document.getElementById('scan-line-anim')?.classList.add('hidden');
     }
 }
 
 export async function saveExtractedInvoice(e) {
     e.preventDefault();
-    if (!scannedPages || scannedPages.length === 0) return showToast("Není naskenována žádná faktura.", "warning");
+    if (!scannedPages || scannedPages.length === 0) {
+        showToast("Není naskenována žádná faktura.", "warning");
+        return;
+    }
 
-    const user = auth.currentUser;
-    const chosenClient = (currentRole === 'client') ? activeClientCompany : (document.getElementById('field-client-name')?.value || activeClientCompany || 'Moje Firma');
+    const user = auth.currentUser || currentUser;
+    const chosenClient = (currentRole === 'client')
+        ? activeClientCompany
+        : (document.getElementById('field-client-name')?.value || activeClientCompany || 'Moje Firma');
 
     const scanLoading = document.getElementById('scan-loading');
     const loadingText = scanLoading ? scanLoading.querySelector('p.font-bold') : null;
@@ -244,10 +298,21 @@ export async function saveExtractedInvoice(e) {
         closeModal('scan-modal');
         showToast(`Doklad uložen! Naskenováno stran: ${uploadedUrls.length}`, "success");
         scannedPages = [];
+        window.scannedPages = [];
     } catch (err) {
-        alert("CHYBA UKLÁDÁNÍ DO FIREBASE:\n" + err.message);
+        console.error("Chyba při zápisu do cloudu:", err);
+        alert("CHYBA UKLÁDÁNÍ DO FIREBASE:\n" + err.message + "\n\nZkontrolujte, zda máte povolený Firebase Storage!");
     } finally {
         if (scanLoading) scanLoading.classList.add('hidden');
-        if (loadingText) loadingText.textContent = "AI analyzuje strukturu dokladu..."; 
+        if (loadingText) loadingText.textContent = "AI analyzuje strukturu dokladu...";
     }
 }
+
+// Navázání na window pro přímé volání z HTML
+window.triggerScan = triggerScan;
+window.handleFileSelect = handleFileSelect;
+window.switchScanPage = switchScanPage;
+window.updateScanPagesUI = updateScanPagesUI;
+window.processWithOpenAI = processWithOpenAI;
+window.saveExtractedInvoice = saveExtractedInvoice;
+window.calculateScanAmounts = calculateScanAmounts;

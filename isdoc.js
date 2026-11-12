@@ -1,5 +1,3 @@
-import { showToast } from './ui.js';
-
 function escapeXml(unsafe) {
     if (unsafe === undefined || unsafe === null) return '';
     return String(unsafe).replace(/[<>&'"]/g, function (c) {
