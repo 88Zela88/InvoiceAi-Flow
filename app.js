@@ -202,8 +202,8 @@ export function renderClientInvoices(filterStatus = null) {
                     ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Zaúčtováno</span>`
                     : `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20">K doplnění</span>`;
             const tr = document.createElement('tr');
-            tr.className = "hover:bg-slate-800/50 transition";
-            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-white">${inv.vendor || '-'}</div><div class="text-xs text-slate-400 font-mono"><span>${inv.invoiceNumber ? 'Číslo: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '')}</span></div></td><td class="p-3 text-xs text-slate-400"><div>Vystaveno: ${inv.dateIssue || '-'}</div><div class="text-slate-500">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-emerald-500 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3 text-xs text-slate-300"><div class="font-medium">${inv.type || 'Přijatá faktura'}</div><span class="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-300 font-semibold">${inv.paymentMethod || 'Převodem'}</span></td><td class="p-3 font-bold text-white">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</td><td class="p-3">${statusBadge}</td><td class="p-3 text-right pr-4"><div class="flex items-center justify-end gap-1"><button onclick="openDetailModal('${inv.id}')" title="Detail dokladu" class="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition"><i data-lucide="eye" class="w-4 h-4"></i></button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
+            tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
+            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-slate-900 dark:text-white">${inv.vendor || '-'}</div><div class="text-xs text-slate-500 dark:text-slate-400 font-mono"><span>${inv.invoiceNumber ? 'Číslo: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '')}</span></div></td><td class="p-3 text-xs text-slate-600 dark:text-slate-400"><div>Vystaveno: ${inv.dateIssue || '-'}</div><div class="text-slate-400 dark:text-slate-500">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-emerald-600 dark:text-emerald-500 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3 text-xs text-slate-700 dark:text-slate-300"><div class="font-medium">${inv.type || 'Přijatá faktura'}</div><span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-semibold">${inv.paymentMethod || 'Převodem'}</span></td><td class="p-3 font-bold text-slate-900 dark:text-white">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</td><td class="p-3">${statusBadge}</td><td class="p-3 text-right pr-4"><div class="flex items-center justify-end gap-1"><button onclick="openDetailModal('${inv.id}')" title="Detail dokladu" class="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"><i data-lucide="eye" class="w-4 h-4"></i></button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -257,13 +257,13 @@ export function renderAccountantInvoices() {
     } else {
         filtered.forEach(inv => {
             const statusBadge = inv.status === 'pending'
-                ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20">Nová k vyřízení</span>`
+                ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20">Nová k vyřízení</span>`
                 : inv.status === 'approved'
-                    ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Zaúčtováno</span>`
-                    : `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20">Vráceno k doplnění</span>`;
+                    ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Zaúčtováno</span>`
+                    : `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-500 border border-rose-500/20">Vráceno k doplnění</span>`;
             const tr = document.createElement('tr');
-            tr.className = "hover:bg-slate-800/50 transition";
-            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-white text-xs">${inv.clientName || 'Klient'}</div><span class="text-[10px] text-slate-400">ID: ${inv.id}</span></td><td class="p-3"><div class="font-semibold text-slate-200 text-xs">${inv.vendor || '-'}</div><div class="text-[11px] text-slate-400">IČO: ${inv.ico || '-'}</div></td><td class="p-3 text-xs"><div class="text-slate-200 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div><div class="text-slate-400 text-[11px]">DUZP: ${inv.dateTax || inv.dateIssue || '-'}</div><div class="text-slate-500 text-[11px]">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-emerald-500 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3"><div class="font-bold text-white text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div><div class="text-[10px] text-slate-400">Základ: ${inv.baseAmount ? Number(inv.baseAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div><div class="text-[10px] text-slate-500">DPH (${inv.vatRate || 21}%): ${inv.vatAmount ? Number(inv.vatAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div></td><td class="p-3">${statusBadge}</td><td class="p-3 text-right pr-4 whitespace-nowrap"><div class="flex items-center justify-end gap-1.5"><button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-slate-800 text-emerald-400 hover:bg-slate-700 font-semibold rounded-lg text-xs transition flex items-center gap-1"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Detail</button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
+            tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
+            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-slate-900 dark:text-white text-xs">${inv.clientName || 'Klient'}</div><span class="text-[10px] text-slate-400">ID: ${inv.id}</span></td><td class="p-3"><div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">${inv.vendor || '-'}</div><div class="text-[11px] text-slate-500 dark:text-slate-400">IČO: ${inv.ico || '-'}</div></td><td class="p-3 text-xs"><div class="text-slate-800 dark:text-slate-200 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div><div class="text-slate-500 dark:text-slate-400 text-[11px]">DUZP: ${inv.dateTax || inv.dateIssue || '-'}</div><div class="text-slate-400 dark:text-slate-500 text-[11px]">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-emerald-600 dark:text-emerald-500 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3"><div class="font-bold text-slate-900 dark:text-white text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div><div class="text-[10px] text-slate-500 dark:text-slate-400">Základ: ${inv.baseAmount ? Number(inv.baseAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div><div class="text-[10px] text-slate-400 dark:text-slate-500">DPH (${inv.vatRate || 21}%): ${inv.vatAmount ? Number(inv.vatAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div></td><td class="p-3">${statusBadge}</td><td class="p-3 text-right pr-4 whitespace-nowrap"><div class="flex items-center justify-end gap-1.5"><button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-700 font-semibold rounded-lg text-xs transition flex items-center gap-1"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Detail</button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -644,28 +644,28 @@ export function renderClientsModalTable() {
         const pin = client.pairingCode || 'PIN-999';
 
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-800/50 transition";
+        tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
         tr.innerHTML = `
-            <td class="p-3 pl-4 font-semibold text-slate-200">
+            <td class="p-3 pl-4 font-semibold text-slate-800 dark:text-slate-200">
                 <div>${client.name}</div>
-                <div class="text-[11px] text-slate-400 font-normal">${client.ico ? 'IČO: ' + client.ico : (client.contactPerson ? client.contactPerson : '')}</div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 font-normal">${client.ico ? 'IČO: ' + client.ico : (client.contactPerson ? client.contactPerson : '')}</div>
             </td>
             <td class="p-3 text-center">
-                <button onclick="copyPairingCode('${pin}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 transition">
+                <button onclick="copyPairingCode('${pin}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 transition">
                     <i data-lucide="copy" class="w-3.5 h-3.5"></i> <span>${pin}</span>
                 </button>
             </td>
             <td class="p-3 text-center">
-                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300">
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                     ${count} ${count === 1 ? 'doklad' : (count >= 2 && count <= 4 ? 'doklady' : 'dokladů')}
                 </span>
             </td>
             <td class="p-3 text-right pr-4 whitespace-nowrap">
                 <div class="flex items-center justify-end gap-1.5">
-                    <button onclick="openClientDetailModal('${client.id}')" class="px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-slate-800 rounded-lg transition flex items-center gap-1">
+                    <button onclick="openClientDetailModal('${client.id}')" class="px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition flex items-center gap-1">
                         <i data-lucide="info" class="w-3.5 h-3.5"></i> Detail
                     </button>
-                    <button onclick="renameClient('${client.id}', '${encodeURIComponent(client.name)}')" class="px-2 py-1 text-xs font-semibold text-slate-300 hover:bg-slate-800 rounded-lg transition flex items-center gap-1">
+                    <button onclick="renameClient('${client.id}', '${encodeURIComponent(client.name)}')" class="px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition flex items-center gap-1">
                         <i data-lucide="edit-2" class="w-3.5 h-3.5"></i> Přejmenovat
                     </button>
                     <button onclick="deleteClient('${client.id}', '${encodeURIComponent(client.name)}')" class="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition">

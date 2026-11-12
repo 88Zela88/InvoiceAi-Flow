@@ -75,15 +75,18 @@ export function toggleProfileDropdown() {
 export function updateThemeUI(isDark) {
     const label = document.getElementById('theme-label');
     const badge = document.getElementById('theme-badge');
+    const icon = document.getElementById('theme-icon');
     if (label && badge) {
         if (isDark) {
-            label.textContent = "Světlý režim";
+            label.textContent = "Tmavý režim";
             badge.textContent = "Aktivní";
             badge.className = "text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded";
+            if (icon) icon.setAttribute('data-lucide', 'moon');
         } else {
             label.textContent = "Tmavý režim";
             badge.textContent = "Vypnuto";
-            badge.className = "text-[10px] uppercase font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded";
+            badge.className = "text-[10px] uppercase font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded";
+            if (icon) icon.setAttribute('data-lucide', 'sun');
         }
     }
     if (window.lucide) window.lucide.createIcons();

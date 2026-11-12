@@ -97,15 +97,15 @@ export function setAuthMode(mode) {
     const forgotBox = document.getElementById('forgot-password-box');
 
     if (mode === 'signin') {
-        if (landIn) landIn.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition bg-slate-900 text-white shadow-sm";
-        if (landUp) landUp.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
+        if (landIn) landIn.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-sm";
+        if (landUp) landUp.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition";
         if (landTitle) landTitle.textContent = "Přihlášení do systému";
         if (extraFields) extraFields.classList.add('hidden');
         if (submitLabel) submitLabel.textContent = "Přihlásit se do systému";
         if (forgotBox) forgotBox.classList.remove('hidden');
     } else {
-        if (landUp) landUp.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition bg-slate-900 text-white shadow-sm";
-        if (landIn) landIn.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition";
+        if (landUp) landUp.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-sm";
+        if (landIn) landIn.className = "flex-1 py-1.5 sm:py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition";
         if (landTitle) landTitle.textContent = "Vytvoření nového účtu";
         if (extraFields) extraFields.classList.remove('hidden');
         if (submitLabel) submitLabel.textContent = "Vytvořit nový účet";
