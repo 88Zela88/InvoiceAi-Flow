@@ -940,9 +940,9 @@
                             </div>
 
                             <div class="relative group sm:col-span-2">
-                                <label class="absolute left-3 -top-2 bg-white dark:bg-slate-900 px-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 group-focus-within:text-emerald-500 transition-colors z-10">Interní poznámka</label>
+                                <label class="absolute left-3 -top-2 bg-white dark:bg-slate-900 px-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 group-focus-within:text-emerald-500 transition-colors z-10">Poznámka k dokladu / Důvod vrácení</label>
                                 <div class="relative flex items-start w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-300 dark:border-slate-700 group-hover:border-emerald-500/60 focus-within:border-emerald-500 rounded-xl overflow-hidden transition-colors">
-                                    <textarea id="detail-comment-note" rows="2" class="w-full bg-transparent px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none placeholder-slate-400 resize-none" placeholder="Zadejte poznámku k dokladu..."></textarea>
+                                    <textarea id="detail-comment-note" rows="2" class="w-full bg-transparent px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none placeholder-slate-400 resize-none" placeholder="Zadejte poznámku k dokladu nebo důvod vrácení klientovi k doplnění..."></textarea>
                                 </div>
                             </div>
                             <!-- Skrytá pole potřebná pro logiku -->
@@ -952,12 +952,15 @@
                         </div>
 
                         <!-- Bottom Actions -->
-                        <div class="mt-auto pt-6 flex flex-col sm:flex-row items-center justify-end gap-3" id="detail-acc-buttons">
-                            <button type="button" onclick="closeModal('detail-modal')" class="w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <div class="mt-auto pt-6 flex flex-col sm:flex-row flex-wrap items-center justify-end gap-2.5" id="detail-acc-buttons">
+                            <button type="button" onclick="closeModal('detail-modal')" class="w-full sm:w-auto px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                                 Zrušit
                             </button>
-                            <button type="submit" class="w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 transition flex items-center justify-center gap-2">
+                            <button type="submit" class="w-full sm:w-auto px-4 py-3 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 transition flex items-center justify-center gap-2">
                                 <i data-lucide="save" class="w-4 h-4"></i> Uložit koncept
+                            </button>
+                            <button type="button" onclick="updateInvoiceStatus('action_needed')" class="w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-bold bg-rose-500/10 hover:bg-rose-600 text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-500/40 hover:border-rose-600 shadow-sm hover:shadow-lg hover:shadow-rose-500/20 transition flex items-center justify-center gap-2">
+                                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Vrátit k doplnění
                             </button>
                             <button type="button" onclick="updateInvoiceStatus('approved')" class="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2">
                                 Schválit & Exportovat <i data-lucide="external-link" class="w-4 h-4"></i>

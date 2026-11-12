@@ -196,14 +196,28 @@ export function renderClientInvoices(filterStatus = null) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 text-xs">Zatím nemáte žádné nahrané doklady odpovídající výběru.</td></tr>`;
     } else {
         filtered.forEach(inv => {
+            const isActionNeeded = inv.status === 'action_needed' || inv.status === 'rejected';
             const statusBadge = inv.status === 'pending'
-                ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20">Čeká na schválení</span>`
+                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20">Čeká na schválení</span>`
                 : inv.status === 'approved'
-                    ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Zaúčtováno</span>`
-                    : `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20">K doplnění</span>`;
+                    ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Zaúčtováno</span>`
+                    : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30"><i data-lucide="alert-triangle" class="w-3 h-3"></i> K doplnění</span>`;
+
+            const safeNote = (inv.note || '').trim().replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const noteBlock = isActionNeeded && safeNote
+                ? `<div class="mt-1.5 p-2 rounded-lg bg-rose-500/10 dark:bg-rose-950/50 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-[11px] leading-snug max-w-xs shadow-sm">
+                       <div class="font-bold uppercase text-[9px] tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1 mb-0.5">
+                           <i data-lucide="alert-circle" class="w-3 h-3 shrink-0"></i> Poznámka od účetní:
+                       </div>
+                       <div class="font-medium break-words">${safeNote}</div>
+                   </div>`
+                : (safeNote ? `<div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400 italic max-w-xs break-words">Pozn.: ${safeNote}</div>` : '');
+
             const tr = document.createElement('tr');
-            tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
-            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-slate-900 dark:text-white">${inv.vendor || '-'}</div><div class="text-xs text-slate-500 dark:text-slate-400 font-mono"><span>${inv.invoiceNumber ? 'Číslo: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '')}</span></div></td><td class="p-3 text-xs text-slate-600 dark:text-slate-400"><div>Vystaveno: ${inv.dateIssue || '-'}</div><div class="text-slate-400 dark:text-slate-500">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-emerald-600 dark:text-emerald-500 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3 text-xs text-slate-700 dark:text-slate-300"><div class="font-medium">${inv.type || 'Přijatá faktura'}</div><span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-semibold">${inv.paymentMethod || 'Převodem'}</span></td><td class="p-3 font-bold text-slate-900 dark:text-white">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</td><td class="p-3">${statusBadge}</td><td class="p-3 text-right pr-4"><div class="flex items-center justify-end gap-1"><button onclick="openDetailModal('${inv.id}')" title="Detail dokladu" class="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"><i data-lucide="eye" class="w-4 h-4"></i></button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
+            tr.className = isActionNeeded
+                ? "bg-rose-500/[0.03] hover:bg-rose-500/[0.07] dark:bg-rose-950/10 dark:hover:bg-rose-950/25 transition"
+                : "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
+            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-slate-900 dark:text-white">${inv.vendor || '-'}</div><div class="text-xs text-slate-500 dark:text-slate-400 font-mono"><span>${inv.invoiceNumber ? 'Číslo: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '')}</span></div></td><td class="p-3 text-xs text-slate-600 dark:text-slate-400"><div>Vystaveno: ${inv.dateIssue || '-'}</div><div class="text-slate-400 dark:text-slate-500">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-emerald-600 dark:text-emerald-500 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3 text-xs text-slate-700 dark:text-slate-300"><div class="font-medium">${inv.type || 'Přijatá faktura'}</div><span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-semibold">${inv.paymentMethod || 'Převodem'}</span></td><td class="p-3 font-bold text-slate-900 dark:text-white">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</td><td class="p-3">${statusBadge}${noteBlock}</td><td class="p-3 text-right pr-4"><div class="flex items-center justify-end gap-1"><button onclick="openDetailModal('${inv.id}')" title="Detail dokladu" class="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"><i data-lucide="eye" class="w-4 h-4"></i></button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -256,14 +270,19 @@ export function renderAccountantInvoices() {
         tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 text-xs">Žádné doklady neodpovídají vybraným filtrům.</td></tr>`;
     } else {
         filtered.forEach(inv => {
+            const isActionNeeded = inv.status === 'action_needed' || inv.status === 'rejected';
             const statusBadge = inv.status === 'pending'
                 ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20">Nová k vyřízení</span>`
                 : inv.status === 'approved'
                     ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Zaúčtováno</span>`
                     : `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-500 border border-rose-500/20">Vráceno k doplnění</span>`;
+            const safeNote = (inv.note || '').trim().replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const noteBlock = safeNote
+                ? `<div class="mt-1 text-[11px] ${isActionNeeded ? 'text-rose-600 dark:text-rose-400 font-medium' : 'text-slate-500 dark:text-slate-400'} max-w-[220px] break-words">Pozn.: ${safeNote}</div>`
+                : '';
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition";
-            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-slate-900 dark:text-white text-xs">${inv.clientName || 'Klient'}</div><span class="text-[10px] text-slate-400">ID: ${inv.id}</span></td><td class="p-3"><div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">${inv.vendor || '-'}</div><div class="text-[11px] text-slate-500 dark:text-slate-400">IČO: ${inv.ico || '-'}</div></td><td class="p-3 text-xs"><div class="text-slate-800 dark:text-slate-200 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div><div class="text-slate-500 dark:text-slate-400 text-[11px]">DUZP: ${inv.dateTax || inv.dateIssue || '-'}</div><div class="text-slate-400 dark:text-slate-500 text-[11px]">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-emerald-600 dark:text-emerald-500 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3"><div class="font-bold text-slate-900 dark:text-white text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div><div class="text-[10px] text-slate-500 dark:text-slate-400">Základ: ${inv.baseAmount ? Number(inv.baseAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div><div class="text-[10px] text-slate-400 dark:text-slate-500">DPH (${inv.vatRate || 21}%): ${inv.vatAmount ? Number(inv.vatAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div></td><td class="p-3">${statusBadge}</td><td class="p-3 text-right pr-4 whitespace-nowrap"><div class="flex items-center justify-end gap-1.5"><button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-700 font-semibold rounded-lg text-xs transition flex items-center gap-1"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Detail</button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
+            tr.innerHTML = `<td class="p-3 pl-4"><div class="font-bold text-slate-900 dark:text-white text-xs">${inv.clientName || 'Klient'}</div><span class="text-[10px] text-slate-400">ID: ${inv.id}</span></td><td class="p-3"><div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">${inv.vendor || '-'}</div><div class="text-[11px] text-slate-500 dark:text-slate-400">IČO: ${inv.ico || '-'}</div></td><td class="p-3 text-xs"><div class="text-slate-800 dark:text-slate-200 font-semibold">${inv.invoiceNumber ? 'Fa: ' + inv.invoiceNumber : (inv.vs ? 'VS: ' + inv.vs : '-')}</div><div class="text-slate-500 dark:text-slate-400 text-[11px]">DUZP: ${inv.dateTax || inv.dateIssue || '-'}</div><div class="text-slate-400 dark:text-slate-500 text-[11px]">Splatnost: ${inv.dateDue || '-'}</div><div class="text-[11px] text-emerald-600 dark:text-emerald-500 font-medium mt-0.5">Nahráno: ${formatDateTime(inv.createdAt)}</div></td><td class="p-3"><div class="font-bold text-slate-900 dark:text-white text-xs">${Number(inv.amount || 0).toLocaleString('cs-CZ')} Kč</div><div class="text-[10px] text-slate-500 dark:text-slate-400">Základ: ${inv.baseAmount ? Number(inv.baseAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div><div class="text-[10px] text-slate-400 dark:text-slate-500">DPH (${inv.vatRate || 21}%): ${inv.vatAmount ? Number(inv.vatAmount).toLocaleString('cs-CZ') + ' Kč' : '-'}</div></td><td class="p-3">${statusBadge}${noteBlock}</td><td class="p-3 text-right pr-4 whitespace-nowrap"><div class="flex items-center justify-end gap-1.5"><button onclick="openDetailModal('${inv.id}')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 hover:bg-slate-200 dark:hover:bg-slate-700 font-semibold rounded-lg text-xs transition flex items-center gap-1"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Detail</button><button onclick="deleteInvoice('${inv.id}')" title="Smazat doklad" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -434,17 +453,16 @@ export function openDetailModal(id) {
     openModal('detail-modal');
 }
 
-export async function saveDetailChanges(e) {
-    if (e) e.preventDefault();
-    if (!selectedInvoiceId) return;
-
+function getDetailModalFormValues() {
     const safeGetVal = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
     const safeGetNum = (id) => { const el = document.getElementById(id); return el ? parseFloat(el.value) || 0 : 0; };
 
     const clientEl = document.getElementById('detail-client-select');
     const chosenClient = (currentRole === 'client') ? activeClientCompany : (clientEl ? clientEl.value : activeClientCompany);
+    const noteEl = document.getElementById('detail-comment-note');
+    const noteText = noteEl ? noteEl.value.trim() : '';
 
-    const updated = {
+    return {
         clientName: chosenClient,
         vendor: safeGetVal('detail-vendor') || 'Neznámý dodavatel',
         ico: safeGetVal('detail-ico'),
@@ -461,8 +479,27 @@ export async function saveDetailChanges(e) {
         vatAmount: safeGetNum('detail-vat-amount'),
         amount: safeGetNum('detail-amount'),
         accountNumber: safeGetVal('detail-account'),
-        note: safeGetVal('detail-comment-note')
+        note: noteText
     };
+}
+
+export async function saveDetailChanges(e) {
+    if (e) e.preventDefault();
+    if (!selectedInvoiceId) return;
+
+    const updated = getDetailModalFormValues();
+
+    const localIdx = invoices.findIndex(i => i.id === selectedInvoiceId);
+    if (localIdx !== -1) {
+        invoices[localIdx] = { ...invoices[localIdx], ...updated };
+    }
+
+    if (window.isDemoMode) {
+        renderClientInvoices();
+        renderAccountantInvoices();
+        showToast("Údaje dokladu byly úspěšně uloženy!", "success");
+        return;
+    }
 
     try {
         await updateDoc(doc(db, "invoices", selectedInvoiceId), updated);
@@ -474,10 +511,26 @@ export async function saveDetailChanges(e) {
 
 export async function clientSubmitInvoice() {
     if (!selectedInvoiceId) return;
+    const updated = getDetailModalFormValues();
     const noteEl = document.getElementById('detail-comment-note');
-    const noteText = noteEl ? noteEl.value : '';
+    const noteText = noteEl ? noteEl.value.trim() : '';
+    const payload = { ...updated, status: 'pending', note: noteText };
+
+    const localIdx = invoices.findIndex(i => i.id === selectedInvoiceId);
+    if (localIdx !== -1) {
+        invoices[localIdx] = { ...invoices[localIdx], ...payload };
+    }
+
+    if (window.isDemoMode) {
+        closeModal('detail-modal');
+        renderClientInvoices();
+        renderAccountantInvoices();
+        showToast("Doklad byl odeslán účetní ke kontrole!", "success");
+        return;
+    }
+
     try {
-        await updateDoc(doc(db, "invoices", selectedInvoiceId), { status: 'pending', note: noteText });
+        await updateDoc(doc(db, "invoices", selectedInvoiceId), payload);
         closeModal('detail-modal');
         showToast("Doklad byl odeslán účetní ke kontrole!", "success");
     } catch (err) {
@@ -487,13 +540,39 @@ export async function clientSubmitInvoice() {
 
 export async function updateInvoiceStatus(newStatus) {
     if (!selectedInvoiceId) return;
-    await saveDetailChanges();
+
+    const updated = getDetailModalFormValues();
+    const noteEl = document.getElementById('detail-comment-note');
+    const noteText = noteEl ? noteEl.value.trim() : '';
+
+    const payload = {
+        ...updated,
+        note: noteText,
+        status: newStatus
+    };
+
+    const localIdx = invoices.findIndex(i => i.id === selectedInvoiceId);
+    if (localIdx !== -1) {
+        invoices[localIdx] = { ...invoices[localIdx], ...payload };
+    }
+
+    if (window.isDemoMode) {
+        closeModal('detail-modal');
+        renderClientInvoices();
+        renderAccountantInvoices();
+        let statusText = newStatus === 'approved' ? "Zaúčtováno" : newStatus === 'pending' ? "Rozpracováno" : "Vráceno klientovi k doplnění";
+        showToast(`Stav dokladu: ${statusText}`, newStatus === 'approved' ? "success" : (newStatus === 'action_needed' ? "warning" : "info"));
+        if (newStatus === 'approved' && currentRole === 'accountant') {
+            downloadSingleISDOC(selectedInvoiceId);
+        }
+        return;
+    }
 
     try {
-        await updateDoc(doc(db, "invoices", selectedInvoiceId), { status: newStatus });
+        await updateDoc(doc(db, "invoices", selectedInvoiceId), payload);
         closeModal('detail-modal');
-        let statusText = newStatus === 'approved' ? "Zaúčtováno" : newStatus === 'pending' ? "Rozpracováno" : "Vráceno k doplnění";
-        showToast(`Stav dokladu: ${statusText}`, newStatus === 'approved' ? "success" : "info");
+        let statusText = newStatus === 'approved' ? "Zaúčtováno" : newStatus === 'pending' ? "Rozpracováno" : "Vráceno klientovi k doplnění";
+        showToast(`Stav dokladu: ${statusText}`, newStatus === 'approved' ? "success" : (newStatus === 'action_needed' ? "warning" : "info"));
 
         if (newStatus === 'approved' && currentRole === 'accountant') {
             downloadSingleISDOC(selectedInvoiceId);
